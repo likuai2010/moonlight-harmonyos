@@ -1,0 +1,3 @@
+[submodule "entry/src/main/cpp/moonlight-core/moonlight-common-c"]
+	path = entry/src/main/cpp/moonlight-core/moonlight-common-c
+	url = https://github.com/moonlight-stream/moonlight-common-c.git
