@@ -6,7 +6,7 @@
 
 #ifndef moonlight_x509Utils_H
 #define moonlight_x509Utils_H
-#include "moon_bridge_javascript_class.h"
+#include "moon_bridge.h"
 #include "iostream"
 
 int generate_x509_certificate(char* cert_path, char* key_path);

@@ -1,5 +1,5 @@
 #include "napi/native_api.h"
-#include "moon_bridge_javascript_class.h"
+#include "moon_bridge.h"
 #include "x509Utils.h"
 #include <openssl/ssl.h>
 #include <curl/curl.h>
@@ -65,13 +65,11 @@ static int testHttps(){
             // 执行请求
             res = curl_easy_perform(curl);
 
-   //          检查执行结果
+            //     检查执行结果
             if(res != CURLE_OK){
                const char* err = curl_easy_strerror(res);
                fprintf(stderr, "curl_easy_perform() failed: %s\n", err);
             }
-
-     //        清理资源
             curl_easy_cleanup(curl);
         }
 
