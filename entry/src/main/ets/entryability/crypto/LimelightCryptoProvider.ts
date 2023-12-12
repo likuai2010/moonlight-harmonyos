@@ -10,8 +10,8 @@ import buffer from '@ohos.buffer';
 
 export class LimelightCertProvider {
   static filesDir: string = ""
-  private certPath: string;
-  private keyPath: string;
+  public certPath: string;
+  public keyPath: string;
 
   public cert: cryptoCert.X509Cert;
   public bytes: Uint8Array;

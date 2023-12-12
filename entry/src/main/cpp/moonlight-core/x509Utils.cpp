@@ -12,6 +12,21 @@
 #include <openssl/x509.h>
 #include <openssl/x509v3.h>
 
+#include <moon_bridge.h>
+
+napi_value generate_certificate(napi_env env, napi_callback_info info)
+{
+    size_t argc = 2;
+    napi_value args[2] = {nullptr};
+
+    napi_get_cb_info(env, info, &argc, args , nullptr, nullptr);
+
+    char* certPath = get_value_string(env, args[0]);
+    char* keyPath = get_value_string(env, args[1]);
+    generate_x509_certificate(certPath, keyPath);
+    return 0;
+}
+
 void THROW_BAD_ALLOC_IF_NULL(void *target) {
     if (target == nullptr) {
         ERR_print_errors_fp(stderr);

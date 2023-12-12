@@ -117,7 +117,7 @@ static CONNECTION_LISTENER_CALLBACKS BridgeConnListenerCallbacks = {
 };
 
 
-static char* get_value_string(napi_env env, napi_value value){
+char* get_value_string(napi_env env, napi_value value){
      size_t length;
      napi_get_value_string_utf8(env, value, nullptr, 0, &length);
      char* buffer = (char*)malloc(length + 1);
@@ -167,7 +167,9 @@ static napi_value MoonBridge_startConnection(napi_env env, napi_callback_info in
     napi_get_value_int32(env, args[13], &clientRefreshRateX100);
     napi_get_value_int32(env, args[14], &encryptionFlags);
     size_t riAesKeyLength;
-   // napi_get_buffer_info(env, args[15], &riAesKey, &riAesKeyLength);
+    napi_value typedArray;
+    
+    //napi_get_buffer_info(env, args[15], &riAesKey, &riAesKeyLength);
     size_t riAesIvLength;
    // napi_get_buffer_info(env, args[16], &riAesIv, &riAesIvLength);
     napi_get_value_int32(env, args[17], &videoCapabilities);

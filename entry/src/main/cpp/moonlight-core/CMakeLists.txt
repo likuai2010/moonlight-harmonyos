@@ -8,6 +8,7 @@ set(CURL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/curl)
 set(CURL_INCLUDE_DIR ${CURL_DIR}/include)
 
 include_directories(
+${CMAKE_CURRENT_SOURCE_DIR}
 ${OPENSSL_INCLUDE_DIR}
 ${CURL_INCLUDE_DIR}
 )
@@ -34,12 +35,15 @@ add_subdirectory(moonlight-common-c)
 add_library(entry SHARED
 hello.cpp
 moon_bridge.cpp
-x509Utils.cpp)
+x509Utils.cpp
+http_curl.cpp
+)
 
 
 target_link_libraries(entry PRIVATE libssl ${OPENSSL_CRYPTO_LIBRARY} moonlight-common-c )
+
 target_include_directories(entry SYSTEM PRIVATE
-${CMAKE_CURRENT_SOURCE_DIR}/x509Utils.h
+${CMAKE_CURRENT_SOURCE_DIR}
 ${OPENSSL_INCLUDE_DIR}
 ${CURL_INCLUDE_DIR}
 ${CMAKE_CURRENT_SOURCE_DIR}/moonlight-common-c/reedsolomon

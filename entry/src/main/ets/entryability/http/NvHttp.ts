@@ -12,10 +12,12 @@ import { bytesToHex, generateRandomBytes } from '../crypto/CryptoManager';
 import { NvApp } from './NvApp';
 import List from '@ohos.util.List';
 import Stack from '@ohos.util.Stack';
+import { CurlClient } from 'libentry.so';
 
 export class NvHttp {
   private uniqueId: string;
   pm: PairingManager;
+  private clientCert: LimelightCertProvider;
 
   private static readonly DEFAULT_HTTPS_PORT: number = 47984;
   public static readonly DEFAULT_HTTP_PORT: number = 47989;
@@ -37,7 +39,8 @@ export class NvHttp {
               httpsPort: number,
               uniqueId: String = "",
               serverCert: any = null,
-              cryptoProvider: LimelightCertProvider = null) {
+              cryptoProvider: LimelightCertProvider = null
+  ) {
     this.uniqueId = '0123456789ABCDEF';
     this.httpsPort = httpsPort | 0;
     this.serverCert = serverCert;
@@ -51,9 +54,10 @@ export class NvHttp {
     } catch (e) {
       console.error("xxx => " + e)
     }
-
+    this.clientCert = cryptoProvider
     this.pm = new PairingManager(this, cryptoProvider)
   }
+
   public async getServerCert(clientCert: Uint8Array): Promise<string> {
     const salt = await generateRandomBytes(16);
     const getCert = await this.executePairingCommand(
@@ -62,7 +66,8 @@ export class NvHttp {
     if (NvHttp.getXmlString(getCert, "paired", true) !== '1') {
       return PairState.FAILED;
     }
-    return  NvHttp.getXmlString(getCert, "plaincert", false);;
+    return NvHttp.getXmlString(getCert, "plaincert", false);
+    ;
   }
 
 
@@ -254,29 +259,21 @@ export class NvHttp {
 
   getComputerDetails(serverInfo: string): ComputerDetails {
     const details = new ComputerDetails();
-
     details.name = NvHttp.getXmlString(serverInfo, "hostname", false) || "UNKNOWN";
-
     // UUID is mandatory to determine which machine is responding
     details.uuid = NvHttp.getXmlString(serverInfo, "uniqueid", true);
-
     details.httpsPort = this.getHttpsPort(serverInfo);
-
     details.macAddress = NvHttp.getXmlString(serverInfo, "mac", false);
-
     // FIXME: Do we want to use the current port?
     details.localAddress = new AddressTuple(NvHttp.getXmlString(serverInfo, "LocalIP", false), NvHttp.DEFAULT_HTTP_PORT);
-
     // This is missing on recent GFE versions, but it's present on Sunshine
     details.externalPort = this.getExternalPort(serverInfo);
     details.remoteAddress = new AddressTuple(NvHttp.getXmlString(serverInfo, "ExternalIP", false), details.externalPort);
 
     //details.pairState = this.getPairState(serverInfo);
     details.runningGameId = this.getCurrentGame(serverInfo);
-
     // The MJOLNIR codename was used by GFE but never by any third-party server
     details.nvidiaServer = NvHttp.getXmlString(serverInfo, "state", true).includes("MJOLNIR");
-
     // We could reach it, so it's online
     details.state = ComputerState.ONLINE;
 
@@ -317,19 +314,17 @@ export class NvHttp {
   }
 
   async openHttpConnectionToString(baseUrl: Url.URL, path: string, query: string = null, timeout: number = 0): Promise<string> {
-    var httpClient = http.createHttp()
+    var httpClient = new CurlClient()
     try {
       let url = this.getCompleteUrl(baseUrl, path, query)
-      const response = await httpClient.request(url, {
-        method: http.RequestMethod.GET,
-        header: {
-          'Content-Type': 'application/json'
-        },
-        readTimeout: timeout == 0 ? NvHttp.READ_TIMEOUT : timeout,
-        connectTimeout: NvHttp.LONG_CONNECTION_TIMEOUT
-      })
-      hilog.info(0x0000, "testTag", `${response}`)
-      return response.result.toString();
+      let clientPath = null;
+      let keyPath = null;
+      if(baseUrl.protocol == "https"){
+        clientPath = this.clientCert.certPath
+        keyPath = this.clientCert.keyPath
+      }
+      const response = await httpClient.get(url,timeout == 0 ? NvHttp.READ_TIMEOUT : timeout, clientPath, keyPath)
+      return response.toString();
     } catch (e) {
       hilog.info(0x0000, "testTag", `${e}`)
     }
@@ -388,9 +383,7 @@ export class NvHttp {
 
 
   private getHttpsUrl(likelyOnline: boolean): Url.URL {
-    Url.URL.parseURL(`https://${this.baseUrlHttp.hostname}:${this.httpsPort}`)
-    // 临时禁用https
-    return this.baseUrlHttp
+    return Url.URL.parseURL(`https://${this.baseUrlHttp.hostname}:${this.httpsPort}`)
   }
 
   public getAppListRaw(): Promise<string> {

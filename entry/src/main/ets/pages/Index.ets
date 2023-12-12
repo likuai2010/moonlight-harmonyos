@@ -1,5 +1,5 @@
 import hilog from '@ohos.hilog';
-import testNapi, { generate_x509_certificate } from 'libentry.so'
+import testNapi, { CurlClient, generate_x509_certificate } from 'libentry.so'
 
 import { Game } from 'ets/entryability/Game'
 import { MoonBridge } from '../entryability/MoonBridge';
@@ -17,8 +17,10 @@ struct Index {
           .fontWeight(FontWeight.Bold)
           .onClick(() => {
             this.message = "xxxx"
+            mb.startConnection();
+
             //game.surfaceChanged()
-            mb.startConnection()
+            //mb.startConnection()
             hilog.info(0x0000, 'testTag', `Test NAPI 2 + 3 = ${testNapi.add(1, 2, "2222")}`);
           })
       }

@@ -1,7 +1,13 @@
 export const add: (a: number, b: number) => number;
-export const generate_x509_certificate: (a: string, b:string) => number;
-export declare class MoonBridgeNapi{
 
+export const generate_x509_certificate: (a: string, b: string) => number;
+
+export declare class CurlClient {
+  close()
+  get(url: string, timeout: Number, client: string, key: string): Promise<string>;
+}
+
+export declare class MoonBridgeNapi {
   startConnection(
     address: string, appVersion: string, gfeVersion: string,
     rtspSessionUrl: string, serverCodecModeSupport: number,
