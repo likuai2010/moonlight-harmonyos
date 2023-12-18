@@ -7,12 +7,13 @@ import { AddressTuple, ComputerDetails, ComputerState } from './ComputerDetails'
 import hilog from '@ohos.hilog';
 import util from '@ohos.util';
 import { LimelightCertProvider } from '../crypto/LimelightCryptoProvider';
-import { ConnectionContext } from '../ConnectionContext';
+import { ConnectionContext } from '../nvstream/ConnectionContext';
 import { bytesToHex, generateRandomBytes } from '../crypto/CryptoManager';
 import { NvApp } from './NvApp';
 import List from '@ohos.util.List';
 import Stack from '@ohos.util.Stack';
 import { CurlClient } from 'libentry.so';
+
 
 export class NvHttp {
   private uniqueId: string;
@@ -286,7 +287,7 @@ export class NvHttp {
   }
 
   async executePairingChallenge(): Promise<string> {
-    return await this.openHttpConnectionToString(this.baseUrlHttp, "pair", "devicename=roth&updateState=1&phrase=pairchallenge",);
+    return await this.openHttpConnectionToString(this.getHttpsUrl(true), "pair", "devicename=roth&updateState=1&phrase=pairchallenge",);
   }
 
   private getCompleteUrl(baseUrl: Url.URL, path: string, query: string): string {
@@ -319,13 +320,15 @@ export class NvHttp {
       let url = this.getCompleteUrl(baseUrl, path, query)
       let clientPath = null;
       let keyPath = null;
-      if(baseUrl.protocol == "https"){
+      if(baseUrl.protocol.startsWith('https')){
         clientPath = this.clientCert.certPath
         keyPath = this.clientCert.keyPath
       }
-      const response = await httpClient.get(url,timeout == 0 ? NvHttp.READ_TIMEOUT : timeout, clientPath, keyPath)
+      const response = await httpClient.get(url,timeout == 0 ?9999 : 30, clientPath, keyPath)
+      httpClient.close()
       return response.toString();
     } catch (e) {
+      httpClient.close()
       hilog.info(0x0000, "testTag", `${e}`)
     }
     return null;
@@ -372,8 +375,7 @@ export class NvHttp {
     if ((verb === "launch" && NvHttp.getXmlString(xmlStr, "gamesession", true) !== "0" ||
     (verb === "resume" && NvHttp.getXmlString(xmlStr, "resume", true) !== "0"))) {
       // sessionUrl0 will be missing for older GFE versions
-      //context.rtspSessionUrl = NvHttp.getXmlString(xmlStr, "sessionUrl0", false);
-      context.rtspSessionUrl = "rtsp://192.168.3.5:48010"
+      context.rtspSessionUrl = NvHttp.getXmlString(xmlStr, "sessionUrl0", false);
       return true;
     }
     else {
@@ -401,7 +403,7 @@ export class NvHttp {
             </App>
         </root>
 `
-    return NvHttp.getAppListByReader(mock)
+    return NvHttp.getAppListByReader(applist)
   }
 
   async getServerInfo(likelyOnline: boolean): Promise<string> {

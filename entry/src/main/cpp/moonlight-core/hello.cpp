@@ -1,16 +1,7 @@
-#include "moonlight-core/http_curl.h"
+#include "utils/http_curl.h"
 #include "napi/native_api.h"
 #include "moon_bridge.h"
-#include "x509Utils.h"
-#include <libavcodec/codec.h>
-extern "C" {
-  #include "libavcodec/codec.h"
- 
-    void test(){
-       const AVCodec * dd = avcodec_find_decoder_by_name("h264");
-    }
-}
-
+#include "utils/x509Utils.h"
 
 
 static napi_value Add(napi_env env, napi_callback_info info)

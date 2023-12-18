@@ -8,7 +8,6 @@
 #include "moonlight-core/moon_bridge.h"
 #include <curl/easy.h>
 #include "napi/native_api.h"
-
 #include <string>
 
 struct AsyncCallbackInfo {
@@ -19,14 +18,19 @@ struct AsyncCallbackInfo {
     const int timeout;
     const char *clientPath;
     const char *keyPath;
-    const char *result;
+    char *result;
     const char *error;
 };
+
 
 size_t write_callback(void *contents, size_t size, size_t nmemb, void *output) {
     size_t total_size = size * nmemb;
     AsyncCallbackInfo *response_data = static_cast<AsyncCallbackInfo *>(output);
-    response_data->result = (char *)contents;
+     if (contents == nullptr)
+            return 0;
+    response_data->result = new char[total_size + 1];
+    memcpy(response_data->result, contents, total_size);
+    response_data->result[total_size] = '\0';
     return total_size;
 }
 
@@ -41,8 +45,11 @@ void getCurl(napi_env env, AsyncCallbackInfo* cb) {
         curl_easy_setopt(curl, CURLOPT_SSLCERTTYPE, "PEM");
         if (cb->clientPath != nullptr)
             curl_easy_setopt(curl, CURLOPT_SSLCERT, cb->clientPath);
-        if (cb->keyPath != nullptr)
+        if (cb->keyPath != nullptr){
+            curl_easy_setopt(curl, CURLOPT_SSLKEYTYPE, "DER");
             curl_easy_setopt(curl, CURLOPT_SSLKEY, cb->keyPath);
+        }
+            
         // 没有ca证书无法信任
         // 设置自签名证书的路径
         // curl_easy_setopt(curl, CURLOPT_CAINFO, "/data/storage/el2/base/haps/entry/cache/ca.pem");
@@ -83,6 +90,7 @@ napi_value GetRequest(napi_env env, napi_callback_info info) {
         .timeout = timeout,
         .clientPath = clientPath,
         .keyPath = keyPath,
+        .result = (char*)malloc(1)
     };
     napi_value resourceName;
     napi_create_string_latin1(env, "GetRequest", NAPI_AUTO_LENGTH, &resourceName);

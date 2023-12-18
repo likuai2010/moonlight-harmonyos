@@ -7,6 +7,7 @@ set(OPENSSL_INCLUDE_DIR ${OPENSSL_DIR}/include)
 set(CURL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/curl)
 set(CURL_INCLUDE_DIR ${CURL_DIR}/include)
 
+
 include_directories(
 ${CMAKE_CURRENT_SOURCE_DIR}
 ${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg/include
@@ -24,10 +25,12 @@ set_target_properties(libcrypto PROPERTIES IMPORTED_LOCATION ${OPENSSL_DIR}/${CM
 set_target_properties(libcrypto PROPERTIES INTERFACE_INCLUDE_DIRECTORIES ${OPENSSL_INCLUDE_DIR})
 
 
-
 add_library(libcurl STATIC IMPORTED)
 set_target_properties(libcurl PROPERTIES IMPORTED_LOCATION ${CURL_DIR}/${CMAKE_OHOS_ARCH_ABI}/libcurl.a)
 set_target_properties(libcurl PROPERTIES INTERFACE_INCLUDE_DIRECTORIES ${CURL_INCLUDE_DIR})
+
+
+
 
 add_subdirectory(moonlight-common-c)
 
@@ -35,13 +38,18 @@ add_subdirectory(moonlight-common-c)
 
 add_library(entry SHARED
 hello.cpp
+video/NativeVideoDecoder.cpp
 moon_bridge.cpp
-x509Utils.cpp
-http_curl.cpp
+utils/x509Utils.cpp
+utils/http_curl.cpp
 )
 
 
-target_link_libraries(entry PRIVATE libssl ${OPENSSL_CRYPTO_LIBRARY} moonlight-common-c )
+target_link_libraries(entry PRIVATE
+libssl
+libcrypto
+moonlight-common-c
+)
 
 target_include_directories(entry SYSTEM PRIVATE
 ${CMAKE_CURRENT_SOURCE_DIR}
@@ -54,7 +62,9 @@ target_include_directories(entry PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg/incl
 target_link_libraries(entry PRIVATE
 libace_napi.z.so
 libhilog_ndk.z.so
-${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg/${OHOS_ARCH}/lib/libavcodec.so
+libnative_media_codecbase.so
+libnative_media_core.so
+libnative_media_vdec.so
 libcurl
 libz.so)
 

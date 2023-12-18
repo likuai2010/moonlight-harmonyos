@@ -1,4 +1,4 @@
-import { NvApp } from './http/NvApp';
+import { NvApp } from '../http/NvApp';
 import { MoonBridge } from './MoonBridge';
 export class StreamConfiguration {
   public static INVALID_APP_ID = 0;

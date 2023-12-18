@@ -1,5 +1,5 @@
 
-import { AddressTuple } from './http/ComputerDetails';
+import { AddressTuple } from '../http/ComputerDetails';
 import { StreamConfiguration } from './StreamConfiguration';
 
 export class ConnectionContext {

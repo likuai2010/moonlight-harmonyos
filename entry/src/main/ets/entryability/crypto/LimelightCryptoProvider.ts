@@ -1,17 +1,12 @@
 import cryptoCert from '@ohos.security.cert';
 import crypto from '@ohos.security.cryptoFramework';
-import { generate_x509_certificate } from 'libentry.so'
-import UIAbility from '@ohos.app.ability.UIAbility';
 import fs from '@ohos.file.fs';
-import cert from '@ohos.security.cert';
-import { KeyCode } from '@ohos.multimodalInput.keyCode';
-import { hexToBytes } from './CryptoManager';
-import buffer from '@ohos.buffer';
 
 export class LimelightCertProvider {
   static filesDir: string = ""
   public certPath: string;
   public keyPath: string;
+  public cerKeyPath: string;
 
   public cert: cryptoCert.X509Cert;
   public bytes: Uint8Array;
@@ -19,20 +14,21 @@ export class LimelightCertProvider {
 
   constructor() {
     this.certPath = LimelightCertProvider.filesDir + "/client.pem"
-    this.keyPath = LimelightCertProvider.filesDir + "/private.key"
+    this.keyPath = LimelightCertProvider.filesDir + "/private.pem"
+    this.cerKeyPath = LimelightCertProvider.filesDir + "/private.pem.cer"
   }
 
   async initCertKeyPair() {
-    if (!fs.accessSync(this.certPath) || !fs.accessSync(this.keyPath)) {
-      generate_x509_certificate(this.certPath, this.keyPath)
-    }
+    // if (!fs.accessSync(this.certPath) || !fs.accessSync(this.keyPath)) {
+    //   generate_x509_certificate(this.certPath, this.keyPath)
+    // }
     const certBytes = readFile(this.certPath)
     this.cert = await cryptoCert.createX509Cert(
       { data: certBytes, encodingFormat: cryptoCert.EncodingFormat.FORMAT_PEM })
     const kg = crypto.createAsyKeyGenerator("RSA2048|PRIMES_2")
     this.bytes = certBytes
     // der 格式
-    //this.key = (await kg.convertKey(null, { data: readFile(this.keyPath) })).priKey
+    this.key = (await kg.convertKey(null, { data: readFile(this.cerKeyPath) })).priKey
   }
 }
 

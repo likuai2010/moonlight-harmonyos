@@ -119,8 +119,11 @@ int generate_x509_certificate(char* cert_path, char* key_path) {
     fclose(cert_file);
     key_file = fopen(key_path, "w");
     ret = PEM_write_PrivateKey(key_file, pk, nullptr, nullptr, 0, nullptr, nullptr);
-    //ret = i2d_PrivateKey_fp(key_file, pk);
     fclose(key_file);
+    FILE *key_cer_file = nullptr;
+    key_cer_file = fopen(strcat(key_path, ".cer") , "w");
+    ret = i2d_PrivateKey_fp(key_cer_file, pk);
+    fclose(key_cer_file);
 
     // 释放资源
     EVP_PKEY_free(pk);

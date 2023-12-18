@@ -2,12 +2,12 @@ import { MoonBridgeNapi } from 'libentry.so'
 import hilog from '@ohos.hilog';
 import Buffer from '@ohos.buffer'
 import crypto from '@ohos.security.cryptoFramework'
-import { NvApp } from './http/NvApp'
-import { NvHttp } from './http/NvHttp'
-import { AddressTuple, ComputerDetails } from './http/ComputerDetails';
-import { LimelightCertProvider, readFile, writeFile } from './crypto/LimelightCryptoProvider';
-import { getHttps } from './http/Http';
-import { bytesToHex, hexToBytes } from './crypto/CryptoManager';
+import { NvApp } from '../http/NvApp'
+import { NvHttp } from '../http/NvHttp'
+import { AddressTuple, ComputerDetails } from '../http/ComputerDetails';
+import { LimelightCertProvider, readFile, writeFile } from '../crypto/LimelightCryptoProvider';
+import { getHttps } from '../http/Http';
+import { bytesToHex, hexToBytes } from '../crypto/CryptoManager';
 
 
 export class AudioConfiguration{
@@ -156,10 +156,13 @@ export class MoonBridge {
 
   public async startConnection() {
     var lime =  new LimelightCertProvider()
-    await lime.initCertKeyPair()
+    //await lime.initCertKeyPair()
     var http = new NvHttp(new AddressTuple("192.168.3.5", NvHttp.DEFAULT_HTTP_PORT), 47984, null, null, lime);
     var serInfo = await http.getServerInfo(true)
-    http.pm.pair(serInfo, "12345")
+    //const d = await http.pm.pair(serInfo, "12345")
+    const list = await http.getAppListRaw()
+    console.log(list);
+    // http.pm.pair(serInfo, "12345")
   }
 }
 

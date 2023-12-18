@@ -1,12 +1,14 @@
 import { MoonBridgeNapi } from 'libentry.so';
 import { ConnectionContext } from './ConnectionContext';
-import { AddressTuple, ComputerDetails } from './http/ComputerDetails';
-import { NvHttp } from './http/NvHttp';
-import { generateRiKey, generateRiKeyId } from './crypto/CryptoManager';
+import { AddressTuple, ComputerDetails } from '../http/ComputerDetails';
+import { NvHttp } from '../http/NvHttp';
+import { generateRiKey, generateRiKeyId } from '../crypto/CryptoManager';
 import {  MoonBridge } from './MoonBridge';
 import { StreamConfiguration } from './StreamConfiguration'
 import { NvConnectionListener } from './ConnetionListener';
 import buffer from '@ohos.buffer';
+import { LimelightCertProvider } from '../crypto/LimelightCryptoProvider';
+import hilog from '@ohos.hilog';
 
 export class NvConnection {
   api: MoonBridgeNapi = new MoonBridgeNapi()
@@ -32,16 +34,20 @@ export class NvConnection {
   public async start(audioRenderer: any, videoDecoderRenderer: any, connectionListener: NvConnectionListener) {
     const context = this.context;
     this.context.connListener = connectionListener;
+    hilog.info(0x0000, "testTag", "start")
    // this.context.videoCapabilities = videoDecoderRenderer;
     const appName = this.context.streamConfig.app.appName;
     this.context.connListener.stageStarting(appName);
     try {
+
       if (!await this.startApp()) {
+        hilog.info(0x0000, "testTag", "start failure")
         this.context.connListener.stageFailed(appName, 0, 0);
         return;
       }
       this.context.connListener.stageComplete(appName);
     } catch (e) {
+      hilog.info(0x0000, "testTag", "start error" + e)
       this.context.connListener.displayMessage(e.message);
       this.context.connListener.stageFailed(appName, 0, -1);
       return;
@@ -57,37 +63,57 @@ export class NvConnection {
     }
 
     const dd = buffer.alloc(16)
-    dd.fill(context.riKeyId)
+    dd.writeInt32BE(context.riKeyId)
     const rikeyId = new Uint8Array(dd.buffer)
     // Moonlight-core is not thread-safe with respect to connection start and stop, so
     // we must not invoke that functionality in parallel.
     //MoonBridge.api.setupBridge(videoDecoderRenderer, audioRenderer, connectionListener);
+    hilog.info(0x0000, "testTag", "startConnection")
+    try {
+      // const ret = this.api.startConnection(
+      //   context.serverAddress.address,
+      //   context.serverAppVersion,
+      //   context.serverGfeVersion,
+      //   context.rtspSessionUrl,
+      //   context.serverCodecModeSupport,
+      //   context.negotiatedWidth,
+      //   context.negotiatedHeight,
+      //   context.streamConfig.refreshRate,
+      //   context.streamConfig.bitrate,
+      //   context.negotiatedPacketSize,
+      //   context.negotiatedRemoteStreaming,
+      //   context.streamConfig.audioConfiguration,
+      //   context.streamConfig.supportedVideoFormats,
+      //   context.streamConfig.clientRefreshRateX100,
+      //   context.streamConfig.encryptionFlags,
+      //   context.riKey, rikeyId,
+      //   context.videoCapabilities,
+      //   context.streamConfig.colorSpace, context.streamConfig.colorRange
+      // )
+      const ret = this.api.startConnection("192.168.3.5",
+                            "7.1.431.-1", "3.23.0.74", "rtsp://192.168.3.5:48010",
+                            197377,
+                            1280, 720,
+                            60, 10000,
+                            1392, 2,
+                            197322,
+                            1,
+                            6000,
+                            1,
+                  context.riKey, rikeyId,
+                            16777216,
+                            1,
+                            0);
+      hilog.info(0x0000, "testTag", "ret=>"+ret)
+    }catch (e){
+      hilog.info(0x0000, "testTag", "err=>"+e)
+    }
 
-    const ret = this.api.startConnection(
-      context.serverAddress.address,
-      context.serverAppVersion,
-      context.serverGfeVersion,
-      context.rtspSessionUrl,
-      context.serverCodecModeSupport,
-      context.negotiatedWidth,
-      context.negotiatedHeight,
-      context.streamConfig.refreshRate,
-      context.streamConfig.bitrate,
-      context.negotiatedPacketSize,
-      context.negotiatedRemoteStreaming,
-      context.streamConfig.audioConfiguration,
-      context.streamConfig.supportedVideoFormats,
-      context.streamConfig.clientRefreshRateX100,
-      context.streamConfig.encryptionFlags,
-      context.riKey, rikeyId,
-      context.videoCapabilities,
-      context.streamConfig.colorSpace, context.streamConfig.colorRange
-    )
-    console.log("ret" + ret);
+
   }
 
   async startApp() {
-    const h = new NvHttp(this.context.serverAddress, this.context.httpsPort, this.uniqueId, null, null);
+    const h = new NvHttp(this.context.serverAddress, this.context.httpsPort, this.uniqueId, {  }, new LimelightCertProvider());
     const serverInfo = await h.getServerInfo(true);
     const context = this.context
     context.serverAppVersion = h.getServerVersion(serverInfo);
@@ -163,7 +189,7 @@ export class NvConnection {
         return false;
       }
     }
-
+    hilog.info(0x0000, "testTag", "startLaunch")
     // If there's a game running, resume it
     if (h.getCurrentGame(serverInfo) != 0) {
       try {
@@ -185,17 +211,20 @@ export class NvConnection {
           return false;
         }
         else if (e.getErrorCode() == 525) {
+
           context.connListener.displayMessage("The application is minimized. Resume it on the PC manually or " +
           "quit the session and start streaming again.");
           return false;
         } else {
+          hilog.info(0x0000, "testTag", "err")
           throw Error(e);
         }
       }
-      console.info("Resumed existing game session");
+      hilog.info(0x0000, "testTag", "Resumed existing game session")
       return true;
     }
     else {
+      hilog.info(0x0000, "testTag", "launchNotRunningApp")
       return await this.launchNotRunningApp(h, context);
     }
   }

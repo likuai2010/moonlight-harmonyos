@@ -30,21 +30,22 @@ export class PairingManager {
 
 
   public async pair(serverInfo: string, pin: string): Promise<PairState> {
-    const serverMajorVersion = this.http.getServerMajorVersion(serverInfo);
-    console.log("Pairing with server generation: " + serverMajorVersion);
-    let hashAlgo: PairingHashAlgorithm;
-    if (serverMajorVersion >= 7) {
-      // Gen 7+ uses SHA-256 hashing
-      hashAlgo = new Sha256PairingHash();
-    } else {
-      // Prior to Gen 7, SHA-1 is used
-      hashAlgo = new Sha1PairingHash();
-    }
+    // const serverMajorVersion = this.http.getServerMajorVersion(serverInfo);
+    // console.log("Pairing with server generation: " + serverMajorVersion);
+    // let hashAlgo: PairingHashAlgorithm;
+    // if (serverMajorVersion >= 7) {
+    //   // Gen 7+ uses SHA-256 hashing
+    //   hashAlgo = new Sha256PairingHash();
+    // } else {
+    //   // Prior to Gen 7, SHA-1 is used
+    //   hashAlgo = new Sha1PairingHash();
+    // }
     // Generate a salt for hashing the PIN
-    const salt = await generateRandomBytes(16);
+    //const salt = await generateRandomBytes(16);
+    const hashAlgo = new Sha256PairingHash();
+    const salt = new Uint8Array([81, 147, 106, 77, 42, 136, 160, 234, 163, 158, 210, 150, 55, 48, 190, 163])
     // Combine the salt and pin, then create an AES key from them
     const aesKey = await this.generateAesKey(hashAlgo, this.saltPin(salt, pin));
-
     // Send the salt and get the server cert. This doesn't have a read timeout
     // because the user must enter the PIN before the server responds
     const getCert = await this.http.executePairingCommand(
@@ -108,10 +109,10 @@ export class PairingManager {
     // Send the server our signed secret
     const clientPairingSecret = concatBytes(clientSecret, await signData(clientSecret, this.clientCert.key));
     const clientSecretResp = await this.http.executePairingCommand("clientpairingsecret=" + bytesToHex(clientPairingSecret), true);
-    // if (NvHttp.getXmlString(clientSecretResp, "paired", true) !== '1') {
-    //   //http.unpair();
-    //   return PairState.FAILED;
-    // }
+    if (NvHttp.getXmlString(clientSecretResp, "paired", true) !== '1') {
+       //http.unpair();
+       return PairState.FAILED;
+     }
 
     // Do the initial challenge (seems necessary for us to show as paired)
     const pairChallenge = await this.http.executePairingChallenge();

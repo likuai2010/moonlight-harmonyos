@@ -1,7 +1,7 @@
 import { NvConnectionListener } from './ConnetionListener';
-import { AddressTuple } from './http/ComputerDetails';
-import { NvApp } from './http/NvApp';
-import { NvHttp } from './http/NvHttp';
+import { AddressTuple } from '../http/ComputerDetails';
+import { NvApp } from '../http/NvApp';
+import { NvHttp } from '../http/NvHttp';
 import { NvConnection } from './NvConnection';
 import { StreamConfiguration } from './StreamConfiguration';
 
@@ -80,8 +80,8 @@ export class Game implements NvConnectionListener {
     console.error("stageStarting")
   }
 
-  surfaceChanged() {
-    this.conn.start(null,
+  async surfaceChanged() {
+    await this.conn.start(null,
       null, this);
   }
 }
