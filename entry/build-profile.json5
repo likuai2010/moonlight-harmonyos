@@ -5,6 +5,7 @@
       "path": "./src/main/cpp/CMakeLists.txt",
       "arguments": "",
       "cppFlags": "",
+      "abiFilters": ["x86_64"]
     },
 //    "externalNativeOptions": {
 //      "path": "./src/main/cpp/CMakeLists.txt",

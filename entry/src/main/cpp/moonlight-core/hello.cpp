@@ -2,8 +2,14 @@
 #include "napi/native_api.h"
 #include "moon_bridge.h"
 #include "x509Utils.h"
-
-
+#include <libavcodec/codec.h>
+extern "C" {
+  #include "libavcodec/codec.h"
+ 
+    void test(){
+       const AVCodec * dd = avcodec_find_decoder_by_name("h264");
+    }
+}
 
 
 
@@ -11,7 +17,6 @@ static napi_value Add(napi_env env, napi_callback_info info)
 {
     size_t argc = 3;
     napi_value args[3] = {nullptr};
-
     napi_get_cb_info(env, info, &argc, args , nullptr, nullptr);
 
     double value0;

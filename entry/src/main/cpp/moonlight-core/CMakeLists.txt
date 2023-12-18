@@ -9,6 +9,7 @@ set(CURL_INCLUDE_DIR ${CURL_DIR}/include)
 
 include_directories(
 ${CMAKE_CURRENT_SOURCE_DIR}
+${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg/include
 ${OPENSSL_INCLUDE_DIR}
 ${CURL_INCLUDE_DIR}
 )
@@ -49,10 +50,11 @@ ${CURL_INCLUDE_DIR}
 ${CMAKE_CURRENT_SOURCE_DIR}/moonlight-common-c/reedsolomon
 ${CMAKE_CURRENT_SOURCE_DIR}/moonlight-common-c/enet/include
 )
-
+target_include_directories(entry PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg/include)
 target_link_libraries(entry PRIVATE
 libace_napi.z.so
 libhilog_ndk.z.so
+${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg/${OHOS_ARCH}/lib/libavcodec.so
 libcurl
 libz.so)
 

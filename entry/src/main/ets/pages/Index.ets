@@ -17,7 +17,7 @@ struct Index {
           .fontWeight(FontWeight.Bold)
           .onClick(() => {
             this.message = "xxxx"
-            mb.startConnection();
+            //mb.startConnection();
 
             //game.surfaceChanged()
             //mb.startConnection()
