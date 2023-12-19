@@ -5,7 +5,6 @@
 // please include "napi/native_api.h".
 
 #include "NativeVideoDecoder.h"
-#include <linux/dvb/video.h>
 #include <stdarg.h>
 #include <hilog/log.h>
 #include <multimedia/player_framework/native_avcodec_videodecoder.h>
@@ -21,6 +20,32 @@ void decodeLog(const char *format, ...) {
 
 NativeVideoDecoder::NativeVideoDecoder() {}
 NativeVideoDecoder::~NativeVideoDecoder() {}
+
+static void OnInputBufferAvailable(OH_AVCodec *codec, uint32_t index, OH_AVMemory *data, void *userData) {
+    (void)codec;
+    VDecSignal *signal_ = static_cast<VDecSignal *>(userData);
+    std::unique_lock<std::mutex> lock(signal_->inMutex_);
+    signal_->inQueue_.push(index);
+    signal_->inBufferQueue_.push(data);
+    signal_->inCond_.notify_all();
+}
+
+static void OnOutputBufferAvailable(OH_AVCodec *codec, uint32_t index, OH_AVMemory *data, OH_AVCodecBufferAttr *attr,
+                                    void *userData) {
+    (void)codec;
+    VDecSignal *signal_ = static_cast<VDecSignal *>(userData);
+    if (attr) {
+        decodeLog("OnOutputBufferAvailable received, index: %{public}d, attr->size: %{public}d", index, attr->size);
+        std::unique_lock<std::mutex> lock(signal_->outMutex_);
+        signal_->outQueue_.push(index);
+        signal_->outBufferQueue_.push(data);
+        signal_->attrQueue_.push(*attr);
+        // outFrameCount += attr->size > 0 ? 1 : 0;
+        signal_->outCond_.notify_all();
+    } else {
+        decodeLog("OnOutputBufferAvailable error, attr is nullptr!");
+    }
+}
 
 int NativeVideoDecoder::setup(DECODER_PARAMETERS *params) {
     m_stream_fps = params->frame_rate;
@@ -42,6 +67,7 @@ int NativeVideoDecoder::setup(DECODER_PARAMETERS *params) {
         decodeLog(" Couldn't find decoder");
         return -1;
     }
+    m_signal = new VDecSignal();
     OH_AVFormat *format = OH_AVFormat_Create();
     OH_AVFormat_SetIntValue(format, OH_MD_KEY_WIDTH, params->width);
     OH_AVFormat_SetIntValue(format, OH_MD_KEY_HEIGHT, params->height);
@@ -50,11 +76,9 @@ int NativeVideoDecoder::setup(DECODER_PARAMETERS *params) {
     int dd = OH_VideoDecoder_Configure(m_decoder, format);
     OH_AVFormat_Destroy(format);
     OH_AVCodecAsyncCallback callback = {
-        .onNeedInputData = {
-        
-        }
-    };
-    OH_VideoDecoder_SetCallback(m_decoder, callback, nullptr);
+        .onNeedInputData = OnInputBufferAvailable,
+        .onNeedOutputData = OnOutputBufferAvailable};
+    OH_VideoDecoder_SetCallback(m_decoder, callback, m_signal);
 
     // 配置送显窗口参数
     // int32_t ret = OH_VideoDecoder_SetSurface(m_decoder, window);    // 从 XComponent 获取 window
@@ -65,11 +89,136 @@ int NativeVideoDecoder::setup(DECODER_PARAMETERS *params) {
     // 开始解码
     return DR_OK;
 }
+
+void NativeVideoDecoder::start() {
+    m_is_running.store(true);
+    m_inputLoop = std::make_unique<std::thread>(&NativeVideoDecoder::inputFunc, this);
+    m_outputLoop = std::make_unique<std::thread>(&NativeVideoDecoder::outputFunc, this);
+
+    OH_VideoDecoder_Start(m_decoder);
+}
+void NativeVideoDecoder::stop() {
+    m_is_running.store(false);
+    if (m_inputLoop != nullptr && m_inputLoop->joinable()) {
+        std::unique_lock<std::mutex> lock(m_signal->inMutex_);
+        m_signal->inCond_.notify_all();
+        lock.unlock();
+        m_inputLoop->join();
+    }
+    if (m_outputLoop != nullptr && m_outputLoop->joinable()) {
+        std::unique_lock<std::mutex> lock(m_signal->outMutex_);
+        m_signal->outCond_.notify_all();
+        lock.unlock();
+        m_outputLoop->join();
+    }
+    decodeLog("start stop!");
+    OH_VideoDecoder_Stop(m_decoder);
+}
+void flush() {
+    // OH_VideoDecoder_Flush(m_decoder);
+}
 void NativeVideoDecoder::cleanup() {
+    OH_VideoDecoder_Destroy(m_decoder);
 }
 VIDEO_STATS *NativeVideoDecoder::video_decode_stats() {
     return nullptr;
 }
+
+int NativeVideoDecoder::ExtractPacket() {
+}
+// 解码现成
+void NativeVideoDecoder::inputFunc() {
+    while (true) {
+        if (!m_is_running.load()) {
+            break;
+        }
+        std::unique_lock<std::mutex> lock(m_signal->inMutex_);
+        m_signal->inCond_.wait(lock, [this]() { return (m_signal->inQueue_.size() > 0 || !m_is_running.load()); });
+
+        if (!m_is_running.load()) {
+            break;
+        }
+
+        uint32_t index = m_signal->inQueue_.front();
+        auto buffer = m_signal->inBufferQueue_.front();
+        lock.unlock();
+        if ((ExtractPacket() != AV_ERR_OK)) {
+            continue;
+        }
+        OH_AVCodecBufferAttr info;
+        info.size = m_pkt->size;
+        info.offset = 0;
+        info.pts = m_pkt->pts;
+
+        if (buffer == nullptr) {
+            decodeLog("Fatal: GetInputBuffer fail");
+        }
+        memcpy(OH_AVMemory_GetAddr(buffer), m_pkt->data, m_pkt->size);
+
+        int32_t ret = 0;
+        if (m_isFirst_frame) {
+            info.flags = AVCODEC_BUFFER_FLAGS_SYNC_FRAME;
+            ret = OH_VideoDecoder_PushInputData(m_decoder, index, info);
+            m_isFirst_frame = false;
+        } else {
+            info.flags = AVCODEC_BUFFER_FLAGS_NONE;
+            ret = OH_VideoDecoder_PushInputData(m_decoder, index, info);
+        }
+
+        if (ret != AV_ERR_OK) {
+            decodeLog("Fatal error, exit");
+            break;
+        }
+
+        // timeStamp_ += FRAME_DURATION_US;
+        lock.lock();
+        m_signal->inQueue_.pop();
+        m_signal->inBufferQueue_.pop();
+    }
+}
+
+void NativeVideoDecoder::outputFunc() {
+    while (true) {
+        if (!m_is_running.load()) {
+            decodeLog("stop, exit");
+            break;
+        }
+
+        std::unique_lock<std::mutex> lock(m_signal->outMutex_);
+        m_signal->outCond_.wait(lock, [this]() { return (m_signal->outQueue_.size() > 0 || !m_is_running.load()); });
+
+        if (!m_is_running.load()) {
+            decodeLog("wait to stop, exit");
+            break;
+        }
+
+        uint32_t index = m_signal->outQueue_.front();
+        OH_AVCodecBufferAttr attr = m_signal->attrQueue_.front();
+        OH_AVMemory *data = m_signal->outBufferQueue_.front();
+        lock.unlock();
+
+        if (attr.flags == AVCODEC_BUFFER_FLAGS_EOS) {
+            //outFrameCount
+            decodeLog("decode eos, write frame: ${public}d");
+            m_is_running.store(false);
+        }
+        // 输入到文件
+//        if ( OH_VideoDecoder_FreeOutputData(m_decoder, index) != AV_ERR_OK) {
+//             decodeLog("Fatal: FreeOutputData fail");
+//            break;
+//        }
+        // 显示
+//        if ( OH_VideoDecoder_RenderOutputData(m_decoder, index) != AV_ERR_OK) {
+//            decodeLog("Fatal: RenderOutputData fail");
+//            break;
+//        }
+        lock.lock();
+        m_signal->outBufferQueue_.pop();
+        m_signal->attrQueue_.pop();
+        m_signal->outQueue_.pop();
+    }
+}
+
 int NativeVideoDecoder::submitDecodeUnit(PDECODE_UNIT du) {
 
     if (m_frames_in == 0 && du->frameType != FRAME_TYPE_IDR) {
@@ -123,12 +272,12 @@ int NativeVideoDecoder::submitDecodeUnit(PDECODE_UNIT du) {
         // 配置 buffer info 信息
         OH_AVCodecBufferAttr *m_packet;
         m_packet->offset = 0;
-        //m_packet->pts = &m_ffmpeg_buffer;
+        // m_packet->pts = &m_ffmpeg_buffer;
         m_packet->size = length;
         OH_AVErrCode err = OH_VideoDecoder_PushInputData(m_decoder, 0, *m_packet);
         if (err != 0) {
             char error[512];
-            //av_strerror(err, error, sizeof(error));
+            // av_strerror(err, error, sizeof(error));
             decodeLog("FFmpeg: Decode failed - %{public}s", error);
         } else if (err == 0) {
             m_frames_out++;
