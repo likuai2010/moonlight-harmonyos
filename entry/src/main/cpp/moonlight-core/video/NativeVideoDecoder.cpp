@@ -20,6 +20,18 @@ void decodeLog(const char *format, ...) {
 
 NativeVideoDecoder::NativeVideoDecoder() {}
 NativeVideoDecoder::~NativeVideoDecoder() {}
+static void OnError(OH_AVCodec *codec, int32_t errorCode, void *userData) {
+    (void)codec;
+    (void)errorCode;
+    (void)userData;
+    decodeLog("Error received, errorCode: %{public}d", errorCode);
+}
+static void OnOutputFormatChanged(OH_AVCodec *codec, OH_AVFormat *format, void *userData) {
+    (void)codec;
+    (void)format;
+    (void)userData;
+    decodeLog("OnOutputFormatChanged received");
+}
 
 static void OnInputBufferAvailable(OH_AVCodec *codec, uint32_t index, OH_AVMemory *data, void *userData) {
     (void)codec;
@@ -59,7 +71,7 @@ int NativeVideoDecoder::setup(DECODER_PARAMETERS *params) {
         m_decoder = OH_VideoDecoder_CreateByMime(OH_AVCODEC_MIMETYPE_VIDEO_AVC);
         break;
     case VIDEO_FORMAT_H265:
-        decodeLog(" Couldn't find decoder h256");
+        decodeLog(" Couldn't find decoder h265");
         m_decoder = OH_VideoDecoder_CreateByMime(OH_AVCODEC_MIMETYPE_VIDEO_AVC);
         break;
     }
@@ -67,13 +79,14 @@ int NativeVideoDecoder::setup(DECODER_PARAMETERS *params) {
         decodeLog(" Couldn't find decoder");
         return -1;
     }
+
     m_signal = new VDecSignal();
     OH_AVFormat *format = OH_AVFormat_Create();
     OH_AVFormat_SetIntValue(format, OH_MD_KEY_WIDTH, params->width);
     OH_AVFormat_SetIntValue(format, OH_MD_KEY_HEIGHT, params->height);
     OH_AVFormat_SetIntValue(format, OH_MD_KEY_PIXEL_FORMAT, AV_PIXEL_FORMAT_NV21);
     // 配置解码器
-    int dd = OH_VideoDecoder_Configure(m_decoder, format);
+    int err = OH_VideoDecoder_Configure(m_decoder, format);
     OH_AVFormat_Destroy(format);
     OH_AVCodecAsyncCallback callback = {
         .onNeedInputData = OnInputBufferAvailable,
@@ -81,12 +94,18 @@ int NativeVideoDecoder::setup(DECODER_PARAMETERS *params) {
     OH_VideoDecoder_SetCallback(m_decoder, callback, m_signal);
 
     // 配置送显窗口参数
-    // int32_t ret = OH_VideoDecoder_SetSurface(m_decoder, window);    // 从 XComponent 获取 window
+    // 从 XComponent 获取 window
+    if (params->context != nullptr) {
+        OHNativeWindow *window = static_cast<OHNativeWindow *>(params->context);
+        // 设置显示窗口
+        OH_VideoDecoder_SetSurface(m_decoder, window);
+    } else {
+        decodeLog(" Couldn't find set surface");
+    }
     bool isSurfaceMode = true;
     // 配置 buffer info 信息
     OH_AVCodecBufferAttr info;
 
-    // 开始解码
     return DR_OK;
 }
 
@@ -125,6 +144,9 @@ VIDEO_STATS *NativeVideoDecoder::video_decode_stats() {
 }
 
 int NativeVideoDecoder::ExtractPacket() {
+    m_pkt = m_signal->dataPacketQueue_.front();
+    m_signal->dataPacketQueue_.pop();
+    return 0;
 }
 // 解码现成
 void NativeVideoDecoder::inputFunc() {
@@ -198,20 +220,15 @@ void NativeVideoDecoder::outputFunc() {
         lock.unlock();
 
         if (attr.flags == AVCODEC_BUFFER_FLAGS_EOS) {
-            //outFrameCount
+            // outFrameCount
             decodeLog("decode eos, write frame: ${public}d");
             m_is_running.store(false);
         }
-        // 输入到文件
-//        if ( OH_VideoDecoder_FreeOutputData(m_decoder, index) != AV_ERR_OK) {
-//             decodeLog("Fatal: FreeOutputData fail");
-//            break;
-//        }
         // 显示
-//        if ( OH_VideoDecoder_RenderOutputData(m_decoder, index) != AV_ERR_OK) {
-//            decodeLog("Fatal: RenderOutputData fail");
-//            break;
-//        }
+        if (OH_VideoDecoder_RenderOutputData(m_decoder, index) != AV_ERR_OK) {
+            decodeLog("Fatal: RenderOutputData fail");
+            break;
+        }
         lock.lock();
         m_signal->outBufferQueue_.pop();
         m_signal->attrQueue_.pop();
@@ -263,35 +280,27 @@ int NativeVideoDecoder::submitDecodeUnit(PDECODE_UNIT du) {
         if (length > DECODER_BUFFER_SIZE) {
             decodeLog("FFmpeg: Big buffer to decode...");
         }
-        //    if (du->frameType == FRAME_TYPE_IDR) {
-        //        m_Pkt->flags = AV_PKT_FLAG_KEY;
-        //    }
-        //    else {
-        //        m_Pkt->flags = 0;
-        //    }
-        // 配置 buffer info 信息
-        OH_AVCodecBufferAttr *m_packet;
-        m_packet->offset = 0;
-        // m_packet->pts = &m_ffmpeg_buffer;
-        m_packet->size = length;
-        OH_AVErrCode err = OH_VideoDecoder_PushInputData(m_decoder, 0, *m_packet);
-        if (err != 0) {
-            char error[512];
-            // av_strerror(err, error, sizeof(error));
-            decodeLog("FFmpeg: Decode failed - %{public}s", error);
-        } else if (err == 0) {
-            m_frames_out++;
-            m_video_decode_stats.totalDecodeTime +=
-                LiGetMillis() - before_decode;
 
-            // Also count the frame-to-frame delay if the decoder is delaying
-            // frames until a subsequent frame is submitted.
-            m_video_decode_stats.totalDecodeTime +=
-                (m_frames_in - m_frames_out) * (1000 / m_stream_fps);
-            m_video_decode_stats.decodedFrames++;
-            // m_frame = get_frame(true);
-            //  AVFrameHolder::instance().push(m_frame);
+        DataPacket *pkt = {};
+        pkt->data = (uint8_t *)m_ffmpeg_buffer;
+        pkt->size = length;
+        if (du->frameType == FRAME_TYPE_IDR) {
+            pkt->flags = AVCODEC_BUFFER_FLAGS_INCOMPLETE_FRAME;
+        } else {
+            pkt->flags = 0;
         }
+        m_signal->dataPacketQueue_.push(pkt);
+        m_frames_out++;
+        m_video_decode_stats.totalDecodeTime +=
+            LiGetMillis() - before_decode;
+
+        // Also count the frame-to-frame delay if the decoder is delaying
+        // frames until a subsequent frame is submitted.
+        m_video_decode_stats.totalDecodeTime +=
+            (m_frames_in - m_frames_out) * (1000 / m_stream_fps);
+        m_video_decode_stats.decodedFrames++;
+        // m_frame = get_frame(true);
+        //  AVFrameHolder::instance().push(m_frame);
     } else {
         decodeLog("FFmpeg: Big buffer to decode... 2");
     }

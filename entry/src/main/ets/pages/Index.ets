@@ -8,10 +8,18 @@ const game = new Game()
 @Component
 struct Index {
   @State message: string = 'Hello World'
+  xComponentContext: object | undefined = undefined;
+
   build() {
     Column() {
       Column() {
-
+        XComponent({ id: 'xcomponentId1', type: 'surface', libraryname: 'nativerender' })
+          .onLoad((context) => {
+            this.xComponentContext = context
+          })
+          .onDestroy(() => {
+            console.log("onDestroy");
+          })
       }.margin({
         top: 10,
         left: 20,

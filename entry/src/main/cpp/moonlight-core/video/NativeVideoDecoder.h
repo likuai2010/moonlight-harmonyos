@@ -17,6 +17,21 @@
 #include <multimedia/player_framework/native_avcodec_base.h>
 #include <multimedia/player_framework/native_avformat.h>
 
+
+struct DataPacket{
+    uint8_t *data;
+        // 数据的大小（字节数）
+    int      size;
+    // 解码时间戳（DTS）
+    int64_t  pts;
+    // 演示时间戳（PTS）
+    int64_t  dts;
+    // 数据的持续时间
+    int  duration;
+    // 一些标志和辅助信息
+    int   flags;
+} ;
+
 class VDecSignal {
 public:
     std::mutex inMutex_;
@@ -28,21 +43,10 @@ public:
     std::queue<OH_AVMemory *> inBufferQueue_;
     std::queue<OH_AVMemory *> outBufferQueue_;
     std::queue<OH_AVCodecBufferAttr> attrQueue_;
+    std::queue<DataPacket *> dataPacketQueue_;
 };
 
-struct DataPacket{
-    uint8_t *data;
-        // 数据的大小（字节数）
-    int      size;
-    // 解码时间戳（DTS）
-    int64_t  pts;
-    // 演示时间戳（PTS）
-    int64_t  dts;
-    // 数据的持续时间
-    int      duration;
-    // 一些标志和辅助信息
-    int      flags;
-};
+
 
 class NativeVideoDecoder : IVideoDecoder {
   public:
@@ -62,6 +66,7 @@ class NativeVideoDecoder : IVideoDecoder {
     std::atomic<bool> m_is_running;
     VDecSignal *m_signal = nullptr;
     bool m_isFirst_frame = true;
+    
     std::unique_ptr<std::thread> m_inputLoop = nullptr;
     std::unique_ptr<std::thread> m_outputLoop = nullptr;
     DataPacket *m_pkt = nullptr;
