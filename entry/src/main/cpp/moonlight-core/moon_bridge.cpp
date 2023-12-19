@@ -5,12 +5,13 @@
 // please include "napi/native_api.h".
 
 #include "moon_bridge.h"
+#include <video/NativeVideoDecoder.h>
 
 #define NDEBUG
 #include <Limelight.h>
 #include "napi/native_api.h"
 #include <hilog/log.h>
-#include "video/decode.h"
+#include <ace/xcomponent/native_interface_xcomponent.h>
 
 IVideoDecoder *m_decoder = nullptr;
 
@@ -128,13 +129,12 @@ static CONNECTION_LISTENER_CALLBACKS BridgeConnListenerCallbacks = {
     .setControllerLED = BridgeClSetControllerLED,
 };
 
-
-char* get_value_string(napi_env env, napi_value value){
-     size_t length;
-     napi_get_value_string_utf8(env, value, nullptr, 0, &length);
-     char* buffer = (char*)malloc(length + 1);
-     napi_get_value_string_utf8(env, value, buffer, length + 1, &length);
-     return buffer;
+char *get_value_string(napi_env env, napi_value value) {
+    size_t length;
+    napi_get_value_string_utf8(env, value, nullptr, 0, &length);
+    char *buffer = (char *)malloc(length + 1);
+    napi_get_value_string_utf8(env, value, buffer, length + 1, &length);
+    return buffer;
 }
 
 struct BridgeCallbackInfo {
@@ -289,22 +289,40 @@ static napi_value MoonBridgeJavascriptClassConstructor(napi_env env, napi_callba
     return thisArg;
 }
 
-void MoonBridgeJavascriptClassInit(napi_env env, napi_value exports) {
-    napi_value one = nullptr;
-    napi_value two = nullptr;
-    napi_value three = nullptr;
-    napi_value four = nullptr;
+OH_NativeXComponent *nativeXComponent = nullptr;
 
-    napi_create_int32(env, TestEnum::ONE, &one);
-    napi_create_int32(env, TestEnum::TWO, &two);
-    napi_create_int32(env, TestEnum::THREE, &three);
-    napi_create_int32(env, TestEnum::FOUR, &four);
+
+void MoonBridgeJavascriptClassInit(napi_env env, napi_value exports) {
 
     napi_property_descriptor descriptors[] = {
         {"startConnection", nullptr, MoonBridge_startConnection, nullptr, nullptr, nullptr, napi_default, nullptr}};
     napi_value result = nullptr;
+    
     napi_define_class(env, "MoonBridgeNapi", NAPI_AUTO_LENGTH, MoonBridgeJavascriptClassConstructor, nullptr,
                       sizeof(descriptors) / sizeof(*descriptors), descriptors, &result);
 
     napi_set_named_property(env, exports, "MoonBridgeNapi", result);
+
+    napi_value exportInstance;
+    if (napi_get_named_property(env, exports, "__NATIVE_XCOMPONENT_OBJ__", &exportInstance) != napi_ok) {
+        OH_LOG_Print(LOG_APP, LOG_ERROR, 0, "PluginManager", "Export: napi_get_named_property fail");
+    } else {
+        OH_LOG_Print(LOG_APP, LOG_ERROR, 0, "PluginManager", "napi_get_named_property success");
+    }
+ 
+    if (napi_unwrap(env, exportInstance, reinterpret_cast<void **>(&nativeXComponent)) != napi_ok) {
+        OH_LOG_Print(LOG_APP, LOG_ERROR, 0, "PluginManager", "Export: napi_unwrap fail");
+    } else {
+        OH_LOG_Print(LOG_APP, LOG_ERROR, 0, "PluginManager", "Export: napi_unwrap success");
+      char idStr[OH_XCOMPONENT_ID_LEN_MAX + 1] = { '\0' };
+        uint64_t idSize = OH_XCOMPONENT_ID_LEN_MAX + 1;
+        if (OH_NativeXComponent_GetXComponentId(nativeXComponent, idStr, &idSize) != OH_NATIVEXCOMPONENT_RESULT_SUCCESS) {
+            OH_LOG_Print(
+                LOG_APP, LOG_ERROR, 0, "PluginManager", "Export: OH_NativeXComponent_GetXComponentId fail");
+            return;
+        }
+        OH_LOG_Print(
+                LOG_APP, LOG_ERROR, 0, "PluginManager", "%{publick}s", idStr);
+    }
+    
 }

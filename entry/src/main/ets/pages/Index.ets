@@ -1,5 +1,4 @@
 import hilog from '@ohos.hilog';
-import testNapi from 'libentry.so'
 
 import { Game } from 'ets/entryability/nvstream/Game'
 import { MoonBridge } from '../entryability/nvstream/MoonBridge';
@@ -13,8 +12,9 @@ struct Index {
   build() {
     Column() {
       Column() {
-        XComponent({ id: 'xcomponentId1', type: 'surface', libraryname: 'nativerender' })
-          .onLoad((context) => {
+        XComponent({ id: 'xcomponentId1', type: 'surface', libraryname: 'entry' })
+          .onLoad((context: any) => {
+            console.log("xxxxxx", context.add)
             this.xComponentContext = context
           })
           .onDestroy(() => {
@@ -32,10 +32,9 @@ struct Index {
           .fontWeight(FontWeight.Bold)
           .onClick(() => {
             this.message = "xxxx"
-
             //game.surfaceChanged()
             //mb.startConnection()
-            hilog.info(0x0000, 'testTag', `Test NAPI 2 + 3 = ${testNapi.add(1, 2, "2222")}`);
+            hilog.info(0x0000, 'testTag', `Test NAPI 2 + 3 = 1`);
 
             // if (this.xComponentContext) {
             //   this.xComponentContext.drawRectangle();

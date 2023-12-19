@@ -1,7 +1,9 @@
 #include "utils/http_curl.h"
 #include "napi/native_api.h"
 #include "moon_bridge.h"
+#include "hilog/log.h"
 #include "utils/x509Utils.h"
+#include <ace/xcomponent/native_interface_xcomponent.h>
 
 
 static napi_value Add(napi_env env, napi_callback_info info)
@@ -39,6 +41,8 @@ static napi_value Init(napi_env env, napi_value exports)
     status = napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc);
     if(status != napi_ok)
         return NULL;
+    
+    
     
     MoonBridgeJavascriptClassInit(env, exports);
     HttpCurlInit(env, exports);
