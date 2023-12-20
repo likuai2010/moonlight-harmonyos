@@ -60,6 +60,7 @@ ${CMAKE_CURRENT_SOURCE_DIR}/moonlight-common-c/enet/include
 )
 target_include_directories(entry PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg/include)
 target_link_libraries(entry PRIVATE
+ace_ndk.z.so
 libace_napi.z.so
 libhilog_ndk.z.so
 libnative_media_codecbase.so

@@ -5,6 +5,7 @@
 // please include "napi/native_api.h".
 
 #include "moon_bridge.h"
+#include <native_window/external_window.h>
 #include <video/NativeVideoDecoder.h>
 
 #define NDEBUG
@@ -14,6 +15,7 @@
 #include <ace/xcomponent/native_interface_xcomponent.h>
 
 IVideoDecoder *m_decoder = nullptr;
+void *nativewindow = nullptr;
 
 static napi_value MoonBridge_startConnection(napi_env env, napi_callback_info info);
 
@@ -22,19 +24,22 @@ int BridgeDrSetup(int videoFormat, int width, int height, int redrawRate, void *
     param.video_format = videoFormat;
     param.width = width;
     param.height = height;
-    param.context = context;
+    param.context = nativewindow;
     param.frame_rate = redrawRate;
     param.dr_flags = drFlags;
     return m_decoder->setup(&param);
 }
 
 void BridgeDrStart(void) {
+    m_decoder->start();
 }
 
 void BridgeDrStop(void) {
+     m_decoder->stop();
 }
 
 void BridgeDrCleanup(void) {
+    m_decoder->cleanup();
 }
 
 int BridgeDrSubmitDecodeUnit(PDECODE_UNIT decodeUnit) {
@@ -292,12 +297,27 @@ static napi_value MoonBridgeJavascriptClassConstructor(napi_env env, napi_callba
 OH_NativeXComponent *nativeXComponent = nullptr;
 
 
+static void OnSurfaceCreated(OH_NativeXComponent* component, void* window){
+    OH_LOG_Print(LOG_APP, LOG_INFO, LOG_DOMAIN, "testTag", "OnSurfaceCreated");
+    m_decoder = (IVideoDecoder *)new NativeVideoDecoder();
+    nativewindow = window;
+}
+static void OnSurfaceChanged(OH_NativeXComponent* component, void* window){
+     OH_LOG_Print(LOG_APP, LOG_INFO, LOG_DOMAIN, "testTag", "OnSurfaceChanged");
+}
+static void OnSurfaceDestroyed(OH_NativeXComponent* component, void* window){
+      OH_LOG_Print(LOG_APP, LOG_INFO, LOG_DOMAIN, "testTag", "OnSurfaceDestroyed");
+}
+static void DispatchTouchEvent(OH_NativeXComponent* component, void* window){
+     OH_LOG_Print(LOG_APP, LOG_INFO, LOG_DOMAIN, "testTag", "DispatchTouchEvent");
+}
+
 void MoonBridgeJavascriptClassInit(napi_env env, napi_value exports) {
 
     napi_property_descriptor descriptors[] = {
         {"startConnection", nullptr, MoonBridge_startConnection, nullptr, nullptr, nullptr, napi_default, nullptr}};
     napi_value result = nullptr;
-    
+
     napi_define_class(env, "MoonBridgeNapi", NAPI_AUTO_LENGTH, MoonBridgeJavascriptClassConstructor, nullptr,
                       sizeof(descriptors) / sizeof(*descriptors), descriptors, &result);
 
@@ -309,20 +329,26 @@ void MoonBridgeJavascriptClassInit(napi_env env, napi_value exports) {
     } else {
         OH_LOG_Print(LOG_APP, LOG_ERROR, 0, "PluginManager", "napi_get_named_property success");
     }
- 
+
     if (napi_unwrap(env, exportInstance, reinterpret_cast<void **>(&nativeXComponent)) != napi_ok) {
         OH_LOG_Print(LOG_APP, LOG_ERROR, 0, "PluginManager", "Export: napi_unwrap fail");
     } else {
         OH_LOG_Print(LOG_APP, LOG_ERROR, 0, "PluginManager", "Export: napi_unwrap success");
-      char idStr[OH_XCOMPONENT_ID_LEN_MAX + 1] = { '\0' };
+        char idStr[OH_XCOMPONENT_ID_LEN_MAX + 1] = {'\0'};
         uint64_t idSize = OH_XCOMPONENT_ID_LEN_MAX + 1;
         if (OH_NativeXComponent_GetXComponentId(nativeXComponent, idStr, &idSize) != OH_NATIVEXCOMPONENT_RESULT_SUCCESS) {
             OH_LOG_Print(
                 LOG_APP, LOG_ERROR, 0, "PluginManager", "Export: OH_NativeXComponent_GetXComponentId fail");
             return;
         }
+        OH_NativeXComponent_Callback callback = {
+            &OnSurfaceCreated,
+            &OnSurfaceChanged,
+            &OnSurfaceDestroyed
+        };
+        OH_NativeXComponent_RegisterCallback(nativeXComponent, &callback);
+        
         OH_LOG_Print(
-                LOG_APP, LOG_ERROR, 0, "PluginManager", "%{publick}s", idStr);
+            LOG_APP, LOG_ERROR, 0, "PluginManager", "%{publick}s", idStr);
     }
-    
 }
