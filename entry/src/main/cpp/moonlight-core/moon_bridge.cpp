@@ -14,12 +14,13 @@
 #include <hilog/log.h>
 #include <ace/xcomponent/native_interface_xcomponent.h>
 
-IVideoDecoder *m_decoder = nullptr;
-void *nativewindow = nullptr;
+static IVideoDecoder *m_decoder = nullptr;
+static void *nativewindow = nullptr;
 
 static napi_value MoonBridge_startConnection(napi_env env, napi_callback_info info);
 
 int BridgeDrSetup(int videoFormat, int width, int height, int redrawRate, void *context, int drFlags) {
+    OH_LOG_Print(LOG_APP, LOG_INFO, LOG_DOMAIN, "testTag", "BridgeDrSetup");
     DECODER_PARAMETERS param;
     param.video_format = videoFormat;
     param.width = width;
@@ -31,14 +32,17 @@ int BridgeDrSetup(int videoFormat, int width, int height, int redrawRate, void *
 }
 
 void BridgeDrStart(void) {
+    OH_LOG_Print(LOG_APP, LOG_INFO, LOG_DOMAIN, "testTag", "BridgeDrStart");
     m_decoder->start();
 }
 
 void BridgeDrStop(void) {
+    OH_LOG_Print(LOG_APP, LOG_INFO, LOG_DOMAIN, "testTag", "BridgeDrStop");
      m_decoder->stop();
 }
 
 void BridgeDrCleanup(void) {
+    OH_LOG_Print(LOG_APP, LOG_INFO, LOG_DOMAIN, "testTag", "BridgeDrCleanup");
     m_decoder->cleanup();
 }
 
@@ -294,23 +298,24 @@ static napi_value MoonBridgeJavascriptClassConstructor(napi_env env, napi_callba
     return thisArg;
 }
 
-OH_NativeXComponent *nativeXComponent = nullptr;
+
 
 
 static void OnSurfaceCreated(OH_NativeXComponent* component, void* window){
-    OH_LOG_Print(LOG_APP, LOG_INFO, LOG_DOMAIN, "testTag", "OnSurfaceCreated");
+    OH_LOG_Print(LOG_APP, LOG_INFO, LOG_DOMAIN, "PluginManager", "OnSurfaceCreated");
     m_decoder = (IVideoDecoder *)new NativeVideoDecoder();
     nativewindow = window;
 }
 static void OnSurfaceChanged(OH_NativeXComponent* component, void* window){
-     OH_LOG_Print(LOG_APP, LOG_INFO, LOG_DOMAIN, "testTag", "OnSurfaceChanged");
+     OH_LOG_Print(LOG_APP, LOG_INFO, LOG_DOMAIN, "PluginManager", "OnSurfaceChanged");
 }
 static void OnSurfaceDestroyed(OH_NativeXComponent* component, void* window){
-      OH_LOG_Print(LOG_APP, LOG_INFO, LOG_DOMAIN, "testTag", "OnSurfaceDestroyed");
+      OH_LOG_Print(LOG_APP, LOG_INFO, LOG_DOMAIN, "PluginManager", "OnSurfaceDestroyed");
 }
 static void DispatchTouchEvent(OH_NativeXComponent* component, void* window){
-     OH_LOG_Print(LOG_APP, LOG_INFO, LOG_DOMAIN, "testTag", "DispatchTouchEvent");
+     OH_LOG_Print(LOG_APP, LOG_INFO, LOG_DOMAIN, "PluginManager", "DispatchTouchEvent");
 }
+static OH_NativeXComponent_Callback callback ;
 
 void MoonBridgeJavascriptClassInit(napi_env env, napi_value exports) {
 
@@ -329,7 +334,7 @@ void MoonBridgeJavascriptClassInit(napi_env env, napi_value exports) {
     } else {
         OH_LOG_Print(LOG_APP, LOG_ERROR, 0, "PluginManager", "napi_get_named_property success");
     }
-
+    OH_NativeXComponent *nativeXComponent = nullptr;
     if (napi_unwrap(env, exportInstance, reinterpret_cast<void **>(&nativeXComponent)) != napi_ok) {
         OH_LOG_Print(LOG_APP, LOG_ERROR, 0, "PluginManager", "Export: napi_unwrap fail");
     } else {
@@ -341,14 +346,19 @@ void MoonBridgeJavascriptClassInit(napi_env env, napi_value exports) {
                 LOG_APP, LOG_ERROR, 0, "PluginManager", "Export: OH_NativeXComponent_GetXComponentId fail");
             return;
         }
-        OH_NativeXComponent_Callback callback = {
-            &OnSurfaceCreated,
-            &OnSurfaceChanged,
-            &OnSurfaceDestroyed
-        };
-        OH_NativeXComponent_RegisterCallback(nativeXComponent, &callback);
-        
         OH_LOG_Print(
-            LOG_APP, LOG_ERROR, 0, "PluginManager", "%{publick}s", idStr);
+                    LOG_APP, LOG_ERROR, 0, "PluginManager", "GetXComponentId %{public}s", idStr);
+       
+        callback.OnSurfaceCreated = OnSurfaceCreated;
+         callback.OnSurfaceChanged = OnSurfaceChanged;
+        callback.OnSurfaceDestroyed = OnSurfaceDestroyed;
+        callback.DispatchTouchEvent = DispatchTouchEvent;
+        if(nativeXComponent != nullptr){
+           int eer = OH_NativeXComponent_RegisterCallback(nativeXComponent, &callback);
+             OH_LOG_Print(
+            LOG_APP, LOG_ERROR, 0, "PluginManager", "RegisterCallback success %{public}d", eer);
+        }
+        
+       
     }
 }

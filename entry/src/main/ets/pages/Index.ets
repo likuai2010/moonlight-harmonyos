@@ -32,7 +32,7 @@ struct Index {
           .fontWeight(FontWeight.Bold)
           .onClick(() => {
             this.message = "xxxx"
-            //game.surfaceChanged()
+            game.surfaceChanged()
             //mb.startConnection()
             hilog.info(0x0000, 'testTag', `Test NAPI 2 + 3 = 1`);
 

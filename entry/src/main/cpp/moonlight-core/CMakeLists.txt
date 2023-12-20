@@ -63,9 +63,13 @@ target_link_libraries(entry PRIVATE
 ace_ndk.z.so
 libace_napi.z.so
 libhilog_ndk.z.so
+
 libnative_media_codecbase.so
 libnative_media_core.so
 libnative_media_vdec.so
 libcurl
-libz.so)
+libuv.so
+libz.so
+libc++.a
+)
 

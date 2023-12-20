@@ -62,16 +62,17 @@ static void OnOutputBufferAvailable(OH_AVCodec *codec, uint32_t index, OH_AVMemo
 int NativeVideoDecoder::setup(DECODER_PARAMETERS *params) {
     m_stream_fps = params->frame_rate;
     decodeLog(
-        "Setup with format: {}, width: {}, height: {}, fps: {}",
+        "Setup with format: %{public}s, width: %{public}d, height: %{public}d, fps: %{public}d",
         params->video_format == VIDEO_FORMAT_H264 ? "H264" : "HEVC",
         params->width, params->height,
         params->frame_rate);
     switch (params->video_format) {
     case VIDEO_FORMAT_H264:
+         decodeLog("  find decoder 264");
         m_decoder = OH_VideoDecoder_CreateByMime(OH_AVCODEC_MIMETYPE_VIDEO_AVC);
         break;
     case VIDEO_FORMAT_H265:
-        decodeLog(" Couldn't find decoder h265");
+        decodeLog(" find decoder HEVC");
         m_decoder = OH_VideoDecoder_CreateByMime(OH_AVCODEC_MIMETYPE_VIDEO_AVC);
         break;
     }

@@ -211,7 +211,6 @@ export class NvConnection {
           return false;
         }
         else if (e.getErrorCode() == 525) {
-
           context.connListener.displayMessage("The application is minimized. Resume it on the PC manually or " +
           "quit the session and start streaming again.");
           return false;
@@ -219,8 +218,9 @@ export class NvConnection {
           hilog.info(0x0000, "testTag", "err")
           throw Error(e);
         }
+        hilog.info(0x0000, "testTag", e.toString())
       }
-      hilog.info(0x0000, "testTag", "Resumed existing game session")
+      hilog.info(0x0000, "testTag", "Resumed existing game session ", )
       return true;
     }
     else {

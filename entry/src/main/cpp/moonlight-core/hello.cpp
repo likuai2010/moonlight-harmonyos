@@ -1,9 +1,8 @@
 #include "utils/http_curl.h"
 #include "napi/native_api.h"
 #include "moon_bridge.h"
-#include "hilog/log.h"
 #include "utils/x509Utils.h"
-#include <ace/xcomponent/native_interface_xcomponent.h>
+#include "hilog/log.h"
 
 
 static napi_value Add(napi_env env, napi_callback_info info)
@@ -29,12 +28,58 @@ static napi_value Add(napi_env env, napi_callback_info info)
 
 
 EXTERN_C_START
+
+napi_value GetContext(napi_env env, napi_callback_info info)
+{
+    if ((env == nullptr) || (info == nullptr)) {
+        OH_LOG_Print(LOG_APP, LOG_INFO, LOG_DOMAIN, "PluginManager", "GetContext env or info is null");
+        return nullptr;
+    }
+
+    size_t argCnt = 1;
+    napi_value args[1] = { nullptr };
+    if (napi_get_cb_info(env, info, &argCnt, args, nullptr, nullptr) != napi_ok) {
+        OH_LOG_Print(LOG_APP, LOG_INFO, LOG_DOMAIN,  "PluginManager", "GetContext napi_get_cb_info failed");
+    }
+
+    if (argCnt != 1) {
+        napi_throw_type_error(env, NULL, "Wrong number of arguments");
+        return nullptr;
+    }
+
+    napi_valuetype valuetype;
+    if (napi_typeof(env, args[0], &valuetype) != napi_ok) {
+        napi_throw_type_error(env, NULL, "napi_typeof failed");
+        return nullptr;
+    }
+
+    if (valuetype != napi_number) {
+        napi_throw_type_error(env, NULL, "Wrong type of arguments");
+        return nullptr;
+    }
+
+    int64_t value;
+    if (napi_get_value_int64(env, args[0], &value) != napi_ok) {
+        napi_throw_type_error(env, NULL, "napi_get_value_int64 failed");
+        return nullptr;
+    }
+
+    napi_value exports;
+    if (napi_create_object(env, &exports) != napi_ok) {
+        napi_throw_type_error(env, NULL, "napi_create_object failed");
+        return nullptr;
+    }
+
+    return exports;
+}
+
 static napi_value Init(napi_env env, napi_value exports)
 {
     napi_status status;
     
     napi_property_descriptor desc[] = {
         { "add", nullptr, Add, nullptr, nullptr, nullptr, napi_default, nullptr },
+        { "getContext", nullptr, GetContext, nullptr, nullptr, nullptr, napi_default, nullptr },
         { "generate_x509_certificate", nullptr, generate_certificate, nullptr, nullptr, nullptr, napi_default, nullptr },
     };
     
