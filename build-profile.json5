@@ -1,6 +1,20 @@
 {
   "app": {
-    "signingConfigs": [],
+    "signingConfigs": [
+      {
+        "name": "default",
+        "type": "HarmonyOS",
+        "material": {
+          "certpath": "C:\\Users\\Administrator\\.ohos\\config\\auto_debug_moonlight_com.example.moonlight_2850086000506643987.cer",
+          "storePassword": "0000001B6F4922208C76022114DDC419404D56545BAB4892D3FCF66706EA873B67195C246CCAEE7675D2D9",
+          "keyAlias": "debugKey",
+          "keyPassword": "0000001BD1D23D90AD8873A0C377289BC09C8542CAEB2C7A87B4E094203BB13E364F75326AC3B6263B5219",
+          "profile": "C:\\Users\\Administrator\\.ohos\\config\\auto_debug_moonlight_com.example.moonlight_2850086000506643987.p7b",
+          "signAlg": "SHA256withECDSA",
+          "storeFile": "C:\\Users\\Administrator\\.ohos\\config\\auto_debug_moonlight_com.example.moonlight_2850086000506643987.p12"
+        }
+      }
+    ],
     "compileSdkVersion": 9,
     "compatibleSdkVersion": 9,
     "products": [

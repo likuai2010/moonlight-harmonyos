@@ -29,6 +29,8 @@ add_library(libcurl STATIC IMPORTED)
 set_target_properties(libcurl PROPERTIES IMPORTED_LOCATION ${CURL_DIR}/${CMAKE_OHOS_ARCH_ABI}/libcurl.a)
 set_target_properties(libcurl PROPERTIES INTERFACE_INCLUDE_DIRECTORIES ${CURL_INCLUDE_DIR})
 
+add_library(ffmpeg SHARED IMPORTED)
+set_target_properties(ffmpeg PROPERTIES IMPORTED_LOCATION ${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg/${CMAKE_OHOS_ARCH_ABI}/libohosffmpeg.z.so)
 
 
 
@@ -38,6 +40,7 @@ add_subdirectory(moonlight-common-c)
 
 add_library(entry SHARED
 hello.cpp
+video/FFmpegVideoDecoder.cpp
 video/NativeVideoDecoder.cpp
 moon_bridge.cpp
 utils/x509Utils.cpp
@@ -59,14 +62,17 @@ ${CMAKE_CURRENT_SOURCE_DIR}/moonlight-common-c/reedsolomon
 ${CMAKE_CURRENT_SOURCE_DIR}/moonlight-common-c/enet/include
 )
 target_include_directories(entry PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg/include)
+#libnative_media_codecbase.so
+# libnative_media_core.so
+ #libnative_media_vdec.so
 target_link_libraries(entry PRIVATE
 ace_ndk.z.so
 libace_napi.z.so
 libhilog_ndk.z.so
-
 libnative_media_codecbase.so
-libnative_media_core.so
-libnative_media_vdec.so
+ libnative_media_core.so
+ libnative_media_vdec.so
+ffmpeg
 libcurl
 libuv.so
 libz.so

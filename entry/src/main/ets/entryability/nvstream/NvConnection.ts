@@ -45,6 +45,7 @@ export class NvConnection {
         this.context.connListener.stageFailed(appName, 0, 0);
         return;
       }
+      hilog.info(0x0000, "testTag", "start end")
       this.context.connListener.stageComplete(appName);
     } catch (e) {
       hilog.info(0x0000, "testTag", "start error" + e)
@@ -61,10 +62,19 @@ export class NvConnection {
       this.context.connListener.stageFailed(appName, 0, 0);
       return;
     }
+    hilog.info(0x0000, "testTag", "create rikey")
+    let rikeyId:Uint8Array = null;
+    try {
+      const dd = buffer.alloc(16)
+      hilog.info(0x0000, "testTag", "riKeyId " + context.riKeyId)
+      dd.writeUInt32BE(context.riKeyId)
+      rikeyId = new Uint8Array(dd.buffer)
+    }catch (e){
+      hilog.info(0x0000, "testTag", "error: " + e)
+      return ;
+    }
 
-    const dd = buffer.alloc(16)
-    dd.writeInt32BE(context.riKeyId)
-    const rikeyId = new Uint8Array(dd.buffer)
+
     // Moonlight-core is not thread-safe with respect to connection start and stop, so
     // we must not invoke that functionality in parallel.
     //MoonBridge.api.setupBridge(videoDecoderRenderer, audioRenderer, connectionListener);

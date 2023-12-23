@@ -6,7 +6,7 @@
 
 #include "moon_bridge.h"
 #include <native_window/external_window.h>
-#include <video/NativeVideoDecoder.h>
+#include <video/FFmpegVideoDecoder.h>
 
 #define NDEBUG
 #include <Limelight.h>
@@ -303,7 +303,10 @@ static napi_value MoonBridgeJavascriptClassConstructor(napi_env env, napi_callba
 
 static void OnSurfaceCreated(OH_NativeXComponent* component, void* window){
     OH_LOG_Print(LOG_APP, LOG_INFO, LOG_DOMAIN, "PluginManager", "OnSurfaceCreated");
-    m_decoder = (IVideoDecoder *)new NativeVideoDecoder();
+    // 需要 api 9 没有真机测试
+    //m_decoder = (IVideoDecoder *)new NativeVideoDecoder();
+    // 软解码 ffmpeg cpu
+    m_decoder = (IVideoDecoder *) new FFmpegVideoDecoder();
     nativewindow = window;
 }
 static void OnSurfaceChanged(OH_NativeXComponent* component, void* window){

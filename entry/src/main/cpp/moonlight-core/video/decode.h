@@ -28,7 +28,8 @@ typedef struct _VIDEO_STATS {
     float decodedFps;
     float renderedFps;
     uint32_t measurementStartTimestamp;
-} VIDEO_STATS, *PVIDEO_STATS;
+} VIDEO_STATS;
+
 enum VideoDecoderSelection
 {
     VDS_AUTO,
