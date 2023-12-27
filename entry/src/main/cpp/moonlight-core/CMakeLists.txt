@@ -40,11 +40,15 @@ add_subdirectory(moonlight-common-c)
 
 add_library(entry SHARED
 hello.cpp
-video/FFmpegVideoDecoder.cpp
-video/NativeVideoDecoder.cpp
+Shader.cpp
 moon_bridge.cpp
 utils/x509Utils.cpp
 utils/http_curl.cpp
+video/AVFrameHolder.cpp
+video/FFmpegVideoDecoder.cpp
+video/NativeVideoDecoder.cpp
+video/render/eglRender.cpp
+video/render/plugin_render.cpp
 )
 
 
@@ -74,6 +78,8 @@ libnative_media_codecbase.so
  libnative_media_vdec.so
 ffmpeg
 libcurl
+EGL.so
+GLESv3.so
 libuv.so
 libz.so
 libc++.a

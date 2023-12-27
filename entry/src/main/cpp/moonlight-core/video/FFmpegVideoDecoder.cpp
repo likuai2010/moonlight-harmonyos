@@ -8,21 +8,16 @@
 #include <hilog/log.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "video/AVFrameHolder.h"
+#define ffDecodeLog(...)  OH_LOG_Print(LOG_APP, LOG_INFO, LOG_DOMAIN, "testTag", __VA_ARGS__);
 
-void ffDecodeLog(const char *format, ...) {
-    va_list va;
-    va_start(va, format);
-    OH_LOG_Print(LOG_APP, LOG_INFO, LOG_DOMAIN, "testTag", format, va);
-    va_end(va);
-}
 
 #define DECODER_BUFFER_SIZE 92 * 1024 * 2
-
 
 FFmpegVideoDecoder::FFmpegVideoDecoder() {}
 FFmpegVideoDecoder::~FFmpegVideoDecoder() {}
 
-int FFmpegVideoDecoder::setup(DECODER_PARAMETERS* params) {
+int FFmpegVideoDecoder::setup(DECODER_PARAMETERS *params) {
 
     m_stream_fps = params->frame_rate;
     ffDecodeLog(
@@ -39,7 +34,7 @@ int FFmpegVideoDecoder::setup(DECODER_PARAMETERS* params) {
     int perf_lvl = LOW_LATENCY_DECODE;
     switch (params->video_format) {
     case VIDEO_FORMAT_H264:
-      m_decoder = avcodec_find_decoder_by_name("h264");
+        m_decoder = avcodec_find_decoder_by_name("h264");
         break;
     case VIDEO_FORMAT_H265:
         m_decoder = avcodec_find_decoder_by_name("hevc");
@@ -170,7 +165,7 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du) {
         int length = 0;
         while (entry != NULL) {
             if (length > DECODER_BUFFER_SIZE) {
-                //decodeLog("FFmpeg: Big buffer to decode... !");
+                // decodeLog("FFmpeg: Big buffer to decode... !");
             }
             memcpy(m_ffmpeg_buffer + length, entry->data, entry->length);
             length += entry->length;
@@ -189,8 +184,7 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du) {
         }
         if (du->frameType == FRAME_TYPE_IDR) {
             m_packet->flags = AV_PKT_FLAG_KEY;
-        }
-        else {
+        } else {
             m_packet->flags = 0;
         }
         if (decode(m_ffmpeg_buffer, length) == 0) {
@@ -205,8 +199,13 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du) {
             m_video_decode_stats.decodedFrames++;
 
             m_frame = get_frame(true);
-            ffDecodeLog("frame data %{public}d", sizeof(m_frame->data));
-            // AVFrameHolder::instance().push(m_frame);
+            if (m_frame->format == AV_PIX_FMT_YUV420P) {
+                ffDecodeLog("frame format is  AV_PIX_FMT_YUV420P");
+            } else {
+                ffDecodeLog("frame format %{public}d", m_frame->format);
+            }
+            ffDecodeLog("frame size %{public}d X %{public}d", m_frame->width, m_frame->height);
+            AVFrameHolder::GetInstance()->push(m_frame);
         }
     } else {
         ffDecodeLog("FFmpeg: Big buffer to decode... 2");

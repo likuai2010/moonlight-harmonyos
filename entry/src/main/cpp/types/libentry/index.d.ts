@@ -1,4 +1,7 @@
 export const add: (a: number, b: number) => number;
+export const drawRectangle:()=> number;
+export const loadYuv:(file: string)=> number;
+export const drawLine:()=> number;
 
 export const generate_x509_certificate: (a: string, b: string) => number;
 

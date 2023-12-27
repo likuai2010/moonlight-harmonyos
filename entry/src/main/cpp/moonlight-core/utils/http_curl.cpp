@@ -7,8 +7,9 @@
 #include "http_curl.h"
 #include "moonlight-core/moon_bridge.h"
 #include <curl/easy.h>
+#include <stdlib.h>
+#include "string.h"
 #include "napi/native_api.h"
-#include <string>
 
 struct AsyncCallbackInfo {
     napi_env env;

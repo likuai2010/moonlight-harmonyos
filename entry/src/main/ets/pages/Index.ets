@@ -7,7 +7,7 @@ const game = new Game()
 @Component
 struct Index {
   @State message: string = 'Hello World'
-  xComponentContext: object | undefined = undefined;
+  xComponentContext: any | undefined = undefined;
 
   build() {
     Column() {
@@ -27,18 +27,30 @@ struct Index {
       })
       .height("33.3%")
       Row() {
-        Button("开始绘制")
+        Button("save stream")
           .fontSize(50)
           .fontWeight(FontWeight.Bold)
           .onClick(() => {
-            this.message = "xxxx"
+            this.message = "save stream"
             game.surfaceChanged()
-            //mb.startConnection()
-            hilog.info(0x0000, 'testTag', `Test NAPI 2 + 3 = 1`);
-
-            // if (this.xComponentContext) {
-            //   this.xComponentContext.drawRectangle();
-            // }
+          })
+        Button("stream")
+          .fontSize(50)
+          .fontWeight(FontWeight.Bold)
+          .onClick(() => {
+            this.message = "stream"
+            if (this.xComponentContext) {
+              this.xComponentContext.loadYuv("/data/storage/el2/base/haps/entry/cache/stream.yuv");
+            }
+          })
+        Button("video1_640_272")
+          .fontSize(50)
+          .fontWeight(FontWeight.Bold)
+          .onClick(() => {
+            this.message = "video1_640_272"
+            if (this.xComponentContext) {
+              this.xComponentContext.loadYuv("/data/storage/el2/base/haps/entry/cache/video1_640_272.yuv");
+            }
           })
       }
       .width('100%')

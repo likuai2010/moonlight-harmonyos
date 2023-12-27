@@ -26,7 +26,7 @@ class FFmpegVideoDecoder : public IVideoDecoder {
     void cleanup() override;
     int submitDecodeUnit(PDECODE_UNIT decode_unit) override;
     VIDEO_STATS* video_decode_stats() override;
-
+    AVFrame* m_frame = nullptr;
   private:
     int decode(char* indata, int inlen);
     int m_stream_fps = 0;
@@ -47,8 +47,6 @@ class FFmpegVideoDecoder : public IVideoDecoder {
     
     AVFrame** m_frames = nullptr;
     AVFrame *tmp_frame = nullptr;
-    
-    AVFrame* m_frame = nullptr;
 };
 
 #endif //moonlight_VideoDecoder_H

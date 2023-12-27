@@ -3,6 +3,8 @@ import hilog from '@ohos.hilog';
 import window from '@ohos.window';
 import { LimelightCertProvider } from './crypto/LimelightCryptoProvider';
 import fileIo from '@ohos.file.fs';
+import inputDevice from '@ohos.multimodalInput.inputDevice';
+import InputEvent from '@ohos.multimodalInput.inputEvent';
 
 
 export default class EntryAbility extends UIAbility {
@@ -28,6 +30,15 @@ export default class EntryAbility extends UIAbility {
           console.log(d+"");
         })
     })
+
+    hilog.info(0x0000, 'testTag', `filesDir ${this.context.filesDir}`);
+    hilog.info(0x0000, 'testTag', `distributedFilesDir ${this.context.distributedFilesDir}`);
+    this.context.resourceManager.getRawFd('video1_640_272.yuv').then((i)=>{
+      fileIo.copyFile(i.fd, this.context.cacheDir + "/video1_640_272.yuv")
+        .then((d)=>{
+          console.log(d+ "");
+        })
+    })
     LimelightCertProvider.filesDir = this.context.cacheDir
     windowStage.loadContent('pages/Index', (err, data) => {
       if (err.code) {
@@ -36,6 +47,25 @@ export default class EntryAbility extends UIAbility {
       }
       hilog.info(0x0000, 'testTag', 'Succeeded in loading the content. Data: %{public}s', JSON.stringify(data) ?? '');
     });
+
+    try {
+      InputEvent
+      inputDevice.getDeviceList((error, ids) => {
+        ids.forEach((d)=>{
+          inputDevice.getDeviceInfo(d, (error, deviceData) => {
+            console.log(`Device info: ${JSON.stringify(deviceData)}`);
+            if(deviceData.name == "BSP-D8 Consumer Control"){
+              inputDevice.on("change",(d)=>{
+
+              })
+            }
+          });
+        })
+        hilog.info(0x0000, 'testTag',`Device id list: ${JSON.stringify(ids)}`);
+      });
+    } catch (error) {
+      hilog.info(0x0000, 'testTag',`Failed to get device id list, error: ${JSON.stringify(error, [`code`, `message`])}`);
+    }
   }
 
   onWindowStageDestroy() {

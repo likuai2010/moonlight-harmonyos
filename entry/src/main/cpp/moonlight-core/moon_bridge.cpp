@@ -13,9 +13,14 @@
 #include "napi/native_api.h"
 #include <hilog/log.h>
 #include <ace/xcomponent/native_interface_xcomponent.h>
+#include "video/render/plugin_render.h"
+#include "video/AVFrameHolder.h"
+#include <unistd.h>
 
-static IVideoDecoder *m_decoder = nullptr;
-static void *nativewindow = nullptr;
+static FFmpegVideoDecoder *m_decoder = nullptr;
+
+void *MoonBridge::nativewindow = nullptr;
+static FILE *fo = fopen("/data/storage/el2/base/haps/entry/cache/stream.yuv", "wb+");
 
 static napi_value MoonBridge_startConnection(napi_env env, napi_callback_info info);
 
@@ -25,7 +30,7 @@ int BridgeDrSetup(int videoFormat, int width, int height, int redrawRate, void *
     param.video_format = videoFormat;
     param.width = width;
     param.height = height;
-    param.context = nativewindow;
+    param.context = MoonBridge::nativewindow;
     param.frame_rate = redrawRate;
     param.dr_flags = drFlags;
     return m_decoder->setup(&param);
@@ -38,7 +43,7 @@ void BridgeDrStart(void) {
 
 void BridgeDrStop(void) {
     OH_LOG_Print(LOG_APP, LOG_INFO, LOG_DOMAIN, "testTag", "BridgeDrStop");
-     m_decoder->stop();
+    m_decoder->stop();
 }
 
 void BridgeDrCleanup(void) {
@@ -47,9 +52,7 @@ void BridgeDrCleanup(void) {
 }
 
 int BridgeDrSubmitDecodeUnit(PDECODE_UNIT decodeUnit) {
-    OH_LOG_Print(LOG_APP, LOG_INFO, LOG_DOMAIN, "testTag", "BridgeDrSubmitDecodeUnit");
-    m_decoder->submitDecodeUnit(decodeUnit);
-    return 0;
+    return m_decoder->submitDecodeUnit(decodeUnit);
 }
 
 int BridgeArInit(int audioConfiguration, POPUS_MULTISTREAM_CONFIGURATION opusConfig, void *context, int flags) {
@@ -149,6 +152,7 @@ char *get_value_string(napi_env env, napi_value value) {
 struct BridgeCallbackInfo {
     SERVER_INFORMATION serverInfo;
     STREAM_CONFIGURATION streamConfig;
+    EglVideoRenderer* render;
     napi_async_work asyncWork;
 };
 
@@ -243,12 +247,16 @@ static napi_value MoonBridge_startConnection(napi_env env, napi_callback_info in
     memcpy(streamConfig.remoteInputAesIv, riAesIv, sizeof(streamConfig.remoteInputAesIv));
 
     BridgeVideoRendererCallbacks.capabilities = videoCapabilities;
-
+   
+     EglVideoRenderer *render = new EglVideoRenderer();
     BridgeCallbackInfo *bridgeCallbackInfo = new BridgeCallbackInfo{
         .serverInfo = serverInfo,
-        .streamConfig = streamConfig};
+        .streamConfig = streamConfig,
+        .render = render
+    };
     napi_value resourceName;
     napi_create_string_latin1(env, "GetRequest", NAPI_AUTO_LENGTH, &resourceName);
+     
     napi_create_async_work(
         env, nullptr, resourceName,
         [](napi_env env, void *data) {
@@ -261,9 +269,21 @@ static napi_value MoonBridge_startConnection(napi_env env, napi_callback_info in
                                         nullptr, 0,
                                         nullptr, 0);
             OH_LOG_Print(LOG_APP, LOG_INFO, LOG_DOMAIN, "testTag", "start con -> %{public}d", ret);
+                        DECODER_PARAMETERS params;
+                        params.context = MoonBridge::nativewindow;
+                        params.width = 1280;
+                        params.height = 720;
+                        info->render->initialize(&params);
+                            while (true) {
+                                 AVFrameHolder::GetInstance()->get([info](AVFrame *frame) {
+                                        info->render->renderFrame(frame);
+                                });
+                                usleep(100000 / 120);
+                            }
         },
         [](napi_env env, napi_status status, void *data) {
             BridgeCallbackInfo *info = (BridgeCallbackInfo *)data;
+         
             napi_delete_async_work(env, info->asyncWork);
             delete info;
         },
@@ -298,29 +318,13 @@ static napi_value MoonBridgeJavascriptClassConstructor(napi_env env, napi_callba
     return thisArg;
 }
 
-
-
-
-static void OnSurfaceCreated(OH_NativeXComponent* component, void* window){
-    OH_LOG_Print(LOG_APP, LOG_INFO, LOG_DOMAIN, "PluginManager", "OnSurfaceCreated");
-    // 需要 api 9 没有真机测试
-    //m_decoder = (IVideoDecoder *)new NativeVideoDecoder();
-    // 软解码 ffmpeg cpu
-    m_decoder = (IVideoDecoder *) new FFmpegVideoDecoder();
-    nativewindow = window;
-}
-static void OnSurfaceChanged(OH_NativeXComponent* component, void* window){
-     OH_LOG_Print(LOG_APP, LOG_INFO, LOG_DOMAIN, "PluginManager", "OnSurfaceChanged");
-}
-static void OnSurfaceDestroyed(OH_NativeXComponent* component, void* window){
-      OH_LOG_Print(LOG_APP, LOG_INFO, LOG_DOMAIN, "PluginManager", "OnSurfaceDestroyed");
-}
-static void DispatchTouchEvent(OH_NativeXComponent* component, void* window){
-     OH_LOG_Print(LOG_APP, LOG_INFO, LOG_DOMAIN, "PluginManager", "DispatchTouchEvent");
-}
-static OH_NativeXComponent_Callback callback ;
+static OH_NativeXComponent_Callback callback;
 
 void MoonBridgeJavascriptClassInit(napi_env env, napi_value exports) {
+    // 需要 api 9 没有真机测试
+    // m_decoder = (IVideoDecoder *)new NativeVideoDecoder();
+    // 软解码 ffmpeg cpu
+    m_decoder = new FFmpegVideoDecoder();
 
     napi_property_descriptor descriptors[] = {
         {"startConnection", nullptr, MoonBridge_startConnection, nullptr, nullptr, nullptr, napi_default, nullptr}};
@@ -350,18 +354,16 @@ void MoonBridgeJavascriptClassInit(napi_env env, napi_value exports) {
             return;
         }
         OH_LOG_Print(
-                    LOG_APP, LOG_ERROR, 0, "PluginManager", "GetXComponentId %{public}s", idStr);
-       
-        callback.OnSurfaceCreated = OnSurfaceCreated;
-         callback.OnSurfaceChanged = OnSurfaceChanged;
-        callback.OnSurfaceDestroyed = OnSurfaceDestroyed;
-        callback.DispatchTouchEvent = DispatchTouchEvent;
-        if(nativeXComponent != nullptr){
-           int eer = OH_NativeXComponent_RegisterCallback(nativeXComponent, &callback);
-             OH_LOG_Print(
-            LOG_APP, LOG_ERROR, 0, "PluginManager", "RegisterCallback success %{public}d", eer);
+            LOG_APP, LOG_ERROR, 0, "PluginManager", "GetXComponentId %{public}s", idStr);
+
+        if (nativeXComponent != nullptr) {
+            int eer = OH_NativeXComponent_RegisterCallback(nativeXComponent, &PluginRender::m_callback);
+            OH_LOG_Print(
+                LOG_APP, LOG_ERROR, 0, "PluginManager", "RegisterCallback success %{public}d", eer);
         }
-        
-       
+        std::string id(idStr);
+        PluginRender *pr = PluginRender::GetInstance(id);
+
+        pr->Export(env, exports);
     }
 }
