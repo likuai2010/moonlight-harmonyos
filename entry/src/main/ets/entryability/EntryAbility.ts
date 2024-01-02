@@ -12,6 +12,7 @@ export default class EntryAbility extends UIAbility {
     hilog.info(0x0000, 'testTag', '%{public}s', 'Ability onCreate');
   }
 
+
   onDestroy() {
     hilog.info(0x0000, 'testTag', '%{public}s', 'Ability onDestroy');
   }
@@ -19,6 +20,8 @@ export default class EntryAbility extends UIAbility {
   onWindowStageCreate(windowStage: window.WindowStage) {
     // Main window is created, set main page for this ability
     hilog.info(0x0000, 'testTag', '%{public}s', 'Ability onWindowStageCreate');
+    let names = [];
+    windowStage.getMainWindowSync().setWindowSystemBarEnable(names)
     this.context.resourceManager.getRawFd('client.pem').then((i)=>{
       fileIo.copyFile(i.fd, this.context.cacheDir + "/client.pem").then((d)=>{
         console.log(d+"");

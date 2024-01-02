@@ -10,22 +10,15 @@ struct Index {
   xComponentContext: any | undefined = undefined;
 
   build() {
-    Column() {
-      Column() {
-        XComponent({ id: 'xcomponentId1', type: 'surface', libraryname: 'entry' })
-          .onLoad((context: any) => {
-            console.log("xxxxxx", context.add)
-            this.xComponentContext = context
-          })
-          .onDestroy(() => {
-            console.log("onDestroy");
-          })
-      }.margin({
-        top: 10,
-        left: 20,
-        right:30,
-      })
-      .height("33.3%")
+    Stack({ alignContent: Alignment.Top }){
+      XComponent({ id: 'xcomponentId1', type: 'surface', libraryname: 'entry' })
+        .onLoad((context: any) => {
+          console.log("xxxxxx", context.add)
+          this.xComponentContext = context
+        })
+        .onDestroy(() => {
+          console.log("onDestroy");
+        }).borderWidth(0).height("100%").width('100%')
       Row() {
         Button("save stream")
           .fontSize(50)
@@ -34,27 +27,10 @@ struct Index {
             this.message = "save stream"
             game.surfaceChanged()
           })
-        Button("stream")
-          .fontSize(50)
-          .fontWeight(FontWeight.Bold)
-          .onClick(() => {
-            this.message = "stream"
-            if (this.xComponentContext) {
-              this.xComponentContext.loadYuv("/data/storage/el2/base/haps/entry/cache/stream.yuv");
-            }
-          })
-        Button("video1_640_272")
-          .fontSize(50)
-          .fontWeight(FontWeight.Bold)
-          .onClick(() => {
-            this.message = "video1_640_272"
-            if (this.xComponentContext) {
-              this.xComponentContext.loadYuv("/data/storage/el2/base/haps/entry/cache/video1_640_272.yuv");
-            }
-          })
+
       }
-      .width('100%')
-    }
+    }.backgroundColor(Color.Black)
+    .width('100%')
     .height('100%')
   }
 }

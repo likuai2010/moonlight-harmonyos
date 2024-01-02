@@ -43,6 +43,7 @@
         "startWindowIcon": "$media:icon",
         "startWindowBackground": "$color:start_window_background",
         "exported": true,
+        "orientation": "landscape",
         "skills": [
           {
             "entities": [

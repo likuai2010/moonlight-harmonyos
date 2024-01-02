@@ -8,10 +8,58 @@
 #include "hilog/log.h"
 #include "video/common/common.h"
 #include "Shader.h"
-#include "FragmentShader.h"
 
 #include <multimedia/player_framework/native_avcodec_videodecoder.h>
 #define eglLog(level, ...) OH_LOG_Print(LOG_APP, level, LOG_DOMAIN, "EglCore", __VA_ARGS__)
+
+static const char *fragYUV420P =
+        "#version 300 es\n"
+
+        "precision mediump float;\n"
+        "//纹理坐标\n"
+        "in vec2 vTextCoord;\n"
+        "//输入的yuv三个纹理\n"
+        "uniform sampler2D yTexture;//采样器\n"
+        "uniform sampler2D uTexture;//采样器\n"
+        "uniform sampler2D vTexture;//采样器\n"
+        "out vec4 FragColor;\n"
+        "void main() {\n"
+        "//采样到的yuv向量数据\n"
+        "   vec3 yuv;\n"
+        "//yuv转化得到的rgb向量数据\n"
+        "    vec3 rgb;\n"
+        "    //分别取yuv各个分量的采样纹理\n"
+        "    yuv.x = texture(yTexture, vTextCoord).r;\n"
+        "   yuv.y = texture(uTexture, vTextCoord).g - 0.5;\n"
+        "    yuv.z = texture(vTexture, vTextCoord).b - 0.5;\n"
+        "   rgb = mat3(\n"
+        "            1.0, 1.0, 1.0,\n"
+        "            0.0, -0.183, 1.816,\n"
+        "            1.540, -0.459, 0.0\n"
+        "    ) * yuv;\n"
+        "    //gl_FragColor是OpenGL内置的\n"
+        "    FragColor = vec4(rgb, 1.0);\n"
+        " }";
+
+static const char *vertexShaderWithMatrix =
+        "        #version 300 es\n"
+        "        layout (location = 0) \n"
+        "        in vec4 aPosition;//输入的顶点坐标，会在程序指定将数据输入到该字段\n"//如果传入的向量是不够4维的，自动将前三个分量设置为0.0，最后一个分量设置为1.0
+
+        "        layout (location = 1) \n"
+        "        in vec2 aTextCoord;//输入的纹理坐标，会在程序指定将数据输入到该字段\n"
+        "\n"
+        "        out\n"
+        "        vec2 vTextCoord;//输出的纹理坐标;\n"
+        "        uniform mat4 uMatrix;"//变换矩阵
+        "\n"
+        "        void main() {\n"
+        "            //这里其实是将上下翻转过来（因为安卓图片会自动上下翻转，所以转回来）\n"
+        "             vTextCoord = vec2(aTextCoord.x, 1.0 - aTextCoord.y);\n"
+        "            //直接把传入的坐标值作为传入渲染管线。gl_Position是OpenGL内置的\n"
+        //    "            gl_Position = aPosition;\n"
+        "            gl_Position = aPosition;\n"
+        "        }";
 
 static const char *texture_mappings[] = {"ymap", "umap", "vmap"};
 static const float vertices[] = {-1.0f, -1.0f, 1.0f, -1.0f,
@@ -138,8 +186,8 @@ bool EglVideoRenderer::initialize(DECODER_PARAMETERS *params) {
     GLuint aTex = static_cast<GLuint>(glGetAttribLocation(m_program, "aTextCoord"));
     glEnableVertexAttribArray(aTex);
     glVertexAttribPointer(aTex, 2, GL_FLOAT, GL_FALSE, 0, fragment);
-    int width = 1280;
-    int height = 720;
+    int width = this->m_width;
+    int height = this->m_height;
     glUniform1i(glGetUniformLocation(m_program, "yTexture"), 0);
     glUniform1i(glGetUniformLocation(m_program, "uTexture"), 1);
     glUniform1i(glGetUniformLocation(m_program, "vTexture"), 2);
@@ -203,14 +251,6 @@ bool EglVideoRenderer::initialize(DECODER_PARAMETERS *params) {
                  GL_UNSIGNED_BYTE, // 像素点存储的数据类型
                  NULL              // 纹理的数据（先不传）
     );
-    // 旋转theta
-    float theta = 0 * M_PI / 180;
-
-    // 先缩小到0.5倍，然后逆时针旋转45度，最后x,y方向分别平移0.5个单位
-    float arr[16] = {0.5f * cos(theta), -0.5f * sin(theta), 0.0, 0.0, 0.5f * sin(theta),
-                     0.5f * cos(theta), 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.5, 0.5, 0.0, 1.0};
-    GLint uScaleMatrixLocation = glGetUniformLocation(m_program, "uMatrix");
-    glUniformMatrix4fv(uScaleMatrixLocation, 1, GL_FALSE, arr);
     return true;
 }
 
