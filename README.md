@@ -19,8 +19,13 @@ MoonlightHarmonyos是基于开源项目moonlight-stream-android的HarmonyOS版�
 我们的目标是在HarmonyOS生态系统中建立一个优秀的游戏流式服务，为用户提供出色的游戏体验。我们的愿景是让MoonlightHarmonyos成为HarmonyOS平台上流行的游戏流媒体解决方案之一。
 
 ## 最新进展
+**2024年1月最新进展：**
 
-**2023年12月最新进展：**
+- 支持软解码,硬解码已实现 (没有真机(需要Api9的harmonyos4的手机)测试)
+- 键盘手柄支持(需要harmonyos next 更新支持)
+- 音频渲染(进行中)
+- 加密配对(进行中)
+**2023年12月进展：**
 
 - 完成了HarmonyOS平台的初步适配工作。
 - 已成功整合moonlight-stream-android的关键功能。
