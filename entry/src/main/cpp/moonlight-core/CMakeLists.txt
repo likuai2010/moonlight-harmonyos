@@ -33,7 +33,7 @@ add_library(ffmpeg SHARED IMPORTED)
 set_target_properties(ffmpeg PROPERTIES IMPORTED_LOCATION ${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg/${CMAKE_OHOS_ARCH_ABI}/libohosffmpeg.z.so)
 
 
-
+add_subdirectory(opus)
 add_subdirectory(moonlight-common-c)
 
 
