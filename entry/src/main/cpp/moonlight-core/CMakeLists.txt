@@ -46,7 +46,7 @@ utils/x509Utils.cpp
 utils/http_curl.cpp
 video/AVFrameHolder.cpp
 video/FFmpegVideoDecoder.cpp
-video/NativeVideoDecoder.cpp
+#video/NativeVideoDecoder.cpp
 video/render/eglRender.cpp
 video/render/plugin_render.cpp
 )
@@ -66,16 +66,14 @@ ${CMAKE_CURRENT_SOURCE_DIR}/moonlight-common-c/reedsolomon
 ${CMAKE_CURRENT_SOURCE_DIR}/moonlight-common-c/enet/include
 )
 target_include_directories(entry PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg/include)
-#libnative_media_codecbase.so
-# libnative_media_core.so
- #libnative_media_vdec.so
+
 target_link_libraries(entry PRIVATE
 ace_ndk.z.so
 libace_napi.z.so
 libhilog_ndk.z.so
-libnative_media_codecbase.so
- libnative_media_core.so
- libnative_media_vdec.so
+#libnative_media_codecbase.so
+# libnative_media_core.so
+#libnative_media_vdec.so
 ffmpeg
 libcurl
 EGL.so

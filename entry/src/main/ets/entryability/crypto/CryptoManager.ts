@@ -2,10 +2,10 @@ import cryptoCert from '@ohos.security.cert';
 import crypto from '@ohos.security.cryptoFramework';
 import { NvHttp } from '../http/NvHttp';
 import Buffer from '@ohos.buffer';
+import { verify_signature } from 'libentry.so'
 
 export interface PairingHashAlgorithm {
   getHashLength(): number
-
   hashData(data: Uint8Array): Promise<Uint8Array>
 }
 
@@ -46,15 +46,16 @@ export async function signData(data: Uint8Array, key: crypto.PriKey): Promise<Ui
   }
 }
 
-export async function verifySignature(data: Uint8Array, signature: Uint8Array, key: crypto.PubKey): Promise<boolean> {
-  try {
-    const verify = crypto.createVerify('RSA2048|PKCS1|SHA256')
-    // der
-    await verify.init(key);
-    return (await verify.verify({ data }, { data: signature }));
-  } catch (e) {
-    throw new Error(e);
-  }
+export async function verifySignature(data: Uint8Array, signature: Uint8Array, key: Uint8Array): Promise<boolean> {
+  return verify_signature(data, signature, key)
+  // try {
+  //   const verify = crypto.createVerify('RSA2048|PKCS1|SHA256')
+  //   // der
+  //   await verify.init(key);
+  //   return (await verify.verify({ data }, { data: signature }));
+  // } catch (e) {
+  //   throw new Error(e);
+  // }
 }
 
 export async function generateRandomBytes(length: number): Promise<Uint8Array> {
@@ -89,15 +90,23 @@ export async function generateCertKeyPair() {
   const keyPair = await asy.generateKeyPair()
 
 }
-
-export async function extractPlainCert(text: string): Promise<cryptoCert.X509Cert> {
+export async function extractPlainCertBytes(text: string): Promise<Uint8Array> {
   // Plaincert may be null if another client is already trying to pair
   const certText = NvHttp.getXmlString(text, "plaincert", false);
   if (certText != null) {
-    const certBytes = hexToBytes(certText);
+    return hexToBytes(certText);
+  }
+  else {
+    return null;
+  }
+}
+
+export async function extractPlainCert(bytes: Uint8Array): Promise<cryptoCert.X509Cert> {
+  // Plaincert may be null if another client is already trying to pair
+  if (bytes != null) {
     try {
       return await cryptoCert.createX509Cert({
-        data: certBytes,
+        data: bytes,
         encodingFormat: cryptoCert.EncodingFormat.FORMAT_PEM
       })
     }

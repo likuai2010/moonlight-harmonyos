@@ -8,7 +8,8 @@ import {
   decryptAes,
   encryptAes,
   extractPlainCert,
-  generateRandomBytes,
+extractPlainCertBytes,
+generateRandomBytes,
   hexToBytes,
   PairingHashAlgorithm,
   Sha1PairingHash,
@@ -54,8 +55,8 @@ export class PairingManager {
       return PairState.FAILED;
     }
     // Save this cert for retrieval later
-    this.serverCert = await extractPlainCert(getCert);
-
+    const serverCertBytes = await extractPlainCertBytes(getCert);
+    this.serverCert = await extractPlainCert(serverCertBytes);
     // Generate a random challenge and encrypt it with our AES key
     const randomChallenge = await generateRandomBytes(16);
     const encryptedChallenge = await encryptAes(randomChallenge, aesKey);
@@ -89,7 +90,7 @@ export class PairingManager {
     const serverSecret = serverSecretResp.slice(0, 16)
     const serverSignature = serverSecretResp.slice(16, serverSecretResp.length)
     // Ensure the authenticity of the data
-    if (!await verifySignature(serverSecret, serverSignature, this.serverCert.getPublicKey())) {
+    if (!await verifySignature(serverSecret, serverSignature, serverCertBytes)) {
       // Cancel the pairing process
       //http.unpair();
       // Looks like a MITM
