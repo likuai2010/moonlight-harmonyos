@@ -40,7 +40,6 @@ struct BridgeCallbackInfo {
 
 static napi_value loadYuv(napi_env env, napi_callback_info info) {
     EglVideoRenderer *render = new EglVideoRenderer();
-   
 
     BridgeCallbackInfo *bridgeCallbackInfo = new BridgeCallbackInfo{
         .render = render};
@@ -125,6 +124,7 @@ static napi_value Init(napi_env env, napi_value exports) {
         {"loadYuv", nullptr, loadYuv, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"getContext", nullptr, GetContext, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"generate_x509_certificate", nullptr, generate_certificate, nullptr, nullptr, nullptr, napi_default, nullptr},
+        {"verifySignature", nullptr, verifySignature, nullptr, nullptr, nullptr, napi_default, nullptr},
     };
 
     status = napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc);

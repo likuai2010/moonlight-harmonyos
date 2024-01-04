@@ -14,19 +14,6 @@
 
 #include <moon_bridge.h>
 
-napi_value generate_certificate(napi_env env, napi_callback_info info)
-{
-    size_t argc = 2;
-    napi_value args[2] = {nullptr};
-
-    napi_get_cb_info(env, info, &argc, args , nullptr, nullptr);
-
-    char* certPath = get_value_string(env, args[0]);
-    char* keyPath = get_value_string(env, args[1]);
-    generate_x509_certificate(certPath, keyPath);
-    return 0;
-}
-
 void THROW_BAD_ALLOC_IF_NULL(void *target) {
     if (target == nullptr) {
         ERR_print_errors_fp(stderr);
@@ -69,7 +56,7 @@ EVP_PKEY *generateKey() {
     return pk;
 }
 
-int generate_x509_certificate(char* cert_path, char* key_path) {
+int generate_x509_certificate(char *cert_path, char *key_path) {
     EVP_PKEY *pk = nullptr;
     X509 *cert = nullptr;
     FILE *cert_file = nullptr;
@@ -121,7 +108,7 @@ int generate_x509_certificate(char* cert_path, char* key_path) {
     ret = PEM_write_PrivateKey(key_file, pk, nullptr, nullptr, 0, nullptr, nullptr);
     fclose(key_file);
     FILE *key_cer_file = nullptr;
-    key_cer_file = fopen(strcat(key_path, ".cer") , "w");
+    key_cer_file = fopen(strcat(key_path, ".cer"), "w");
     ret = i2d_PrivateKey_fp(key_cer_file, pk);
     fclose(key_cer_file);
 
@@ -134,3 +121,77 @@ int generate_x509_certificate(char* cert_path, char* key_path) {
 
     return 0;
 }
+
+napi_value generate_certificate(napi_env env, napi_callback_info info) {
+    size_t argc = 2;
+    napi_value args[2] = {nullptr};
+
+    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+
+    char *certPath = get_value_string(env, args[0]);
+    char *keyPath = get_value_string(env, args[1]);
+    generate_x509_certificate(certPath, keyPath);
+    return 0;
+}
+napi_value verifySignature(napi_env env, napi_callback_info info) {
+    size_t argc = 3;
+    napi_value args[3] = {nullptr};
+    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    void* data;
+    void* signature;
+    void* serverCertificate;
+    size_t dataLength;
+    size_t signatureLength;
+    size_t serverCertificateLength;
+    napi_get_typedarray_info(
+            env,
+            args[0],
+            nullptr,
+            &dataLength,
+            &data,
+            nullptr, // 可选的 ArrayBuffer
+            nullptr  // 可选的偏移
+        );
+    napi_get_typedarray_info(
+        env,
+        args[1],
+        nullptr,
+        &signatureLength,
+        &signature,
+        nullptr, // 可选的 ArrayBuffer
+        nullptr  // 可选的偏移
+    );
+    napi_get_typedarray_info(
+        env,
+        args[2],
+        nullptr,
+        &serverCertificateLength,
+        &serverCertificate,
+        nullptr, // 可选的 ArrayBuffer
+        nullptr  // 可选的偏移
+    );
+    BIO *bio = BIO_new_mem_buf(serverCertificate, serverCertificateLength);
+    THROW_BAD_ALLOC_IF_NULL(bio);
+
+    X509 *cert = PEM_read_bio_X509(bio, nullptr, nullptr, nullptr);
+    BIO_free_all(bio);
+
+    EVP_PKEY *pubKey = X509_get_pubkey(cert);
+    THROW_BAD_ALLOC_IF_NULL(pubKey);
+
+    EVP_MD_CTX *mdctx = EVP_MD_CTX_create();
+    THROW_BAD_ALLOC_IF_NULL(mdctx);
+
+    EVP_DigestVerifyInit(mdctx, nullptr, EVP_sha256(), nullptr, pubKey);
+    EVP_DigestVerifyUpdate(mdctx, data, dataLength);
+    int result = EVP_DigestVerifyFinal(mdctx, reinterpret_cast<unsigned char *>(signature), signatureLength);
+
+    EVP_PKEY_free(pubKey);
+    EVP_MD_CTX_destroy(mdctx);
+    X509_free(cert);
+    napi_value ret;
+    napi_get_boolean(env, result > 0, &ret);
+    return ret;
+}
+
+
