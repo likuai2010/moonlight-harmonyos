@@ -31,6 +31,9 @@ export class PairingManager {
 
 
   public async pair(serverInfo: string, pin: string): Promise<PairState> {
+    const aaa = await generateRandomBytes(16);
+    const signaa = await signData(aaa, this.clientCert.key)
+    const ddd = concatBytes(aaa, signaa)
      const serverMajorVersion = this.http.getServerMajorVersion(serverInfo);
      console.log("Pairing with server generation: " + serverMajorVersion);
      let hashAlgo: PairingHashAlgorithm;
@@ -77,6 +80,7 @@ export class PairingManager {
 
     // Using another 16 bytes secret, compute a challenge response hash using the secret, our cert sig, and the challenge
     const clientSecret = await generateRandomBytes(16);
+
     const challengeRespHash = await hashAlgo.hashData(concatBytes(concatBytes(serverChallenge, this.clientCert.cert.getSignature().data), clientSecret));
     const challengeRespEncrypted = await encryptAes(challengeRespHash, aesKey);
 
@@ -97,8 +101,10 @@ export class PairingManager {
       return PairState.FAILED;
     }
     // Ensure the server challenge matched what we expected (aka the PIN was correct)
-    const serverChallengeRespHash = await hashAlgo.hashData(concatBytes(concatBytes(randomChallenge, this.serverCert.getSignature().data), serverSecret));
-    if (serverChallengeRespHash.every((value, index) => value === serverResponse[index])) {
+    const dd = concatBytes(randomChallenge, this.serverCert.getSignature().data)
+    const hash = concatBytes(dd, serverSecret)
+    const serverChallengeRespHash = await hashAlgo.hashData(hash);
+    if (!serverChallengeRespHash.every((value, index) => value === serverResponse[index])) {
       // Cancel the pairing process
       //http.unpair();
 
@@ -106,7 +112,8 @@ export class PairingManager {
       return PairState.PIN_WRONG;
     }
     // Send the server our signed secret
-    const clientPairingSecret = concatBytes(clientSecret, await signData(clientSecret, this.clientCert.key));
+    const sign = await signData(clientSecret, this.clientCert.key)
+    const clientPairingSecret = concatBytes(clientSecret, sign);
     const clientSecretResp = await this.http.executePairingCommand("clientpairingsecret=" + bytesToHex(clientPairingSecret), true);
     if (NvHttp.getXmlString(clientSecretResp, "paired", true) !== '1') {
        //http.unpair();

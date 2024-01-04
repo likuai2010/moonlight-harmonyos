@@ -5,6 +5,8 @@ export const drawLine:()=> number;
 
 export const generate_x509_certificate: (a: string, b: string) => number;
 export const verify_signature: (a: Uint8Array, b: Uint8Array, c: Uint8Array) => boolean;
+export const sign_message: (message: Uint8Array, key: Uint8Array,) => Uint8Array;
+
 
 export declare class CurlClient {
   close()

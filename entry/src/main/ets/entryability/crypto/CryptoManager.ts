@@ -2,7 +2,7 @@ import cryptoCert from '@ohos.security.cert';
 import crypto from '@ohos.security.cryptoFramework';
 import { NvHttp } from '../http/NvHttp';
 import Buffer from '@ohos.buffer';
-import { verify_signature } from 'libentry.so'
+import { sign_message, verify_signature } from 'libentry.so'
 
 export interface PairingHashAlgorithm {
   getHashLength(): number
@@ -37,10 +37,11 @@ export class Sha256PairingHash implements PairingHashAlgorithm {
 
 export async function signData(data: Uint8Array, key: crypto.PriKey): Promise<Uint8Array> {
   try {
+    return sign_message(data, key.getEncoded().data)
     // der
-    const sign = crypto.createSign("RSA2048|PKCS1|SHA256")
-    await sign.init(key)
-    return (await sign.sign({ data })).data;
+    // const sign = crypto.createSign("RSA2048|PKCS1|SHA256")
+    // await sign.init(key)
+    // return (await sign.sign({ data })).data;
   } catch (e) {
     throw new Error(e);
   }
@@ -137,7 +138,7 @@ export function hexToBytes(hex: string) {
 export function concatBytes(a: Uint8Array, b: Uint8Array): Uint8Array {
  const dd = Buffer.allocUninitialized(a.length + b.length)
   dd.fill(a)
-  dd.fill(b)
+  dd.fill(b, a.length)
   return new Uint8Array(dd.buffer);
 }
 
