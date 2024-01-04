@@ -11,6 +11,7 @@ set(CURL_INCLUDE_DIR ${CURL_DIR}/include)
 include_directories(
 ${CMAKE_CURRENT_SOURCE_DIR}
 ${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg/include
+${CMAKE_CURRENT_SOURCE_DIR}/opus/include
 ${OPENSSL_INCLUDE_DIR}
 ${CURL_INCLUDE_DIR}
 )
@@ -55,6 +56,7 @@ video/render/plugin_render.cpp
 target_link_libraries(entry PRIVATE
 libssl
 libcrypto
+opus
 moonlight-common-c
 )
 
@@ -62,9 +64,11 @@ target_include_directories(entry SYSTEM PRIVATE
 ${CMAKE_CURRENT_SOURCE_DIR}
 ${OPENSSL_INCLUDE_DIR}
 ${CURL_INCLUDE_DIR}
+${CMAKE_CURRENT_SOURCE_DIR}/opus/include
 ${CMAKE_CURRENT_SOURCE_DIR}/moonlight-common-c/reedsolomon
 ${CMAKE_CURRENT_SOURCE_DIR}/moonlight-common-c/enet/include
 )
+
 target_include_directories(entry PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg/include)
 
 target_link_libraries(entry PRIVATE

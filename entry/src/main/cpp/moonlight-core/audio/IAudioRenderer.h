@@ -4,9 +4,12 @@
 // Node APIs are not fully supported. To solve the compilation error of the interface cannot be found,
 // please include "napi/native_api.h".
 
-#ifndef moonlight-harmonyos_IAudioRenderer_H
-#define moonlight-harmonyos_IAudioRenderer_H
+#ifndef moonlight_harmonyos_IAudioRenderer_H
+#define moonlight_harmonyos_IAudioRenderer_H
+extern "C" {
 #include <Limelight.h>
+}
+#pragma once
 
 class IAudioRenderer {
   public:
@@ -21,6 +24,5 @@ class IAudioRenderer {
                                         int sample_length) = 0;
     virtual int capabilities() = 0;
 };
-
 
 #endif //moonlight-harmonyos_IAudioRenderer_H
