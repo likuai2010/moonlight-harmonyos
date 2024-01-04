@@ -38,7 +38,6 @@ export class NvHttp {
 
   constructor(address: AddressTuple,
               httpsPort: number,
-              uniqueId: String = "",
               serverCert: any = null,
               cryptoProvider: LimelightCertProvider = null
   ) {

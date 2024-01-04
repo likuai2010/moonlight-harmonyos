@@ -11,6 +11,12 @@ export declare class CurlClient {
 }
 
 export declare class MoonBridgeNapi {
+  on(key:string, callback:(any:any)=> void)
+  getStageName(stage: number):string
+  onBridgeClStageStarting(callback:(stage:string)=> void)
+  onBridgeClStageComplete(callback:(stage:string)=> void)
+  onBridgeClStageFailed(callback:(stage:string)=> void)
+
   startConnection(
     address: string, appVersion: string, gfeVersion: string,
     rtspSessionUrl: string, serverCodecModeSupport: number,

@@ -1,9 +1,9 @@
-import { NvConnectionListener } from './ConnetionListener';
-import { AddressTuple } from '../http/ComputerDetails';
-import { NvApp } from '../http/NvApp';
-import { NvHttp } from '../http/NvHttp';
-import { NvConnection } from './NvConnection';
-import { StreamConfiguration } from './StreamConfiguration';
+import { NvConnectionListener } from './nvstream/ConnetionListener';
+import { AddressTuple } from './http/ComputerDetails';
+import { NvApp } from './http/NvApp';
+import { NvHttp } from './http/NvHttp';
+import { NvConnection } from './nvstream/NvConnection';
+import { StreamConfiguration } from './nvstream/StreamConfiguration';
 
 
 export class Game implements NvConnectionListener {
@@ -81,7 +81,6 @@ export class Game implements NvConnectionListener {
   }
 
   async surfaceChanged() {
-    await this.conn.start(null,
-      null, this);
+    await this.conn.start( this);
   }
 }

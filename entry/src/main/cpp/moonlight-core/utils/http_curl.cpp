@@ -29,9 +29,17 @@ size_t write_callback(void *contents, size_t size, size_t nmemb, void *output) {
     AsyncCallbackInfo *response_data = static_cast<AsyncCallbackInfo *>(output);
      if (contents == nullptr)
             return 0;
-    response_data->result = new char[total_size + 1];
-    memcpy(response_data->result, contents, total_size);
-    response_data->result[total_size] = '\0';
+    size_t destSize = (response_data->result != nullptr) ? strlen(response_data->result) : 0;
+    char* temp = new char[destSize + total_size + 1];
+   
+    if (response_data->result != nullptr) {
+        memcpy(temp, response_data->result, destSize);
+    }
+    memcpy(temp + destSize, contents, total_size);
+     temp[destSize + total_size] = '\0';
+    delete[] response_data->result;
+   
+    response_data->result = temp;
     return total_size;
 }
 
@@ -91,7 +99,7 @@ napi_value GetRequest(napi_env env, napi_callback_info info) {
         .timeout = timeout,
         .clientPath = clientPath,
         .keyPath = keyPath,
-        .result = (char*)malloc(1)
+        .result = nullptr
     };
     napi_value resourceName;
     napi_create_string_latin1(env, "GetRequest", NAPI_AUTO_LENGTH, &resourceName);

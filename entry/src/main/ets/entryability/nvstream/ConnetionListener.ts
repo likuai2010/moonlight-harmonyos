@@ -1,4 +1,4 @@
-export  interface NvConnectionListener {
+export interface NvConnectionListener {
   stageStarting(stage: string): void;
   stageComplete(stage: string): void;
   stageFailed(stage: string, portFlags: number, errorCode: number): void;

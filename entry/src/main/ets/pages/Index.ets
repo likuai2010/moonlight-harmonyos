@@ -1,35 +1,48 @@
 import hilog from '@ohos.hilog';
+import router from '@ohos.router';
+import { LimelightCertProvider } from '../entryability/crypto/LimelightCryptoProvider';
+import { AddressTuple } from '../entryability/http/ComputerDetails';
+import { NvHttp } from '../entryability/http/NvHttp';
 
-import { Game } from 'ets/entryability/nvstream/Game'
-import { MoonBridge } from '../entryability/nvstream/MoonBridge';
-const game = new Game()
+
 @Entry
 @Component
 struct Index {
-  @State message: string = 'Hello World'
-  xComponentContext: any | undefined = undefined;
+  @State textValue: string = ''
+
+  onCancel() {
+    console.info('Callback when the first button is clicked')
+  }
+
+  onAccept() {
+    console.info('Callback when the second button is clicked')
+  }
 
   build() {
     Stack({ alignContent: Alignment.Top }){
-      XComponent({ id: 'xcomponentId1', type: 'surface', libraryname: 'entry' })
-        .onLoad((context: any) => {
-          console.log("xxxxxx", context.add)
-          this.xComponentContext = context
-        })
-        .onDestroy(() => {
-          console.log("onDestroy");
-        }).borderWidth(0).height("100%").width('100%')
       Row() {
-        Button("save stream")
+        Button("start")
           .fontSize(50)
           .fontWeight(FontWeight.Bold)
           .onClick(() => {
-            this.message = "save stream"
-            game.surfaceChanged()
+            router.pushUrl({ url:"pages/GamePage" })
           })
-
+        Button("pair")
+          .fontSize(50)
+          .fontWeight(FontWeight.Bold)
+          .onClick(async  () => {
+            try {
+              const lime = new LimelightCertProvider()
+              await lime.initCertKeyPair()
+              const http = new NvHttp(new AddressTuple("192.168.3.5", 47989), 47984, null, lime)
+              const server = await http.getServerInfo(true)
+              await http.pm.pair(server, "12345")
+            }catch (e){
+              console.log(e);
+            }
+          })
       }
-    }.backgroundColor(Color.Black)
+    }
     .width('100%')
     .height('100%')
   }

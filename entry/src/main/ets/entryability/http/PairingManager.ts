@@ -30,20 +30,18 @@ export class PairingManager {
 
 
   public async pair(serverInfo: string, pin: string): Promise<PairState> {
-    // const serverMajorVersion = this.http.getServerMajorVersion(serverInfo);
-    // console.log("Pairing with server generation: " + serverMajorVersion);
-    // let hashAlgo: PairingHashAlgorithm;
-    // if (serverMajorVersion >= 7) {
-    //   // Gen 7+ uses SHA-256 hashing
-    //   hashAlgo = new Sha256PairingHash();
-    // } else {
-    //   // Prior to Gen 7, SHA-1 is used
-    //   hashAlgo = new Sha1PairingHash();
-    // }
+     const serverMajorVersion = this.http.getServerMajorVersion(serverInfo);
+     console.log("Pairing with server generation: " + serverMajorVersion);
+     let hashAlgo: PairingHashAlgorithm;
+    if (serverMajorVersion >= 7) {
+      // Gen 7+ uses SHA-256 hashing
+      hashAlgo = new Sha256PairingHash();
+    } else {
+      // Prior to Gen 7, SHA-1 is used
+      hashAlgo = new Sha1PairingHash();
+    }
     // Generate a salt for hashing the PIN
-    //const salt = await generateRandomBytes(16);
-    const hashAlgo = new Sha256PairingHash();
-    const salt = new Uint8Array([81, 147, 106, 77, 42, 136, 160, 234, 163, 158, 210, 150, 55, 48, 190, 163])
+    const salt = await generateRandomBytes(16);
     // Combine the salt and pin, then create an AES key from them
     const aesKey = await this.generateAesKey(hashAlgo, this.saltPin(salt, pin));
     // Send the salt and get the server cert. This doesn't have a read timeout
@@ -91,12 +89,12 @@ export class PairingManager {
     const serverSecret = serverSecretResp.slice(0, 16)
     const serverSignature = serverSecretResp.slice(16, serverSecretResp.length)
     // Ensure the authenticity of the data
-    // if (!await verifySignature(serverSecret, serverSignature, this.serverCert.getPublicKey())) {
-    //   // Cancel the pairing process
-    //   //http.unpair();
-    //   // Looks like a MITM
-    //   return PairState.FAILED;
-    // }
+    if (!await verifySignature(serverSecret, serverSignature, this.serverCert.getPublicKey())) {
+      // Cancel the pairing process
+      //http.unpair();
+      // Looks like a MITM
+      return PairState.FAILED;
+    }
     // Ensure the server challenge matched what we expected (aka the PIN was correct)
     const serverChallengeRespHash = await hashAlgo.hashData(concatBytes(concatBytes(randomChallenge, this.serverCert.getSignature().data), serverSecret));
     if (serverChallengeRespHash.every((value, index) => value === serverResponse[index])) {

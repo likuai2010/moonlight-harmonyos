@@ -28,10 +28,9 @@ export class NvConnection {
       this.context.riKeyId = id
     })
     this.context.videoCapabilities = 16777221
-    //this.context.serverCert = serverCert;
   }
 
-  public async start(audioRenderer: any, videoDecoderRenderer: any, connectionListener: NvConnectionListener) {
+  public async start(connectionListener: NvConnectionListener) {
     const context = this.context;
     this.context.connListener = connectionListener;
     hilog.info(0x0000, "testTag", "start")
@@ -53,28 +52,17 @@ export class NvConnection {
       this.context.connListener.stageFailed(appName, 0, -1);
       return;
     }
-    // Acquire the connection semaphore to ensure we only have one
-    // connection going at once.
+    let rikeyId:Uint8Array = null;
     try {
-      //this.connectionAllowed.acquire();
+      const dd = buffer.alloc(16)
+      dd.writeUInt32BE(context.riKeyId)
+      rikeyId = new Uint8Array(dd.buffer)
     } catch (e) {
+      hilog.info(0x0000, "testTag", "error: " + e)
       this.context.connListener.displayMessage(e.message);
       this.context.connListener.stageFailed(appName, 0, 0);
       return;
     }
-    hilog.info(0x0000, "testTag", "create rikey")
-    let rikeyId:Uint8Array = null;
-    try {
-      const dd = buffer.alloc(16)
-      hilog.info(0x0000, "testTag", "riKeyId " + context.riKeyId)
-      dd.writeUInt32BE(context.riKeyId)
-      rikeyId = new Uint8Array(dd.buffer)
-    }catch (e){
-      hilog.info(0x0000, "testTag", "error: " + e)
-      return ;
-    }
-
-
     // Moonlight-core is not thread-safe with respect to connection start and stop, so
     // we must not invoke that functionality in parallel.
     //MoonBridge.api.setupBridge(videoDecoderRenderer, audioRenderer, connectionListener);
@@ -123,7 +111,7 @@ export class NvConnection {
   }
 
   async startApp() {
-    const h = new NvHttp(this.context.serverAddress, this.context.httpsPort, this.uniqueId, {  }, new LimelightCertProvider());
+    const h = new NvHttp(this.context.serverAddress, this.context.httpsPort, this.uniqueId, new LimelightCertProvider());
     const serverInfo = await h.getServerInfo(true);
     const context = this.context
     context.serverAppVersion = h.getServerVersion(serverInfo);

@@ -8,6 +8,7 @@ import { AddressTuple, ComputerDetails } from '../http/ComputerDetails';
 import { LimelightCertProvider, readFile, writeFile } from '../crypto/LimelightCryptoProvider';
 import { getHttps } from '../http/Http';
 import { bytesToHex, hexToBytes } from '../crypto/CryptoManager';
+import { NvConnectionListener } from './ConnetionListener';
 
 
 export class AudioConfiguration{
@@ -151,18 +152,24 @@ export class MoonBridge {
   public static LI_BATTERY_STATE_NOT_CHARGING: number = 0x04; // Connected to power but not charging
   public static LI_BATTERY_STATE_FULL: number = 0x05;
   public static LI_BATTERY_PERCENTAGE_UNKNOWN: number = 0xFF;
-  public static api = new MoonBridgeNapi()
-
+  public api = new MoonBridgeNapi()
+  public listener: NvConnectionListener
 
   public async startConnection() {
     var lime =  new LimelightCertProvider()
     //await lime.initCertKeyPair()
-    var http = new NvHttp(new AddressTuple("192.168.3.5", NvHttp.DEFAULT_HTTP_PORT), 47984, null, null, lime);
+    var http = new NvHttp(new AddressTuple("192.168.3.5", NvHttp.DEFAULT_HTTP_PORT), 47984, null, lime);
     var serInfo = await http.getServerInfo(true)
     //const d = await http.pm.pair(serInfo, "12345")
     const list = await http.getAppListRaw()
     console.log(list);
     // http.pm.pair(serInfo, "12345")
+  }
+  public register(listener: NvConnectionListener){
+    this.listener = listener;
+    this.api.bridgeClStageStarting(listener.stageStarting)
+    this.api.bridgeClStageComplete(listener.stageStarting)
+    this.api.bridgeClStageFailed(listener.stageFailed)
   }
 }
 
