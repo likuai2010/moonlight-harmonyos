@@ -137,21 +137,21 @@ napi_value verifySignature(napi_env env, napi_callback_info info) {
     size_t argc = 3;
     napi_value args[3] = {nullptr};
     napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
-    void* data;
-    void* signature;
-    void* serverCertificate;
+    void *data;
+    void *signature;
+    void *serverCertificate;
     size_t dataLength;
     size_t signatureLength;
     size_t serverCertificateLength;
     napi_get_typedarray_info(
-            env,
-            args[0],
-            nullptr,
-            &dataLength,
-            &data,
-            nullptr, // 可选的 ArrayBuffer
-            nullptr  // 可选的偏移
-        );
+        env,
+        args[0],
+        nullptr,
+        &dataLength,
+        &data,
+        nullptr, // 可选的 ArrayBuffer
+        nullptr  // 可选的偏移
+    );
     napi_get_typedarray_info(
         env,
         args[1],
@@ -192,6 +192,44 @@ napi_value verifySignature(napi_env env, napi_callback_info info) {
     napi_value ret;
     napi_get_boolean(env, result > 0, &ret);
     return ret;
+}
+
+napi_value getSignatureFromPemCert(napi_env env, napi_callback_info info) {
+    size_t argc = 1;
+    napi_value args[1] = {nullptr};
+    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    void *serverCertificate;
+    size_t serverCertificateLength;
+    napi_get_typedarray_info(
+        env,
+        args[0],
+        nullptr,
+        &serverCertificateLength,
+        &serverCertificate,
+        nullptr, // 可选的 ArrayBuffer
+        nullptr  // 可选的偏移
+    );
+    BIO *bio = BIO_new_mem_buf(serverCertificate, serverCertificateLength);
+    THROW_BAD_ALLOC_IF_NULL(bio);
+
+    X509 *cert = PEM_read_bio_X509(bio, nullptr, nullptr, nullptr);
+    BIO_free_all(bio);
+
+#if (OPENSSL_VERSION_NUMBER < 0x10002000L)
+    ASN1_BIT_STRING *asnSignature = cert->signature;
+#elif (OPENSSL_VERSION_NUMBER < 0x10100000L)
+    ASN1_BIT_STRING *asnSignature;
+    X509_get0_signature(&asnSignature, NULL, cert);
+#else
+    const ASN1_BIT_STRING *asnSignature;
+    X509_get0_signature(&asnSignature, NULL, cert);
+#endif
+    napi_value arrayBuffer;
+    napi_value uint8Array;
+    napi_create_external_arraybuffer(env, asnSignature->data, asnSignature->length, nullptr, nullptr, &arrayBuffer);
+    napi_create_typedarray(env, napi_uint8_array, asnSignature->length, arrayBuffer, 0, &uint8Array);
+    X509_free(cert);
+    return uint8Array;
 }
 
 

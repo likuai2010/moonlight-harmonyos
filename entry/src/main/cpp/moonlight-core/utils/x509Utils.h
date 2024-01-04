@@ -10,6 +10,7 @@
 
 napi_value generate_certificate(napi_env env, napi_callback_info info);
 napi_value verifySignature(napi_env env, napi_callback_info info);
+napi_value getSignatureFromPemCert(napi_env env, napi_callback_info info);
 
 
 int generate_x509_certificate(char* cert_path, char* key_path);
