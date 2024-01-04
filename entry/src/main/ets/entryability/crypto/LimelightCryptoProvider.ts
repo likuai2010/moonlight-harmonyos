@@ -11,25 +11,22 @@ export class LimelightCertProvider {
 
   public cert: cryptoCert.X509Cert;
   public bytes: Uint8Array;
-  public key: crypto.PriKey;
+  public keyBytes: Uint8Array;
 
   constructor() {
     this.certPath = LimelightCertProvider.filesDir + "/client.pem"
     this.keyPath = LimelightCertProvider.filesDir + "/private.pem"
-    this.cerKeyPath = LimelightCertProvider.filesDir + "/private.pem.cer"
   }
 
   async initCertKeyPair() {
-    if (!fs.accessSync(this.certPath) || !fs.accessSync(this.keyPath) || !fs.accessSync(this.cerKeyPath)) {
+    if (!fs.accessSync(this.certPath) || !fs.accessSync(this.keyPath) ) {
       generate_x509_certificate(this.certPath, this.keyPath)
     }
     const certBytes = readFile(this.certPath)
     this.cert = await cryptoCert.createX509Cert(
       { data: certBytes, encodingFormat: cryptoCert.EncodingFormat.FORMAT_PEM })
-    const kg = crypto.createAsyKeyGenerator("RSA2048|PRIMES_2")
     this.bytes = certBytes
-    // der 格式
-    this.key = (await kg.convertKey(null, { data: readFile(this.cerKeyPath) })).priKey
+    this.keyBytes = readFile(this.keyPath)
   }
 }
 

@@ -58,26 +58,20 @@ export default class EntryAbility extends UIAbility {
     // 开发者可以在适当的时机，如主窗口上按钮点击事件等，创建子窗口。并不一定需要在onWindowStageCreate调用，这里仅作展示
 
 
-    this.context.resourceManager.getRawFd('client.pem').then((i)=>{
-      fileIo.copyFile(i.fd, this.context.cacheDir + "/client.pem").then((d)=>{
-        console.log(d+"");
-      })
-    })
-    this.context.resourceManager.getRawFd('client.key').then((i)=>{
-      fileIo.copyFile(i.fd, this.context.cacheDir + "/private.pem")
-        .then((d)=>{
-          console.log(d+"");
-        })
-    })
+    // this.context.resourceManager.getRawFd('client.pem').then((i)=>{
+    //   fileIo.copyFile(i.fd, this.context.cacheDir + "/client.pem").then((d)=>{
+    //     console.log(d+"");
+    //   })
+    // })
+    // this.context.resourceManager.getRawFd('client.key').then((i)=>{
+    //   fileIo.copyFile(i.fd, this.context.cacheDir + "/private.pem")
+    //     .then((d)=>{
+    //       console.log(d+"");
+    //     })
+    // })
 
     hilog.info(0x0000, 'testTag', `filesDir ${this.context.filesDir}`);
     hilog.info(0x0000, 'testTag', `distributedFilesDir ${this.context.distributedFilesDir}`);
-    this.context.resourceManager.getRawFd('video1_640_272.yuv').then((i)=>{
-      fileIo.copyFile(i.fd, this.context.cacheDir + "/video1_640_272.yuv")
-        .then((d)=>{
-          console.log(d+ "");
-        })
-    })
     LimelightCertProvider.filesDir = this.context.cacheDir
     windowStage.loadContent('pages/Index', (err, data) => {
       if (err.code) {

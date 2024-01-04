@@ -48,21 +48,21 @@ static napi_value loadYuv(napi_env env, napi_callback_info info) {
     napi_create_async_work(
         env, nullptr, resourceName,
         [](napi_env env, void *data) {
-         BridgeCallbackInfo *info = (BridgeCallbackInfo *)data;
-          DECODER_PARAMETERS params;
-             params.context = MoonBridge::nativewindow;
-             params.width = 1280;
-             params.height = 720;
-                info->render->initialize(&params);
-                    while (true) {
-                         AVFrameHolder::GetInstance()->get([info](AVFrame *frame) {
-                                info->render->renderFrame(frame);
-                        });
-                        usleep(100000 / 120);
-                    }
+            BridgeCallbackInfo *info = (BridgeCallbackInfo *)data;
+            DECODER_PARAMETERS params;
+            params.context = MoonBridge::nativewindow;
+            params.width = 1280;
+            params.height = 720;
+            info->render->initialize(&params);
+            while (true) {
+                AVFrameHolder::GetInstance()->get([info](AVFrame *frame) {
+                    info->render->renderFrame(frame);
+                });
+                usleep(100000 / 120);
+            }
         },
         [](napi_env env, napi_status status, void *data) {
-              BridgeCallbackInfo *info = (BridgeCallbackInfo *)data;
+            BridgeCallbackInfo *info = (BridgeCallbackInfo *)data;
             napi_delete_async_work(env, info->asyncWork);
             delete info;
         },
@@ -126,6 +126,9 @@ static napi_value Init(napi_env env, napi_value exports) {
         {"generate_x509_certificate", nullptr, generate_certificate, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"verify_signature", nullptr, verifySignature, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"sign_message", nullptr, signMessage, nullptr, nullptr, nullptr, napi_default, nullptr},
+        {"decrypt", nullptr, decrypt, nullptr, nullptr, nullptr, napi_default, nullptr},
+        {"encrypt", nullptr, encrypt, nullptr, nullptr, nullptr, napi_default, nullptr},
+        {"get_signature_from_pemCert", nullptr, getSignatureFromPemCert, nullptr, nullptr, nullptr, napi_default, nullptr},
     };
 
     status = napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc);

@@ -8,8 +8,8 @@ import {
   decryptAes,
   encryptAes,
   extractPlainCert,
-extractPlainCertBytes,
-generateRandomBytes,
+  extractPlainCertBytes,
+  generateRandomBytes,
   hexToBytes,
   PairingHashAlgorithm,
   Sha1PairingHash,
@@ -29,14 +29,10 @@ export class PairingManager {
   }
 
 
-
   public async pair(serverInfo: string, pin: string): Promise<PairState> {
-    const aaa = await generateRandomBytes(16);
-    const signaa = await signData(aaa, this.clientCert.key)
-    const ddd = concatBytes(aaa, signaa)
-     const serverMajorVersion = this.http.getServerMajorVersion(serverInfo);
-     console.log("Pairing with server generation: " + serverMajorVersion);
-     let hashAlgo: PairingHashAlgorithm;
+    const serverMajorVersion = this.http.getServerMajorVersion(serverInfo);
+    console.log("Pairing with server generation: " + serverMajorVersion);
+    let hashAlgo: PairingHashAlgorithm;
     if (serverMajorVersion >= 7) {
       // Gen 7+ uses SHA-256 hashing
       hashAlgo = new Sha256PairingHash();
@@ -66,7 +62,7 @@ export class PairingManager {
 
     const challengeResp = await this.http.executePairingCommand("clientchallenge=" + bytesToHex(encryptedChallenge), true);
     if (NvHttp.getXmlString(challengeResp, "paired", true) !== '1') {
-      //this.http.unpair();
+      this.http.unpair();
       return PairState.FAILED;
     }
 
@@ -86,7 +82,7 @@ export class PairingManager {
 
     const secretResp = await this.http.executePairingCommand("serverchallengeresp=" + bytesToHex(challengeRespEncrypted), true);
     if (NvHttp.getXmlString(secretResp, "paired", true) !== '1') {
-      //http.unpair();
+      this.http.unpair();
       return PairState.FAILED;
     }
     // Get the server's signed secret
@@ -96,34 +92,34 @@ export class PairingManager {
     // Ensure the authenticity of the data
     if (!await verifySignature(serverSecret, serverSignature, serverCertBytes)) {
       // Cancel the pairing process
-      //http.unpair();
+      this.http.unpair();
       // Looks like a MITM
       return PairState.FAILED;
     }
     // Ensure the server challenge matched what we expected (aka the PIN was correct)
-    const dd = concatBytes(randomChallenge, this.serverCert.getSignature().data)
-    const hash = concatBytes(dd, serverSecret)
+    const challengeAndSignature = concatBytes(randomChallenge, this.serverCert.getSignature().data)
+    const hash = concatBytes(challengeAndSignature, serverSecret)
     const serverChallengeRespHash = await hashAlgo.hashData(hash);
     if (!serverChallengeRespHash.every((value, index) => value === serverResponse[index])) {
       // Cancel the pairing process
-      //http.unpair();
+      this.http.unpair();
 
       // Probably got the wrong PIN
       return PairState.PIN_WRONG;
     }
     // Send the server our signed secret
-    const sign = await signData(clientSecret, this.clientCert.key)
+    const sign = await signData(clientSecret, this.clientCert.keyBytes)
     const clientPairingSecret = concatBytes(clientSecret, sign);
     const clientSecretResp = await this.http.executePairingCommand("clientpairingsecret=" + bytesToHex(clientPairingSecret), true);
     if (NvHttp.getXmlString(clientSecretResp, "paired", true) !== '1') {
-       //http.unpair();
-       return PairState.FAILED;
-     }
+      this.http.unpair();
+      return PairState.FAILED;
+    }
 
     // Do the initial challenge (seems necessary for us to show as paired)
     const pairChallenge = await this.http.executePairingChallenge();
     if (NvHttp.getXmlString(pairChallenge, "paired", true) !== '1') {
-      //http.unpair();
+      this.http.unpair();
       return PairState.FAILED;
     }
 
@@ -135,10 +131,9 @@ export class PairingManager {
   }
 
   private saltPin(salt: Uint8Array, pin: string): Uint8Array {
-    const saltedPin = salt.slice(0, salt.length)
     const decoder = new util.TextEncoder("UTF-8")
     const pinBytes = decoder.encodeInto(pin)
-    return Uint8Array.from([...saltedPin, ...pinBytes]);
+    return concatBytes(salt, pinBytes);
   }
 }
 

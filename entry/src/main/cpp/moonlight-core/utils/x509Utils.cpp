@@ -194,9 +194,9 @@ napi_value verifySignature(napi_env env, napi_callback_info info) {
     return ret;
 }
 
-napi_value createTypedArray(napi_env env, size_t length, napi_typedarray_type type, void* data) {
+napi_value createTypedArray(napi_env env, size_t length, napi_typedarray_type type, void *data) {
     napi_value arrayBuffer;
-    void * arrayBufferPtr;
+    void *arrayBufferPtr;
     napi_value uint8Array;
     // 创建一个 ArrayBuffer
     napi_status status = napi_create_arraybuffer(env, length, &arrayBufferPtr, &arrayBuffer);
@@ -205,7 +205,7 @@ napi_value createTypedArray(napi_env env, size_t length, napi_typedarray_type ty
         return NULL;
     }
     memcpy(arrayBufferPtr, data, length);
-    
+
     // 创建一个 TypedArray，使用指定的类型和 ArrayBuffer
     status = napi_create_typedarray(env, type, length, arrayBuffer, 0, &uint8Array);
     if (status != napi_ok) {
@@ -215,7 +215,6 @@ napi_value createTypedArray(napi_env env, size_t length, napi_typedarray_type ty
 
     return uint8Array;
 }
-
 
 napi_value signMessage(napi_env env, napi_callback_info info) {
     size_t argc = 2;
@@ -235,26 +234,23 @@ napi_value signMessage(napi_env env, napi_callback_info info) {
         nullptr  // 可选的偏移
     );
     napi_get_typedarray_info(
-            env,
-            args[1],
-            nullptr,
-            &privateKeyLength,
-            &privateKey,
-            nullptr, 
-            nullptr  
-        );
+        env,
+        args[1],
+        nullptr,
+        &privateKeyLength,
+        &privateKey,
+        nullptr,
+        nullptr);
     EVP_MD_CTX *ctx = EVP_MD_CTX_create();
     THROW_BAD_ALLOC_IF_NULL(ctx);
 
-    // BIO* bio = BIO_new_mem_buf(privateKey, privateKeyLength);
-    // THROW_BAD_ALLOC_IF_NULL(bio);
-    // EVP_PKEY* m_PrivateKey;
-    // i2d_PrivateKey_bio(bio, m_PrivateKey);
-    const unsigned char *ptr = (const unsigned char *)privateKey;
-    EVP_PKEY *m_PrivateKey = d2i_PrivateKey(EVP_PKEY_RSA, NULL, &ptr, privateKeyLength);
+    BIO *bio = BIO_new_mem_buf(privateKey, privateKeyLength);
+    THROW_BAD_ALLOC_IF_NULL(bio);
+    // const unsigned char *ptr = (const unsigned char *)privateKey;
+    // EVP_PKEY *m_PrivateKey = d2i_PrivateKey(EVP_PKEY_RSA, NULL, &ptr, privateKeyLength);
 
-    // EVP_PKEY* m_PrivateKey = PEM_read_bio_PrivateKey(bio, nullptr, nullptr, nullptr);
-    // BIO_free_all(bio);
+    EVP_PKEY *m_PrivateKey = PEM_read_bio_PrivateKey(bio, nullptr, nullptr, nullptr);
+    BIO_free_all(bio);
 
     EVP_DigestSignInit(ctx, NULL, EVP_sha256(), NULL, m_PrivateKey);
     EVP_DigestSignUpdate(ctx, reinterpret_cast<unsigned char *>(message), messageLength);
@@ -303,10 +299,97 @@ napi_value getSignatureFromPemCert(napi_env env, napi_callback_info info) {
     const ASN1_BIT_STRING *asnSignature;
     X509_get0_signature(&asnSignature, NULL, cert);
 #endif
-    napi_value arrayBuffer;
-    napi_value uint8Array;
-    napi_create_external_arraybuffer(env, asnSignature->data, asnSignature->length, nullptr, nullptr, &arrayBuffer);
-    napi_create_typedarray(env, napi_uint8_array, asnSignature->length, arrayBuffer, 0, &uint8Array);
     X509_free(cert);
-    return uint8Array;
+    return createTypedArray(env, asnSignature->length, napi_uint8_array, asnSignature->data);
+}
+
+napi_value encrypt(napi_env env, napi_callback_info info) {
+    size_t argc = 2;
+    napi_value args[2] = {nullptr};
+    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    void *message;
+    size_t messageLength;
+    void *privateKey;
+    size_t privateKeyLength;
+    napi_get_typedarray_info(
+        env,
+        args[0],
+        nullptr,
+        &messageLength,
+        &message,
+        nullptr, // 可选的 ArrayBuffer
+        nullptr  // 可选的偏移
+    );
+    napi_get_typedarray_info(
+        env,
+        args[1],
+        nullptr,
+        &privateKeyLength,
+        &privateKey,
+        nullptr,
+        nullptr);
+
+    void *ciphertext = malloc(messageLength);
+    EVP_CIPHER_CTX *cipher;
+    int ciphertextLen;
+
+    cipher = EVP_CIPHER_CTX_new();
+    THROW_BAD_ALLOC_IF_NULL(cipher);
+
+    EVP_EncryptInit(cipher, EVP_aes_128_ecb(), reinterpret_cast<const unsigned char *>(privateKey), NULL);
+    EVP_CIPHER_CTX_set_padding(cipher, 0);
+
+    EVP_EncryptUpdate(cipher,
+                      reinterpret_cast<unsigned char *>(ciphertext),
+                      &ciphertextLen,
+                      reinterpret_cast<const unsigned char *>(message),
+                      messageLength);
+    EVP_CIPHER_CTX_free(cipher);
+
+    return createTypedArray(env, messageLength, napi_uint8_array, ciphertext);
+}
+napi_value decrypt(napi_env env, napi_callback_info info) {
+    size_t argc = 2;
+    napi_value args[2] = {nullptr};
+    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    void *message;
+    size_t messageLength;
+    void *privateKey;
+    size_t privateKeyLength;
+    napi_get_typedarray_info(
+        env,
+        args[0],
+        nullptr,
+        &messageLength,
+        &message,
+        nullptr, // 可选的 ArrayBuffer
+        nullptr  // 可选的偏移
+    );
+    napi_get_typedarray_info(
+        env,
+        args[1],
+        nullptr,
+        &privateKeyLength,
+        &privateKey,
+        nullptr,
+        nullptr);
+    void *plaintext = malloc(messageLength);
+    EVP_CIPHER_CTX *cipher;
+    int plaintextLen;
+
+    cipher = EVP_CIPHER_CTX_new();
+    THROW_BAD_ALLOC_IF_NULL(cipher);
+
+    EVP_DecryptInit(cipher, EVP_aes_128_ecb(), reinterpret_cast<const unsigned char *>(privateKey), NULL);
+    EVP_CIPHER_CTX_set_padding(cipher, 0);
+
+    EVP_DecryptUpdate(cipher,
+                      reinterpret_cast<unsigned char *>(plaintext),
+                      &plaintextLen,
+                      reinterpret_cast<const unsigned char *>(message),
+                      messageLength);
+
+    EVP_CIPHER_CTX_free(cipher);
+
+    return createTypedArray(env, messageLength, napi_uint8_array, plaintext);
 }

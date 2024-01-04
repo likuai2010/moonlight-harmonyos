@@ -2,7 +2,7 @@ import cryptoCert from '@ohos.security.cert';
 import crypto from '@ohos.security.cryptoFramework';
 import { NvHttp } from '../http/NvHttp';
 import Buffer from '@ohos.buffer';
-import { sign_message, verify_signature } from 'libentry.so'
+import { decrypt, encrypt, sign_message, verify_signature } from 'libentry.so'
 
 export interface PairingHashAlgorithm {
   getHashLength(): number
@@ -35,9 +35,9 @@ export class Sha256PairingHash implements PairingHashAlgorithm {
   }
 }
 
-export async function signData(data: Uint8Array, key: crypto.PriKey): Promise<Uint8Array> {
+export async function signData(data: Uint8Array, key: Uint8Array): Promise<Uint8Array> {
   try {
-    return sign_message(data, key.getEncoded().data)
+    return sign_message(data, key)
     // der
     // const sign = crypto.createSign("RSA2048|PKCS1|SHA256")
     // await sign.init(key)
@@ -66,30 +66,26 @@ export async function generateRandomBytes(length: number): Promise<Uint8Array> {
 }
 
 export async function encryptAes(plaintextData: Uint8Array, aesKey: Uint8Array): Promise<Uint8Array> {
-  const cipher = crypto.createCipher("AES128|ECB|NoPadding")
-  const key = await crypto.createSymKeyGenerator("AES128").convertKey({ data: aesKey })
-  await cipher.init(crypto.CryptoMode.ENCRYPT_MODE, key, null)
-  const bytes = await cipher.update({ data: plaintextData })
-  return (await cipher.doFinal(bytes)).data
+  return encrypt(plaintextData, aesKey)
+  // const cipher = crypto.createCipher("AES128|ECB|NoPadding")
+  // const key = await crypto.createSymKeyGenerator("AES128").convertKey({ data: aesKey })
+  // await cipher.init(crypto.CryptoMode.ENCRYPT_MODE, key, null)
+  // const bytes = await cipher.update({ data: plaintextData })
+  // return (await cipher.doFinal(bytes)).data
 }
 
 export async function decryptAes(plaintextData: Uint8Array, aesKey: Uint8Array): Promise<Uint8Array> {
-  const cipher = crypto.createCipher("AES128|ECB|NoPadding")
-  const key = await crypto.createSymKeyGenerator("AES128").convertKey({ data: aesKey })
-  await cipher.init(crypto.CryptoMode.DECRYPT_MODE, key, null)
-  const bytes = await cipher.update({ data: plaintextData })
-  return (await cipher.doFinal(bytes)).data
+  return decrypt(plaintextData, aesKey)
+  // const cipher = crypto.createCipher("AES128|ECB|NoPadding")
+  // const key = await crypto.createSymKeyGenerator("AES128").convertKey({ data: aesKey })
+  // await cipher.init(crypto.CryptoMode.DECRYPT_MODE, key, null)
+  // const bytes = await cipher.update({ data: plaintextData })
+  // return (await cipher.doFinal(bytes)).data
 }
 
 
 export async function generateAesKey(hashAlgo: PairingHashAlgorithm, keyData: Uint8Array): Promise<Uint8Array> {
   return (await hashAlgo.hashData(keyData)).slice(0, 16)
-}
-export async function generateCertKeyPair() {
-  const snBytes = await generateRandomBytes(8)
-  const asy = crypto.createAsyKeyGenerator("RSA2048|PRIMES_2")
-  const keyPair = await asy.generateKeyPair()
-
 }
 export async function extractPlainCertBytes(text: string): Promise<Uint8Array> {
   // Plaincert may be null if another client is already trying to pair

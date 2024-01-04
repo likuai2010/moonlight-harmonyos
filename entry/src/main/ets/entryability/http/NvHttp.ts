@@ -319,7 +319,7 @@ export class NvHttp {
       let url = this.getCompleteUrl(baseUrl, path, query)
       let clientPath = null;
       let keyPath = null;
-      if(baseUrl.protocol.startsWith('https')){
+      if (baseUrl.protocol.startsWith('https')){
         clientPath = this.clientCert.certPath
         keyPath = this.clientCert.keyPath
       }
@@ -332,7 +332,9 @@ export class NvHttp {
     }
     return null;
   }
+  public async unpair(): Promise<void>{
 
+  }
   public async launchApp(context: ConnectionContext, verb: string, appId: number, enableHdr: boolean): Promise<boolean> {
     // Using an FPS value over 60 causes SOPS to default to 720p60,
     // so force it to 0 to ensure the correct resolution is set. We
