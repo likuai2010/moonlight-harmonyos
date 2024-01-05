@@ -5,9 +5,9 @@
 // please include "napi/native_api.h".
 
 #include "moon_bridge.h"
+#include <audio/SDLAudioRenderer.h>
 #include <native_window/external_window.h>
 #include <video/FFmpegVideoDecoder.h>
-
 #define NDEBUG
 #include <Limelight.h>
 #include "napi/native_api.h"
@@ -18,6 +18,7 @@
 #include <unistd.h>
 
 static FFmpegVideoDecoder *m_decoder = nullptr;
+static SDLAudioRenderer *m_audioRender = nullptr;
 void *MoonBridge::nativewindow = nullptr;
 napi_env MoonBridge::env;
 std::unordered_map<std::string, napi_ref> MoonBridge::m_funRefs;
@@ -56,20 +57,24 @@ int BridgeDrSubmitDecodeUnit(PDECODE_UNIT decodeUnit) {
 }
 
 int BridgeArInit(int audioConfiguration, POPUS_MULTISTREAM_CONFIGURATION opusConfig, void *context, int flags) {
-    return 0;
+    return m_audioRender->init(audioConfiguration, opusConfig, context, flags);
 }
 
 void BridgeArStart(void) {
+    m_audioRender->start();
 }
 
 void BridgeArStop(void) {
+    m_audioRender->stop();
 }
 
 void BridgeArCleanup() {
+    m_audioRender->cleanup();
 }
 
 void BridgeArDecodeAndPlaySample(char *sampleData, int sampleLength) {
     OH_LOG_Print(LOG_APP, LOG_INFO, LOG_DOMAIN, "testTag", "BridgeArDecodeAndPlaySample");
+    m_audioRender->decode_and_play_sample(sampleData, sampleLength);
 }
 
 void BridgeClStageStarting(int stage) {
@@ -366,7 +371,7 @@ void MoonBridgeJavascriptClassInit(napi_env env, napi_value exports) {
     // m_decoder = (IVideoDecoder *)new NativeVideoDecoder();
     // 软解码 ffmpeg cpu
     m_decoder = new FFmpegVideoDecoder();
-
+    m_audioRender = new SDLAudioRenderer();
     napi_property_descriptor descriptors[] = {
         {"startConnection", nullptr, MoonBridge_startConnection, nullptr, nullptr, nullptr, napi_default, nullptr}};
     napi_value result = nullptr;

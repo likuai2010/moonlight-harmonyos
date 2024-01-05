@@ -11,6 +11,7 @@ set(CURL_INCLUDE_DIR ${CURL_DIR}/include)
 include_directories(
 ${CMAKE_CURRENT_SOURCE_DIR}
 ${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg/include
+${CMAKE_CURRENT_SOURCE_DIR}/sdl/sdl-ohos/include
 ${CMAKE_CURRENT_SOURCE_DIR}/opus/include
 ${OPENSSL_INCLUDE_DIR}
 ${CURL_INCLUDE_DIR}
@@ -35,6 +36,7 @@ set_target_properties(ffmpeg PROPERTIES IMPORTED_LOCATION ${CMAKE_CURRENT_SOURCE
 
 
 add_subdirectory(opus)
+add_subdirectory(sdl)
 add_subdirectory(moonlight-common-c)
 
 
@@ -50,6 +52,7 @@ video/FFmpegVideoDecoder.cpp
 #video/NativeVideoDecoder.cpp
 video/render/eglRender.cpp
 video/render/plugin_render.cpp
+audio/SDLAudioRenderer.cpp
 )
 
 
@@ -57,6 +60,7 @@ target_link_libraries(entry PRIVATE
 libssl
 libcrypto
 opus
+sdl3
 moonlight-common-c
 )
 

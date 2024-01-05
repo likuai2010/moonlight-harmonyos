@@ -1,3 +1,6 @@
 [submodule "entry/src/main/cpp/moonlight-core/moonlight-common-c"]
 	path = entry/src/main/cpp/moonlight-core/moonlight-common-c
 	url = https://github.com/moonlight-stream/moonlight-common-c.git
+[submodule "entry/src/main/cpp/moonlight-core/sdl/sdl-ohos"]
+	path = entry/src/main/cpp/moonlight-core/sdl/sdl-ohos
+	url = https://gitee.com/fastCode2019/sdl-ohos.git

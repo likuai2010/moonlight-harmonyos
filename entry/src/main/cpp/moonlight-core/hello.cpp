@@ -10,9 +10,7 @@
 #include <math.h>
 #include <unistd.h>
 #include "Shader.h"
-#include "FragmentShader.h"
 #include "video/render/plugin_render.h"
-#include "video/common/common.h"
 #include "video/AVFrameHolder.h"
 #define BITMAP_INFO_LOGD(...) OH_LOG_Print(LOG_APP, LOG_INFO, LOG_DOMAIN, "loadYuv", __VA_ARGS__)
 
