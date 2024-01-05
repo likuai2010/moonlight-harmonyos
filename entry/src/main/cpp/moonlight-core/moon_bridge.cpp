@@ -16,6 +16,7 @@
 #include "video/render/plugin_render.h"
 #include "video/AVFrameHolder.h"
 #include <unistd.h>
+#include <arpa/inet.h>
 
 static FFmpegVideoDecoder *m_decoder = nullptr;
 static SDLAudioRenderer *m_audioRender = nullptr;
@@ -302,7 +303,6 @@ static napi_value MoonBridge_startConnection(napi_env env, napi_callback_info in
         .render = render};
     napi_value resourceName;
     napi_create_string_latin1(env, "GetRequest", NAPI_AUTO_LENGTH, &resourceName);
-
     napi_create_async_work(
         env, nullptr, resourceName,
         [](napi_env env, void *data) {
@@ -340,6 +340,88 @@ static napi_value MoonBridge_startConnection(napi_env env, napi_callback_info in
     napi_create_int32(env, -99, &result);
     return result;
 }
+static napi_value MoonBridge_stopConnection(napi_env env, napi_callback_info info) {
+    LiStopConnection();
+}
+static napi_value MoonBridge_interruptConnection(napi_env env, napi_callback_info info) {
+    LiInterruptConnection();
+}
+static napi_value MoonBridge_sendMouseMove(napi_env env, napi_callback_info info) {
+    //LiSendMouseMoveEvent(deltaX, deltaY);
+}
+static napi_value MoonBridge_sendMousePosition(napi_env env, napi_callback_info info) {
+    //LiSendMousePositionEvent(x, y, referenceWidth, referenceHeight);
+}
+static napi_value MoonBridge_sendMouseMoveAsMousePosition(napi_env env, napi_callback_info info) {
+    //LiSendMouseMoveAsMousePositionEvent(deltaX, deltaY, referenceWidth, referenceHeight);
+}
+static napi_value MoonBridge_sendMouseButton(napi_env env, napi_callback_info info) {
+    //LiSendMouseButtonEvent(buttonEvent, mouseButton);
+}
+static napi_value MoonBridge_sendMultiControllerInput(napi_env env, napi_callback_info info) {
+    // LiSendMultiControllerEvent(controllerNumber, activeGamepadMask, buttonFlags,
+          //        leftTrigger, rightTrigger, leftStickX, leftStickY, rightStickX, rightStickY);
+}
+static napi_value MoonBridge_sendTouchEvent(napi_env env, napi_callback_info info) {
+    // LiSendTouchEvent(eventType, pointerId, x, y, pressureOrDistance,
+      //                          contactAreaMajor, contactAreaMinor, rotation);
+}
+static napi_value MoonBridge_sendPenEvent(napi_env env, napi_callback_info info) {
+     // LiSendPenEvent(eventType, toolType, penButtons, x, y, pressureOrDistance,
+       //                       contactAreaMajor, contactAreaMinor, rotation, tilt);
+}
+static napi_value MoonBridge_sendControllerTouchEvent(napi_env env, napi_callback_info info) {
+    //LiSendControllerArrivalEvent(controllerNumber, activeGamepadMask, type, supportedButtonFlags, capabilities);
+}
+static napi_value MoonBridge_sendControllerArrivalEvent(napi_env env, napi_callback_info info) {
+     //LiSendControllerTouchEvent(controllerNumber, eventType, pointerId, x, y, pressure);
+}
+static napi_value MoonBridge_sendControllerMotionEvent(napi_env env, napi_callback_info info) {
+   
+    //LiSendControllerMotionEvent(controllerNumber, motionType, x, y, z);
+    
+}
+static napi_value MoonBridge_sendControllerBatteryEvent(napi_env env, napi_callback_info info) {
+    //  LiSendControllerBatteryEvent(controllerNumber, batteryState, batteryPercentage);
+}
+static napi_value MoonBridge_sendKeyboardInput(napi_env env, napi_callback_info info) {
+    //LiSendKeyboardEvent2(keyCode, keyAction, modifiers, flags);
+}
+static napi_value MoonBridge_sendMouseHighResScroll(napi_env env, napi_callback_info info) {
+    //LiSendHighResScrollEvent(scrollAmount);
+}
+static napi_value MoonBridge_sendMouseHighResHScroll(napi_env env, napi_callback_info info) {
+    // LiSendHighResHScrollEvent(scrollAmount);
+}
+static napi_value MoonBridge_sendUtf8Text(napi_env env, napi_callback_info info) {
+     //const char* utf8Text = (*env)->GetStringUTFChars(env, text, NULL);
+      //  LiSendUtf8TextEvent(utf8Text, strlen(utf8Text));
+       // (*env)->ReleaseStringUTFChars(env, text, utf8Text);
+}
+
+static napi_value MoonBridge_findExternalAddressIP4(napi_env env, napi_callback_info info) {
+        size_t argc = 2;
+        napi_value args[2] = {nullptr};
+        napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+        int stunPort;
+        struct in_addr wanAddr;
+        const char* stunHostNameStr = get_value_string(env, args[0]);
+        int err = LiFindExternalAddressIP4(stunHostNameStr, stunPort, &wanAddr.s_addr);
+        delete stunHostNameStr;
+    
+        if (err == 0) {
+            char addrStr[INET_ADDRSTRLEN];
+            inet_ntop(AF_INET, &wanAddr, addrStr, sizeof(addrStr));
+            OH_LOG_Print(LOG_APP, LOG_INFO, LOG_DOMAIN, "moonlight-common-c", "Resolved WAN address to %{public}s", addrStr);
+            napi_value result;
+            napi_create_string_utf8(env, addrStr, sizeof(addrStr), &result);
+            return result;
+        }
+        else {
+            OH_LOG_Print(LOG_APP, LOG_INFO, LOG_DOMAIN, "moonlight-common-c", "STUN failed to get WAN address: %{public}d", err);
+            return NULL;
+        }
+}
 
 enum TestEnum {
     ONE = 0,
@@ -373,7 +455,12 @@ void MoonBridgeJavascriptClassInit(napi_env env, napi_value exports) {
     m_decoder = new FFmpegVideoDecoder();
     m_audioRender = new SDLAudioRenderer();
     napi_property_descriptor descriptors[] = {
-        {"startConnection", nullptr, MoonBridge_startConnection, nullptr, nullptr, nullptr, napi_default, nullptr}};
+        {"startConnection", nullptr, MoonBridge_startConnection, nullptr, nullptr, nullptr, napi_default, nullptr},
+        {"stopConnection", nullptr, MoonBridge_stopConnection, nullptr, nullptr, nullptr, napi_default, nullptr},
+        {"interruptConnection", nullptr, MoonBridge_interruptConnection, nullptr, nullptr, nullptr, napi_default, nullptr},
+    
+    };
+        
     napi_value result = nullptr;
 
     napi_define_class(env, "MoonBridgeNapi", NAPI_AUTO_LENGTH, MoonBridgeJavascriptClassConstructor, nullptr,
@@ -413,7 +500,6 @@ void MoonBridgeJavascriptClassInit(napi_env env, napi_value exports) {
         pr->Export(env, exports);
     }
 }
-
 
 napi_value MoonBridge::Emit(char *eventName, napi_value *value) {
     auto it = MoonBridge::m_funRefs.find(eventName);
