@@ -3,15 +3,12 @@
 #include "moon_bridge.h"
 #include "utils/x509Utils.h"
 #include "hilog/log.h"
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
-#include <GLES3/gl3.h>
-#include <fstream>
-#include <math.h>
 #include <unistd.h>
 #include "Shader.h"
 #include "video/render/plugin_render.h"
-#include "video/AVFrameHolder.h"
+#include "audio/Audio.h"
+#include "audio/SDLAudioRenderer.h"
+
 #define BITMAP_INFO_LOGD(...) OH_LOG_Print(LOG_APP, LOG_INFO, LOG_DOMAIN, "loadYuv", __VA_ARGS__)
 
 static napi_value Add(napi_env env, napi_callback_info info) {
@@ -35,97 +32,53 @@ struct BridgeCallbackInfo {
 
     napi_async_work asyncWork;
 };
+DataQueue *dataQueue = NULL;
+Audio *audio = NULL;
+SDLAudioRenderer* renderer = NULL;
 
-static napi_value loadYuv(napi_env env, napi_callback_info info) {
-    EglVideoRenderer *render = new EglVideoRenderer();
+static napi_value OpenSlEsPlayer_sendPcmData(napi_env env, napi_callback_info info) {
+    size_t argc = 1;
+    napi_value args[1] = {nullptr};
+    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    void *message;
+    size_t messageLength;
+    napi_typedarray_type type;
+    napi_get_typedarray_info(
+        env,
+        args[0],
+        &type,
+        &messageLength,
+        &message,
+        nullptr, // 可选的 ArrayBuffer
+        nullptr  // 可选的偏移
+    );
 
-    BridgeCallbackInfo *bridgeCallbackInfo = new BridgeCallbackInfo{
-        .render = render};
-    napi_value resourceName;
-    napi_create_string_latin1(env, "GetRequest", NAPI_AUTO_LENGTH, &resourceName);
-    napi_create_async_work(
-        env, nullptr, resourceName,
-        [](napi_env env, void *data) {
-            BridgeCallbackInfo *info = (BridgeCallbackInfo *)data;
-            DECODER_PARAMETERS params;
-            params.context = MoonBridge::nativewindow;
-            params.width = 1280;
-            params.height = 720;
-            info->render->initialize(&params);
-            while (true) {
-                AVFrameHolder::GetInstance()->get([info](AVFrame *frame) {
-                    info->render->renderFrame(frame);
-                });
-                usleep(100000 / 120);
-            }
-        },
-        [](napi_env env, napi_status status, void *data) {
-            BridgeCallbackInfo *info = (BridgeCallbackInfo *)data;
-            napi_delete_async_work(env, info->asyncWork);
-            delete info;
-        },
-        (void *)bridgeCallbackInfo, &bridgeCallbackInfo->asyncWork);
-    napi_queue_async_work(env, bridgeCallbackInfo->asyncWork);
-
+    if (audio == NULL) {
+        audio = new Audio(dataQueue, 48000);
+        audio->play();
+    }
+    
+    PcmData *pdata = new PcmData((char *)(message), messageLength);
+    dataQueue->putPcmData(pdata);
+   
     return nullptr;
 }
 
 EXTERN_C_START
-napi_value GetContext(napi_env env, napi_callback_info info) {
-    if ((env == nullptr) || (info == nullptr)) {
-        OH_LOG_Print(LOG_APP, LOG_INFO, LOG_DOMAIN, "PluginManager", "GetContext env or info is null");
-        return nullptr;
-    }
-
-    size_t argCnt = 1;
-    napi_value args[1] = {nullptr};
-    if (napi_get_cb_info(env, info, &argCnt, args, nullptr, nullptr) != napi_ok) {
-        OH_LOG_Print(LOG_APP, LOG_INFO, LOG_DOMAIN, "PluginManager", "GetContext napi_get_cb_info failed");
-    }
-
-    if (argCnt != 1) {
-        napi_throw_type_error(env, NULL, "Wrong number of arguments");
-        return nullptr;
-    }
-
-    napi_valuetype valuetype;
-    if (napi_typeof(env, args[0], &valuetype) != napi_ok) {
-        napi_throw_type_error(env, NULL, "napi_typeof failed");
-        return nullptr;
-    }
-
-    if (valuetype != napi_number) {
-        napi_throw_type_error(env, NULL, "Wrong type of arguments");
-        return nullptr;
-    }
-
-    int64_t value;
-    if (napi_get_value_int64(env, args[0], &value) != napi_ok) {
-        napi_throw_type_error(env, NULL, "napi_get_value_int64 failed");
-        return nullptr;
-    }
-
-    napi_value exports;
-    if (napi_create_object(env, &exports) != napi_ok) {
-        napi_throw_type_error(env, NULL, "napi_create_object failed");
-        return nullptr;
-    }
-
-    return exports;
-}
 
 static napi_value Init(napi_env env, napi_value exports) {
     napi_status status;
-
+    if (dataQueue == NULL) {
+        dataQueue = new DataQueue();
+    }
     napi_property_descriptor desc[] = {
         {"add", nullptr, Add, nullptr, nullptr, nullptr, napi_default, nullptr},
-        {"loadYuv", nullptr, loadYuv, nullptr, nullptr, nullptr, napi_default, nullptr},
-        {"getContext", nullptr, GetContext, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"generate_x509_certificate", nullptr, generate_certificate, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"verify_signature", nullptr, verifySignature, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"sign_message", nullptr, signMessage, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"decrypt", nullptr, decrypt, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"encrypt", nullptr, encrypt, nullptr, nullptr, nullptr, napi_default, nullptr},
+        {"openSlEsPlayer_sendPcmData", nullptr, OpenSlEsPlayer_sendPcmData, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"get_signature_from_pemCert", nullptr, getSignatureFromPemCert, nullptr, nullptr, nullptr, napi_default, nullptr},
     };
 

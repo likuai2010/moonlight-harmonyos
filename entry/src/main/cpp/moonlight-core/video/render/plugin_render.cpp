@@ -112,9 +112,34 @@ void DispatchTouchEventCB(OH_NativeXComponent *component, void *window)
             "DispatchTouchEventCB: component or window is null");
         return;
     }
- 
+     uint64_t width, height;
+     OH_NativeXComponent_GetXComponentSize(component, window, &width, &height);
+     OH_NativeXComponent_TouchEvent touchEvent;
+     OH_NativeXComponent_GetTouchEvent(component, window, &touchEvent);
+     MoonBridge_sendTouchEvent(touchEvent, width, height);
 }
-
+void OnMouseEventCB(OH_NativeXComponent *component, void *window)
+{
+    if ((nullptr == component) || (nullptr == window)) {
+        OH_LOG_Print(LOG_APP, LOG_ERROR, LOG_DOMAIN, "Callback",
+            "DispatchTouchEventCB: component or window is null");
+        return;
+    }
+    uint64_t width, height;
+    OH_NativeXComponent_GetXComponentSize(component, window, &width, &height);
+    OH_NativeXComponent_MouseEvent touchEvent;
+    OH_NativeXComponent_GetMouseEvent(component, window, &touchEvent);
+    MoonBridge_sendMouseEvent(touchEvent, width, height);
+}
+void OnHoverEventCB(OH_NativeXComponent *component, bool isHover)
+{
+    OH_LOG_Print(LOG_APP, LOG_INFO, LOG_DOMAIN, "Callback", "OnHoverEventCB");
+    if ((nullptr == component)) {
+        OH_LOG_Print(LOG_APP, LOG_ERROR, LOG_DOMAIN, "Callback",
+            "OnHoverEventCB: component or window is null");
+        return;
+    }
+}
 PluginRender::PluginRender(std::string &id)
 {
     this->m_id = id;

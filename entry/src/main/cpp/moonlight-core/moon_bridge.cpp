@@ -5,6 +5,7 @@
 // please include "napi/native_api.h".
 
 #include "moon_bridge.h"
+#include <asm-generic/stat.h>
 #include <audio/SDLAudioRenderer.h>
 #include <native_window/external_window.h>
 #include <video/FFmpegVideoDecoder.h>
@@ -17,14 +18,31 @@
 #include "video/AVFrameHolder.h"
 #include <unistd.h>
 #include <arpa/inet.h>
+#include "audio/Audio.h"
 
 static FFmpegVideoDecoder *m_decoder = nullptr;
 static SDLAudioRenderer *m_audioRender = nullptr;
 void *MoonBridge::nativewindow = nullptr;
 napi_env MoonBridge::env;
 std::unordered_map<std::string, napi_ref> MoonBridge::m_funRefs;
+static napi_threadsafe_function tsfn;
 
 static napi_value MoonBridge_startConnection(napi_env env, napi_callback_info info);
+
+static int OnVideoStatus(VIDEO_STATS *stats);
+
+napi_value ConvertIntToNapiValue(napi_env env, float intValue) {
+    napi_value result;
+    napi_status status;
+
+    // Convert the int to a JavaScript Number
+    status = napi_create_double(env, intValue, &result);
+    if (status != napi_ok) {
+        // Handle error
+        return NULL;
+    }
+    return result;
+}
 
 int BridgeDrSetup(int videoFormat, int width, int height, int redrawRate, void *context, int drFlags) {
     OH_LOG_Print(LOG_APP, LOG_INFO, LOG_DOMAIN, "testTag", "BridgeDrSetup");
@@ -52,11 +70,16 @@ void BridgeDrCleanup(void) {
     OH_LOG_Print(LOG_APP, LOG_INFO, LOG_DOMAIN, "testTag", "BridgeDrCleanup");
     m_decoder->cleanup();
 }
-
+static napi_ref onVideoStatsCb;
+struct VideoStatusCallbackInfo {
+    napi_async_work asyncWork;
+};
 int BridgeDrSubmitDecodeUnit(PDECODE_UNIT decodeUnit) {
-    return m_decoder->submitDecodeUnit(decodeUnit);
+    int ret = m_decoder->submitDecodeUnit(decodeUnit);
+     napi_call_threadsafe_function(tsfn, m_decoder->video_decode_stats(), napi_tsfn_nonblocking);
+    return ret;
 }
-
+static POPUS_MULTISTREAM_CONFIGURATION config;
 int BridgeArInit(int audioConfiguration, POPUS_MULTISTREAM_CONFIGURATION opusConfig, void *context, int flags) {
     return m_audioRender->init(audioConfiguration, opusConfig, context, flags);
 }
@@ -74,7 +97,6 @@ void BridgeArCleanup() {
 }
 
 void BridgeArDecodeAndPlaySample(char *sampleData, int sampleLength) {
-    OH_LOG_Print(LOG_APP, LOG_INFO, LOG_DOMAIN, "testTag", "BridgeArDecodeAndPlaySample");
     m_audioRender->decode_and_play_sample(sampleData, sampleLength);
 }
 
@@ -170,7 +192,7 @@ static AUDIO_RENDERER_CALLBACKS BridgeAudioRendererCallbacks = {
 void BridgeClLogMessage(const char *format, ...) {
     va_list va;
     va_start(va, format);
-    OH_LOG_Print(LOG_APP, LOG_INFO, LOG_DOMAIN, "moon_bridge", format, va);
+    OH_LOG_Print(LOG_APP, LOG_INFO, LOG_DOMAIN, "testTag", format, va);
     va_end(va);
 }
 
@@ -329,7 +351,6 @@ static napi_value MoonBridge_startConnection(napi_env env, napi_callback_info in
         },
         [](napi_env env, napi_status status, void *data) {
             BridgeCallbackInfo *info = (BridgeCallbackInfo *)data;
-
             napi_delete_async_work(env, info->asyncWork);
             delete info;
         },
@@ -337,90 +358,207 @@ static napi_value MoonBridge_startConnection(napi_env env, napi_callback_info in
     // 将异步工作排队，等待 Node.js 事件循环处理
     napi_queue_async_work(env, bridgeCallbackInfo->asyncWork);
     napi_value result;
-    napi_create_int32(env, -99, &result);
+    napi_create_int32(env, -1, &result);
     return result;
 }
 static napi_value MoonBridge_stopConnection(napi_env env, napi_callback_info info) {
     LiStopConnection();
+    return nullptr;
 }
 static napi_value MoonBridge_interruptConnection(napi_env env, napi_callback_info info) {
     LiInterruptConnection();
+    return nullptr;
 }
+
+static void Napi_ThreadSafe_TestFunction(napi_env env, napi_value js_callback, void *context, void *data)
+{
+    VIDEO_STATS* status = (VIDEO_STATS*)data;
+       napi_value params[1];
+       napi_value stats;
+       napi_create_object(env, &stats);
+       napi_set_named_property(env, stats, "decodedFps", ConvertIntToNapiValue(env, status->decodedFps));
+       napi_set_named_property(env, stats, "receivedFps", ConvertIntToNapiValue(env, status->receivedFps));
+       napi_set_named_property(env, stats, "renderedFps", ConvertIntToNapiValue(env, status->renderedFps));
+       napi_set_named_property(env, stats, "totalFps", ConvertIntToNapiValue(env, status->totalFps));
+       napi_set_named_property(env, stats, "networkDroppedFrames", ConvertIntToNapiValue(env, status->networkDroppedFrames));
+       params[0] = stats;
+       napi_call_function(env, nullptr, js_callback, 1, params, nullptr);
+    
+}
+
+static napi_value MoonBridge_onVideoStatus(napi_env env, napi_callback_info info) {
+    size_t argc = 1;
+    napi_value args[1] = {nullptr};
+    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    napi_value resourceName;
+    napi_create_string_latin1(env, "testFunction", NAPI_AUTO_LENGTH, &resourceName);
+    napi_create_threadsafe_function(env, args[0], NULL,resourceName, 0, 1, NULL, NULL,NULL, Napi_ThreadSafe_TestFunction, &tsfn);
+    
+    napi_create_reference(env, args[0], 1, &onVideoStatsCb);
+    
+    return nullptr;
+}
+
+static int OnVideoStatus(VIDEO_STATS *status) {
+   
+    return 0;
+}
+
+// <limelight.h>
+uint8_t getTouchEvent(OH_NativeXComponent_TouchEventType type) {
+    uint8_t eventType;
+    switch (type) {
+    case OH_NATIVEXCOMPONENT_DOWN:
+        eventType = LI_TOUCH_EVENT_DOWN;
+        break;
+    case OH_NATIVEXCOMPONENT_UP:
+        eventType = LI_TOUCH_EVENT_UP;
+        break;
+    case OH_NATIVEXCOMPONENT_MOVE:
+        eventType = LI_TOUCH_EVENT_MOVE;
+        break;
+    case OH_NATIVEXCOMPONENT_CANCEL:
+        eventType = LI_TOUCH_EVENT_CANCEL_ALL;
+        break;
+    default:
+        LI_ROT_UNKNOWN;
+    }
+    return eventType;
+}
+
+int MoonBridge_sendTouchEvent(
+    OH_NativeXComponent_TouchEvent touchEvent,
+    uint64_t width, uint64_t height) {
+    uint8_t eventType = getTouchEvent(touchEvent.type);
+    uint32_t pointerId;
+    float x, y;
+    int ret = 0;
+    float pressureOrDistance = touchEvent.force;
+    float contactAreaMajor = 0.0f;
+    float contactAreaMinor = 0.0f;
+    float rotation = LI_ROT_UNKNOWN;
+    if (touchEvent.type == OH_NATIVEXCOMPONENT_MOVE) {
+        for (int i = 0; i < touchEvent.numPoints; i++) {
+            pointerId = touchEvent.touchPoints[i].id;
+            pressureOrDistance = touchEvent.touchPoints[i].force;
+            if (touchEvent.touchPoints[i].isPressed) {
+                LiSendTouchEvent(eventType, pointerId, touchEvent.touchPoints[i].x / width, touchEvent.touchPoints[i].y / height, pressureOrDistance, contactAreaMajor, contactAreaMinor, rotation);
+            } else {
+            }
+        }
+        ret = 0;
+    } else if (touchEvent.type == OH_NATIVEXCOMPONENT_CANCEL) {
+        ret = LiSendTouchEvent(LI_TOUCH_EVENT_CANCEL_ALL, 0, 0, 0, 0, 0, 0, rotation);
+    } else {
+        pointerId = touchEvent.touchPoints[0].id;
+        x = touchEvent.touchPoints[0].x / width;
+        y = touchEvent.touchPoints[0].y / height;
+        pressureOrDistance = touchEvent.touchPoints[0].force;
+        ret = LiSendTouchEvent(eventType, pointerId, x, y, pressureOrDistance, contactAreaMajor, contactAreaMinor, rotation);
+    }
+    return ret;
+}
+int MoonBridge_sendMouseEvent(
+    OH_NativeXComponent_MouseEvent mouseEvent,
+    uint64_t width, uint64_t height) {
+    uint8_t button;
+    switch (mouseEvent.button) {
+    case OH_NATIVEXCOMPONENT_LEFT_BUTTON:
+        button = BUTTON_LEFT;
+    case OH_NATIVEXCOMPONENT_RIGHT_BUTTON:
+        button = BUTTON_RIGHT;
+    case OH_NATIVEXCOMPONENT_MIDDLE_BUTTON:
+        button = BUTTON_MIDDLE;
+    case OH_NATIVEXCOMPONENT_BACK_BUTTON:
+        button = BUTTON_X1;
+    case OH_NATIVEXCOMPONENT_FORWARD_BUTTON:
+        button = BUTTON_X2;
+    }
+    if (mouseEvent.action == OH_NATIVEXCOMPONENT_MOUSE_MOVE) {
+        LiSendMousePositionEvent(mouseEvent.x, mouseEvent.y, width, height);
+    }
+    if (mouseEvent.action == OH_NATIVEXCOMPONENT_MOUSE_PRESS) {
+        LiSendMouseButtonEvent(BUTTON_ACTION_PRESS, button);
+    }
+    if (mouseEvent.action == OH_NATIVEXCOMPONENT_MOUSE_RELEASE) {
+        LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, button);
+    }
+    return 0;
+}
+
 static napi_value MoonBridge_sendMouseMove(napi_env env, napi_callback_info info) {
-    //LiSendMouseMoveEvent(deltaX, deltaY);
+    // LiSendMouseMoveEvent(deltaX, deltaY);
 }
 static napi_value MoonBridge_sendMousePosition(napi_env env, napi_callback_info info) {
-    //LiSendMousePositionEvent(x, y, referenceWidth, referenceHeight);
+    // LiSendMousePositionEvent(x, y, referenceWidth, referenceHeight);
 }
 static napi_value MoonBridge_sendMouseMoveAsMousePosition(napi_env env, napi_callback_info info) {
-    //LiSendMouseMoveAsMousePositionEvent(deltaX, deltaY, referenceWidth, referenceHeight);
+    // LiSendMouseMoveAsMousePositionEvent(deltaX, deltaY, referenceWidth, referenceHeight);
 }
 static napi_value MoonBridge_sendMouseButton(napi_env env, napi_callback_info info) {
-    //LiSendMouseButtonEvent(buttonEvent, mouseButton);
+    // LiSendMouseButtonEvent(buttonEvent, mouseButton);
 }
 static napi_value MoonBridge_sendMultiControllerInput(napi_env env, napi_callback_info info) {
     // LiSendMultiControllerEvent(controllerNumber, activeGamepadMask, buttonFlags,
-          //        leftTrigger, rightTrigger, leftStickX, leftStickY, rightStickX, rightStickY);
+    //        leftTrigger, rightTrigger, leftStickX, leftStickY, rightStickX, rightStickY);
 }
 static napi_value MoonBridge_sendTouchEvent(napi_env env, napi_callback_info info) {
     // LiSendTouchEvent(eventType, pointerId, x, y, pressureOrDistance,
-      //                          contactAreaMajor, contactAreaMinor, rotation);
+    //                          contactAreaMajor, contactAreaMinor, rotation);
 }
 static napi_value MoonBridge_sendPenEvent(napi_env env, napi_callback_info info) {
-     // LiSendPenEvent(eventType, toolType, penButtons, x, y, pressureOrDistance,
-       //                       contactAreaMajor, contactAreaMinor, rotation, tilt);
+    // LiSendPenEvent(eventType, toolType, penButtons, x, y, pressureOrDistance,
+    //                       contactAreaMajor, contactAreaMinor, rotation, tilt);
 }
 static napi_value MoonBridge_sendControllerTouchEvent(napi_env env, napi_callback_info info) {
-    //LiSendControllerArrivalEvent(controllerNumber, activeGamepadMask, type, supportedButtonFlags, capabilities);
+    // LiSendControllerArrivalEvent(controllerNumber, activeGamepadMask, type, supportedButtonFlags, capabilities);
 }
 static napi_value MoonBridge_sendControllerArrivalEvent(napi_env env, napi_callback_info info) {
-     //LiSendControllerTouchEvent(controllerNumber, eventType, pointerId, x, y, pressure);
+    // LiSendControllerTouchEvent(controllerNumber, eventType, pointerId, x, y, pressure);
 }
 static napi_value MoonBridge_sendControllerMotionEvent(napi_env env, napi_callback_info info) {
-   
-    //LiSendControllerMotionEvent(controllerNumber, motionType, x, y, z);
-    
+
+    // LiSendControllerMotionEvent(controllerNumber, motionType, x, y, z);
 }
 static napi_value MoonBridge_sendControllerBatteryEvent(napi_env env, napi_callback_info info) {
     //  LiSendControllerBatteryEvent(controllerNumber, batteryState, batteryPercentage);
 }
 static napi_value MoonBridge_sendKeyboardInput(napi_env env, napi_callback_info info) {
-    //LiSendKeyboardEvent2(keyCode, keyAction, modifiers, flags);
+    // LiSendKeyboardEvent2(keyCode, keyAction, modifiers, flags);
 }
 static napi_value MoonBridge_sendMouseHighResScroll(napi_env env, napi_callback_info info) {
-    //LiSendHighResScrollEvent(scrollAmount);
+    // LiSendHighResScrollEvent(scrollAmount);
 }
 static napi_value MoonBridge_sendMouseHighResHScroll(napi_env env, napi_callback_info info) {
     // LiSendHighResHScrollEvent(scrollAmount);
 }
 static napi_value MoonBridge_sendUtf8Text(napi_env env, napi_callback_info info) {
-     //const char* utf8Text = (*env)->GetStringUTFChars(env, text, NULL);
-      //  LiSendUtf8TextEvent(utf8Text, strlen(utf8Text));
-       // (*env)->ReleaseStringUTFChars(env, text, utf8Text);
+    // const char* utf8Text = (*env)->GetStringUTFChars(env, text, NULL);
+    //   LiSendUtf8TextEvent(utf8Text, strlen(utf8Text));
+    //  (*env)->ReleaseStringUTFChars(env, text, utf8Text);
 }
 
 static napi_value MoonBridge_findExternalAddressIP4(napi_env env, napi_callback_info info) {
-        size_t argc = 2;
-        napi_value args[2] = {nullptr};
-        napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
-        int stunPort;
-        struct in_addr wanAddr;
-        const char* stunHostNameStr = get_value_string(env, args[0]);
-        int err = LiFindExternalAddressIP4(stunHostNameStr, stunPort, &wanAddr.s_addr);
-        delete stunHostNameStr;
-    
-        if (err == 0) {
-            char addrStr[INET_ADDRSTRLEN];
-            inet_ntop(AF_INET, &wanAddr, addrStr, sizeof(addrStr));
-            OH_LOG_Print(LOG_APP, LOG_INFO, LOG_DOMAIN, "moonlight-common-c", "Resolved WAN address to %{public}s", addrStr);
-            napi_value result;
-            napi_create_string_utf8(env, addrStr, sizeof(addrStr), &result);
-            return result;
-        }
-        else {
-            OH_LOG_Print(LOG_APP, LOG_INFO, LOG_DOMAIN, "moonlight-common-c", "STUN failed to get WAN address: %{public}d", err);
-            return NULL;
-        }
+    size_t argc = 2;
+    napi_value args[2] = {nullptr};
+    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    int stunPort;
+    struct in_addr wanAddr;
+    const char *stunHostNameStr = get_value_string(env, args[0]);
+    int err = LiFindExternalAddressIP4(stunHostNameStr, stunPort, &wanAddr.s_addr);
+    delete stunHostNameStr;
+
+    if (err == 0) {
+        char addrStr[INET_ADDRSTRLEN];
+        inet_ntop(AF_INET, &wanAddr, addrStr, sizeof(addrStr));
+        OH_LOG_Print(LOG_APP, LOG_INFO, LOG_DOMAIN, "moonlight-common-c", "Resolved WAN address to %{public}s", addrStr);
+        napi_value result;
+        napi_create_string_utf8(env, addrStr, sizeof(addrStr), &result);
+        return result;
+    } else {
+        OH_LOG_Print(LOG_APP, LOG_INFO, LOG_DOMAIN, "moonlight-common-c", "STUN failed to get WAN address: %{public}d", err);
+        return NULL;
+    }
 }
 
 enum TestEnum {
@@ -449,6 +587,7 @@ static napi_value MoonBridgeJavascriptClassConstructor(napi_env env, napi_callba
 static OH_NativeXComponent_Callback callback;
 
 void MoonBridgeJavascriptClassInit(napi_env env, napi_value exports) {
+    MoonBridge::env = env;
     // 需要 api 9 没有真机测试
     // m_decoder = (IVideoDecoder *)new NativeVideoDecoder();
     // 软解码 ffmpeg cpu
@@ -456,11 +595,12 @@ void MoonBridgeJavascriptClassInit(napi_env env, napi_value exports) {
     m_audioRender = new SDLAudioRenderer();
     napi_property_descriptor descriptors[] = {
         {"startConnection", nullptr, MoonBridge_startConnection, nullptr, nullptr, nullptr, napi_default, nullptr},
+        {"onVideoStatus", nullptr, MoonBridge_onVideoStatus, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"stopConnection", nullptr, MoonBridge_stopConnection, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"interruptConnection", nullptr, MoonBridge_interruptConnection, nullptr, nullptr, nullptr, napi_default, nullptr},
-    
+
     };
-        
+
     napi_value result = nullptr;
 
     napi_define_class(env, "MoonBridgeNapi", NAPI_AUTO_LENGTH, MoonBridgeJavascriptClassConstructor, nullptr,

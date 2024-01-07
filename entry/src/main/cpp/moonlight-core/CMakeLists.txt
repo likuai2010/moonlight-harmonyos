@@ -40,9 +40,11 @@ add_subdirectory(sdl)
 add_subdirectory(moonlight-common-c)
 
 
-
 add_library(entry SHARED
 hello.cpp
+audio/Audio.cpp
+audio/DataQueue.cpp
+audio/PcmData.cpp
 Shader.cpp
 moon_bridge.cpp
 utils/x509Utils.cpp

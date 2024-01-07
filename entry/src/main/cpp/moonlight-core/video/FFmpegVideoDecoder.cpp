@@ -199,11 +199,6 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du) {
             m_video_decode_stats.decodedFrames++;
 
             m_frame = get_frame(true);
-            if (m_frame->format == AV_PIX_FMT_YUV420P) {
-                ffDecodeLog("frame format is  AV_PIX_FMT_YUV420P");
-            } else {
-                ffDecodeLog("frame format %{public}d", m_frame->format);
-            }
             ffDecodeLog("frame size %{public}d X %{public}d", m_frame->width, m_frame->height);
             AVFrameHolder::GetInstance()->push(m_frame);
         }

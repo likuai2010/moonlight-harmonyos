@@ -24,7 +24,6 @@ export class Game implements NvConnectionListener {
     config.remote = 2
     config.sops = true
     config.enableAdaptiveResolution = false
-
     this.conn = new NvConnection(new AddressTuple("192.168.3.5", NvHttp.DEFAULT_HTTP_PORT), httpsPort, uniqueId, config)
   }
 
@@ -81,6 +80,6 @@ export class Game implements NvConnectionListener {
   }
 
   async surfaceChanged() {
-    await this.conn.start( this);
+    await this.conn.start(this);
   }
 }

@@ -8,19 +8,25 @@ export const verify_signature: (a: Uint8Array, b: Uint8Array, c: Uint8Array) => 
 export const sign_message: (message: Uint8Array, key: Uint8Array,) => Uint8Array;
 export const decrypt: (message: Uint8Array, key: Uint8Array,) => Uint8Array;
 export const encrypt: (message: Uint8Array, key: Uint8Array,) => Uint8Array;
+export const openSlEsPlayer_sendPcmData: (message: Uint8Array) => void;
 
 export declare class CurlClient {
   close()
   get(url: string, timeout: Number, client: string, key: string): Promise<string>;
 }
-
+export declare class VideoStatus{
+  totalFps: Number
+  receivedFps: Number
+  decodedFps: Number
+  renderedFps: Number
+  networkDroppedFrames: number
+}
 export declare class MoonBridgeNapi {
   on(key:string, callback:(any:any)=> void)
-  getStageName(stage: number):string
   onBridgeClStageStarting(callback:(stage:string)=> void)
   onBridgeClStageComplete(callback:(stage:string)=> void)
   onBridgeClStageFailed(callback:(stage:string)=> void)
-
+  onVideoStatus(callback:(any:VideoStatus)=> void)
   startConnection(
     address: string, appVersion: string, gfeVersion: string,
     rtspSessionUrl: string, serverCodecModeSupport: number,
@@ -34,7 +40,7 @@ export declare class MoonBridgeNapi {
     colorSpace: number, colorRange: number
   ): number;
 
-  static stopConnection(): void;
+  stopConnection(): void;
 
   static interruptConnection(): void;
 

@@ -9,3 +9,4 @@
 /.clang-format
 /.clang-tidy
 **/.test
+entry/src/main/cpp/moonlight-core/ffmpeg/libohosffmpeg.z.so

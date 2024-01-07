@@ -1,4 +1,4 @@
-import { MoonBridgeNapi } from 'libentry.so';
+import { MoonBridgeNapi, VideoStatus } from 'libentry.so';
 import { ConnectionContext } from './ConnectionContext';
 import { AddressTuple, ComputerDetails } from '../http/ComputerDetails';
 import { NvHttp } from '../http/NvHttp';
@@ -226,7 +226,9 @@ export class NvConnection {
       return await this.launchNotRunningApp(h, context);
     }
   }
-
+  onVideoStatus(callback: (VideoStatus)=>void){
+    this.api.onVideoStatus(callback)
+  }
   protected async quitAndLaunch(h: NvHttp, context: ConnectionContext): Promise<boolean> {
     try {
       if (!await h.quitApp()) {

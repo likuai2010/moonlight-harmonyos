@@ -19,6 +19,7 @@
 #define MAX_CHANNEL_COUNT 6
 #define FRAME_SIZE 240
 #define FRAME_BUFFER 12
+#include "Audio.h"
 
 class SDLAudioRenderer : public IAudioRenderer {
   public:
@@ -33,6 +34,8 @@ class SDLAudioRenderer : public IAudioRenderer {
     int capabilities() override;
 
   private:
+    DataQueue *dataQueue = NULL;
+    Audio *audio = NULL;
     OpusMSDecoder *decoder;
     short pcmBuffer[FRAME_SIZE * MAX_CHANNEL_COUNT];
     SDL_AudioStream *m_stream;

@@ -8,20 +8,22 @@
 #define moonlight_moon_bridge_H
 #include "napi/native_api.h"
 #include "node_api.h"
+#include <ace/xcomponent/native_interface_xcomponent.h>
 #include <string>
 #include <unordered_map>
 
 void MoonBridgeJavascriptClassInit(napi_env env, napi_value exports);
 char *get_value_string(napi_env env, napi_value value);
-
+int MoonBridge_sendTouchEvent(OH_NativeXComponent_TouchEvent touchEvent, uint64_t width, uint64_t height);
+int MoonBridge_sendMouseEvent(OH_NativeXComponent_MouseEvent mouseEvent, uint64_t width, uint64_t height);
 class MoonBridge {
   public:
-
     static std::unordered_map<std::string, napi_ref> m_funRefs;
     static void *nativewindow;
     static napi_env env;
     // void Export(napi_env env, napi_value exports);
-    static napi_value Emit(char* eventName, napi_value* value);
+    static napi_value Emit(char *eventName, napi_value *value);
+
   private:
     napi_value On(napi_env env, napi_callback_info info);
 };
