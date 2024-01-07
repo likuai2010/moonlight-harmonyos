@@ -21,7 +21,7 @@ class FFmpegVideoDecoder : public IVideoDecoder {
   public:
     explicit FFmpegVideoDecoder();
     ~FFmpegVideoDecoder();
-
+    DECODER_PARAMETERS* params;
     int setup(DECODER_PARAMETERS* params) override;
     void cleanup() override;
     int submitDecodeUnit(PDECODE_UNIT decode_unit) override;

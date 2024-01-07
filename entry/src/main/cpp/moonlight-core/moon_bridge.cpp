@@ -5,7 +5,6 @@
 // please include "napi/native_api.h".
 
 #include "moon_bridge.h"
-#include <asm-generic/stat.h>
 #include <audio/SDLAudioRenderer.h>
 #include <native_window/external_window.h>
 #include <video/FFmpegVideoDecoder.h>
@@ -14,28 +13,50 @@
 #include "napi/native_api.h"
 #include <hilog/log.h>
 #include <ace/xcomponent/native_interface_xcomponent.h>
-#include "video/render/plugin_render.h"
 #include "video/AVFrameHolder.h"
 #include <unistd.h>
 #include <arpa/inet.h>
-#include "audio/Audio.h"
 
-static FFmpegVideoDecoder *m_decoder = nullptr;
-static SDLAudioRenderer *m_audioRender = nullptr;
-void *MoonBridge::nativewindow = nullptr;
-napi_env MoonBridge::env;
-std::unordered_map<std::string, napi_ref> MoonBridge::m_funRefs;
 static napi_threadsafe_function tsfn;
+MoonBridgeApi *MoonBridgeApi::api = new MoonBridgeApi();
 
-static napi_value MoonBridge_startConnection(napi_env env, napi_callback_info info);
+MoonBridgeApi::MoonBridgeApi() {
+    m_decoder = new FFmpegVideoDecoder();
+    m_audioRender = new SDLAudioRenderer();
+    BridgeVideoRendererCallbacks = {
+        .setup = BridgeDrSetup,
+        .start = BridgeDrStart,
+        .stop = BridgeDrStop,
+        .cleanup = BridgeDrCleanup,
+        .submitDecodeUnit = BridgeDrSubmitDecodeUnit,
+    };
+    BridgeAudioRendererCallbacks = {
+        .init = BridgeArInit,
+        .start = BridgeArStart,
+        .stop = BridgeArStop,
+        .cleanup = BridgeArCleanup,
+        .decodeAndPlaySample = BridgeArDecodeAndPlaySample,
+        .capabilities = CAPABILITY_SUPPORTS_ARBITRARY_AUDIO_DURATION};
+    CONNECTION_LISTENER_CALLBACKS BridgeConnListenerCallbacks = {
+        .stageStarting = BridgeClStageStarting,
+        .stageComplete = BridgeClStageComplete,
+        .stageFailed = BridgeClStageFailed,
+        .connectionStarted = BridgeClConnectionStarted,
+        .connectionTerminated = BridgeClConnectionTerminated,
+        .logMessage = BridgeClLogMessage,
+        .rumble = BridgeClRumble,
+        .connectionStatusUpdate = BridgeClConnectionStatusUpdate,
+        .setHdrMode = BridgeClSetHdrMode,
+        .rumbleTriggers = BridgeClRumbleTriggers,
+        .setMotionEventState = BridgeClSetMotionEventState,
+        .setControllerLED = BridgeClSetControllerLED,
+    };
+}
 
-static int OnVideoStatus(VIDEO_STATS *stats);
-
-napi_value ConvertIntToNapiValue(napi_env env, float intValue) {
+napi_value ConvertFloatToNapiValue(napi_env env, float intValue) {
     napi_value result;
     napi_status status;
 
-    // Convert the int to a JavaScript Number
     status = napi_create_double(env, intValue, &result);
     if (status != napi_ok) {
         // Handle error
@@ -43,174 +64,6 @@ napi_value ConvertIntToNapiValue(napi_env env, float intValue) {
     }
     return result;
 }
-
-int BridgeDrSetup(int videoFormat, int width, int height, int redrawRate, void *context, int drFlags) {
-    OH_LOG_Print(LOG_APP, LOG_INFO, LOG_DOMAIN, "testTag", "BridgeDrSetup");
-    DECODER_PARAMETERS param;
-    param.video_format = videoFormat;
-    param.width = width;
-    param.height = height;
-    param.context = MoonBridge::nativewindow;
-    param.frame_rate = redrawRate;
-    param.dr_flags = drFlags;
-    return m_decoder->setup(&param);
-}
-
-void BridgeDrStart(void) {
-    OH_LOG_Print(LOG_APP, LOG_INFO, LOG_DOMAIN, "testTag", "BridgeDrStart");
-    m_decoder->start();
-}
-
-void BridgeDrStop(void) {
-    OH_LOG_Print(LOG_APP, LOG_INFO, LOG_DOMAIN, "testTag", "BridgeDrStop");
-    m_decoder->stop();
-}
-
-void BridgeDrCleanup(void) {
-    OH_LOG_Print(LOG_APP, LOG_INFO, LOG_DOMAIN, "testTag", "BridgeDrCleanup");
-    m_decoder->cleanup();
-}
-static napi_ref onVideoStatsCb;
-struct VideoStatusCallbackInfo {
-    napi_async_work asyncWork;
-};
-int BridgeDrSubmitDecodeUnit(PDECODE_UNIT decodeUnit) {
-    int ret = m_decoder->submitDecodeUnit(decodeUnit);
-     napi_call_threadsafe_function(tsfn, m_decoder->video_decode_stats(), napi_tsfn_nonblocking);
-    return ret;
-}
-static POPUS_MULTISTREAM_CONFIGURATION config;
-int BridgeArInit(int audioConfiguration, POPUS_MULTISTREAM_CONFIGURATION opusConfig, void *context, int flags) {
-    return m_audioRender->init(audioConfiguration, opusConfig, context, flags);
-}
-
-void BridgeArStart(void) {
-    m_audioRender->start();
-}
-
-void BridgeArStop(void) {
-    m_audioRender->stop();
-}
-
-void BridgeArCleanup() {
-    m_audioRender->cleanup();
-}
-
-void BridgeArDecodeAndPlaySample(char *sampleData, int sampleLength) {
-    m_audioRender->decode_and_play_sample(sampleData, sampleLength);
-}
-
-void BridgeClStageStarting(int stage) {
-    napi_value params[1];
-    napi_create_int32(MoonBridge::env, stage, &params[0]);
-    MoonBridge::Emit("BridgeClStageStarting", params);
-}
-
-void BridgeClStageComplete(int stage) {
-    napi_value params[1];
-    napi_create_int32(MoonBridge::env, stage, &params[0]);
-    MoonBridge::Emit("BridgeClStageComplete", params);
-}
-
-void BridgeClStageFailed(int stage, int errorCode) {
-    napi_value params[2];
-    napi_create_int32(MoonBridge::env, stage, &params[0]);
-    napi_create_int32(MoonBridge::env, errorCode, &params[1]);
-    MoonBridge::Emit("BridgeClStageFailed", params);
-}
-
-void BridgeClConnectionStarted(void) {
-    napi_value params[0];
-    MoonBridge::Emit("BridgeClConnectionStarted", params);
-}
-
-void BridgeClConnectionTerminated(int errorCode) {
-    napi_value params[1];
-    napi_create_int32(MoonBridge::env, errorCode, &params[0]);
-    MoonBridge::Emit("BridgeClConnectionTerminated", params);
-}
-
-void BridgeClConnectionStatusUpdate(int connectionStatus) {
-    napi_value params[1];
-    napi_create_int32(MoonBridge::env, connectionStatus, &params[0]);
-    MoonBridge::Emit("BridgeClConnectionTerminated", params);
-}
-
-void BridgeClSetHdrMode(bool enabled) {
-    napi_value params[1];
-    napi_create_int32(MoonBridge::env, enabled, &params[0]);
-    MoonBridge::Emit("BridgeClSetHdrMode", params);
-}
-
-void BridgeClRumble(unsigned short controllerNumber, unsigned short lowFreqMotor, unsigned short highFreqMotor) {
-    napi_value params[3];
-    napi_create_int32(MoonBridge::env, controllerNumber, &params[0]);
-    napi_create_int32(MoonBridge::env, lowFreqMotor, &params[1]);
-    napi_create_int32(MoonBridge::env, highFreqMotor, &params[2]);
-    MoonBridge::Emit("BridgeClRumble", params);
-}
-
-void BridgeClRumbleTriggers(unsigned short controllerNumber, unsigned short leftTrigger, unsigned short rightTrigger) {
-    napi_value params[3];
-    napi_create_int32(MoonBridge::env, controllerNumber, &params[0]);
-    napi_create_int32(MoonBridge::env, leftTrigger, &params[1]);
-    napi_create_int32(MoonBridge::env, rightTrigger, &params[2]);
-    MoonBridge::Emit("BridgeClRumbleTriggers", params);
-}
-
-void BridgeClSetMotionEventState(uint16_t controllerNumber, uint8_t motionType, uint16_t reportRateHz) {
-    napi_value params[1];
-    napi_create_int32(MoonBridge::env, controllerNumber, &params[0]);
-    napi_create_int32(MoonBridge::env, motionType, &params[1]);
-    napi_create_int32(MoonBridge::env, reportRateHz, &params[2]);
-    MoonBridge::Emit("BridgeClSetMotionEventState", params);
-}
-
-void BridgeClSetControllerLED(uint16_t controllerNumber, uint8_t r, uint8_t g, uint8_t b) {
-    napi_value params[41];
-    napi_create_int32(MoonBridge::env, controllerNumber, &params[0]);
-    napi_create_int32(MoonBridge::env, r, &params[1]);
-    napi_create_int32(MoonBridge::env, g, &params[2]);
-    napi_create_int32(MoonBridge::env, b, &params[3]);
-    MoonBridge::Emit("BridgeClSetControllerLED", params);
-}
-static DECODER_RENDERER_CALLBACKS BridgeVideoRendererCallbacks = {
-    .setup = BridgeDrSetup,
-    .start = BridgeDrStart,
-    .stop = BridgeDrStop,
-    .cleanup = BridgeDrCleanup,
-    .submitDecodeUnit = BridgeDrSubmitDecodeUnit,
-};
-
-static AUDIO_RENDERER_CALLBACKS BridgeAudioRendererCallbacks = {
-    .init = BridgeArInit,
-    .start = BridgeArStart,
-    .stop = BridgeArStop,
-    .cleanup = BridgeArCleanup,
-    .decodeAndPlaySample = BridgeArDecodeAndPlaySample,
-    .capabilities = CAPABILITY_SUPPORTS_ARBITRARY_AUDIO_DURATION};
-void BridgeClLogMessage(const char *format, ...) {
-    va_list va;
-    va_start(va, format);
-    OH_LOG_Print(LOG_APP, LOG_INFO, LOG_DOMAIN, "testTag", format, va);
-    va_end(va);
-}
-
-static CONNECTION_LISTENER_CALLBACKS BridgeConnListenerCallbacks = {
-    .stageStarting = BridgeClStageStarting,
-    .stageComplete = BridgeClStageComplete,
-    .stageFailed = BridgeClStageFailed,
-    .connectionStarted = BridgeClConnectionStarted,
-    .connectionTerminated = BridgeClConnectionTerminated,
-    .logMessage = BridgeClLogMessage,
-    .rumble = BridgeClRumble,
-    .connectionStatusUpdate = BridgeClConnectionStatusUpdate,
-    .setHdrMode = BridgeClSetHdrMode,
-    .rumbleTriggers = BridgeClRumbleTriggers,
-    .setMotionEventState = BridgeClSetMotionEventState,
-    .setControllerLED = BridgeClSetControllerLED,
-};
-
 char *get_value_string(napi_env env, napi_value value) {
     size_t length;
     napi_get_value_string_utf8(env, value, nullptr, 0, &length);
@@ -225,12 +78,10 @@ struct BridgeCallbackInfo {
     EglVideoRenderer *render;
     napi_async_work asyncWork;
 };
-
-static napi_value MoonBridge_startConnection(napi_env env, napi_callback_info info) {
+napi_value MoonBridgeApi::MoonBridge_startConnection(napi_env env, napi_callback_info info) {
     size_t argc = 20;
     napi_value args[20] = {nullptr};
     napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
-
     char *address;        // 假设字符串不超过 256 个字符
     char *appVersion;     // 假设字符串不超过 256 个字符
     char *gfeVersion;     // 假设字符串不超过 256 个字符
@@ -316,8 +167,16 @@ static napi_value MoonBridge_startConnection(napi_env env, napi_callback_info in
     memcpy(streamConfig.remoteInputAesKey, riAesKey, sizeof(streamConfig.remoteInputAesKey));
     memcpy(streamConfig.remoteInputAesIv, riAesIv, sizeof(streamConfig.remoteInputAesIv));
 
-    BridgeVideoRendererCallbacks.capabilities = videoCapabilities;
+    api->BridgeVideoRendererCallbacks.capabilities = videoCapabilities;
+    int ret = LiStartConnection(&serverInfo,
+                                &streamConfig,
+                                &api->BridgeConnListenerCallbacks,
+                                &api->BridgeVideoRendererCallbacks,
+                                &api->BridgeAudioRendererCallbacks,
+                                nullptr, 0,
+                                nullptr, 0);
 
+    OH_LOG_Print(LOG_APP, LOG_INFO, LOG_DOMAIN, "testTag", "start con -> %{public}d", ret);
     EglVideoRenderer *render = new EglVideoRenderer();
     BridgeCallbackInfo *bridgeCallbackInfo = new BridgeCallbackInfo{
         .serverInfo = serverInfo,
@@ -329,19 +188,7 @@ static napi_value MoonBridge_startConnection(napi_env env, napi_callback_info in
         env, nullptr, resourceName,
         [](napi_env env, void *data) {
             BridgeCallbackInfo *info = (BridgeCallbackInfo *)data;
-            int ret = LiStartConnection(&info->serverInfo,
-                                        &info->streamConfig,
-                                        &BridgeConnListenerCallbacks,
-                                        &BridgeVideoRendererCallbacks,
-                                        &BridgeAudioRendererCallbacks,
-                                        nullptr, 0,
-                                        nullptr, 0);
-            OH_LOG_Print(LOG_APP, LOG_INFO, LOG_DOMAIN, "testTag", "start con -> %{public}d", ret);
-            DECODER_PARAMETERS params;
-            params.context = MoonBridge::nativewindow;
-            params.width = 1280;
-            params.height = 720;
-            info->render->initialize(&params);
+            info->render->initialize(api->m_decoder->params);
             while (true) {
                 AVFrameHolder::GetInstance()->get([info](AVFrame *frame) {
                     info->render->renderFrame(frame);
@@ -361,29 +208,31 @@ static napi_value MoonBridge_startConnection(napi_env env, napi_callback_info in
     napi_create_int32(env, -1, &result);
     return result;
 }
-static napi_value MoonBridge_stopConnection(napi_env env, napi_callback_info info) {
+napi_value MoonBridgeApi::MoonBridge_stopConnection(napi_env env, napi_callback_info info) {
     LiStopConnection();
     return nullptr;
 }
-static napi_value MoonBridge_interruptConnection(napi_env env, napi_callback_info info) {
+napi_value MoonBridgeApi::MoonBridge_interruptConnection(napi_env env, napi_callback_info info) {
     LiInterruptConnection();
     return nullptr;
 }
 
-static void Napi_ThreadSafe_TestFunction(napi_env env, napi_value js_callback, void *context, void *data)
-{
-    VIDEO_STATS* status = (VIDEO_STATS*)data;
-       napi_value params[1];
-       napi_value stats;
-       napi_create_object(env, &stats);
-       napi_set_named_property(env, stats, "decodedFps", ConvertIntToNapiValue(env, status->decodedFps));
-       napi_set_named_property(env, stats, "receivedFps", ConvertIntToNapiValue(env, status->receivedFps));
-       napi_set_named_property(env, stats, "renderedFps", ConvertIntToNapiValue(env, status->renderedFps));
-       napi_set_named_property(env, stats, "totalFps", ConvertIntToNapiValue(env, status->totalFps));
-       napi_set_named_property(env, stats, "networkDroppedFrames", ConvertIntToNapiValue(env, status->networkDroppedFrames));
-       params[0] = stats;
-       napi_call_function(env, nullptr, js_callback, 1, params, nullptr);
-    
+static void Napi_OnVideoStatus(napi_env env, napi_value js_callback, void *context, void *data) {
+    VIDEO_STATS *status = (VIDEO_STATS *)data;
+   
+    napi_value stats;
+    napi_create_object(env, &stats);
+    napi_set_named_property(env, stats, "decodedFps", ConvertFloatToNapiValue(env, status->decodedFps));
+    napi_set_named_property(env, stats, "receivedFps", ConvertFloatToNapiValue(env, status->receivedFps));
+    napi_set_named_property(env, stats, "renderedFps", ConvertFloatToNapiValue(env, status->renderedFps));
+    napi_set_named_property(env, stats, "totalFps", ConvertFloatToNapiValue(env, status->totalFps));
+    napi_set_named_property(env, stats, "networkDroppedRate", ConvertFloatToNapiValue(env, status->networkDroppedFrames / status->totalFrames * 100));
+    napi_set_named_property(env, stats, "networkDroppedFrames", ConvertFloatToNapiValue(env, status->networkDroppedFrames));
+    napi_set_named_property(env, stats, "decodeTime", ConvertFloatToNapiValue(env, status->totalDecodeTime / status->decodedFrames));
+    napi_set_named_property(env, stats, "receivedTime", ConvertFloatToNapiValue(env, status->totalReassemblyTime / status->receivedFrames));
+    napi_value params[1];
+    params[0] = stats;
+    napi_call_function(env, nullptr, js_callback, 1, params, nullptr);
 }
 
 static napi_value MoonBridge_onVideoStatus(napi_env env, napi_callback_info info) {
@@ -391,17 +240,10 @@ static napi_value MoonBridge_onVideoStatus(napi_env env, napi_callback_info info
     napi_value args[1] = {nullptr};
     napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
     napi_value resourceName;
-    napi_create_string_latin1(env, "testFunction", NAPI_AUTO_LENGTH, &resourceName);
-    napi_create_threadsafe_function(env, args[0], NULL,resourceName, 0, 1, NULL, NULL,NULL, Napi_ThreadSafe_TestFunction, &tsfn);
-    
-    napi_create_reference(env, args[0], 1, &onVideoStatsCb);
-    
+    napi_create_string_latin1(env, "onVideoStatus", NAPI_AUTO_LENGTH, &resourceName);
+    napi_create_threadsafe_function(env, args[0], NULL, resourceName, 0, 1, NULL, NULL, NULL, Napi_OnVideoStatus, &tsfn);
+    MoonBridgeApi::api->setFunByName("OnVideoStatus", tsfn);
     return nullptr;
-}
-
-static int OnVideoStatus(VIDEO_STATS *status) {
-   
-    return 0;
 }
 
 // <limelight.h>
@@ -575,7 +417,6 @@ static napi_value MoonBridgeJavascriptClassConstructor(napi_env env, napi_callba
     napi_value thisArg = nullptr;
     void *data = nullptr;
     int vale = 1;
-    BridgeClLogMessage("MoonBridgeJavascriptClassConstructor xxx %d\n", vale);
     napi_get_cb_info(env, info, nullptr, nullptr, &thisArg, &data);
 
     napi_value global = nullptr;
@@ -586,19 +427,20 @@ static napi_value MoonBridgeJavascriptClassConstructor(napi_env env, napi_callba
 
 static OH_NativeXComponent_Callback callback;
 
-void MoonBridgeJavascriptClassInit(napi_env env, napi_value exports) {
-    MoonBridge::env = env;
+void MoonBridgeApi::Export(napi_env env, napi_value exports) {
     // 需要 api 9 没有真机测试
     // m_decoder = (IVideoDecoder *)new NativeVideoDecoder();
     // 软解码 ffmpeg cpu
-    m_decoder = new FFmpegVideoDecoder();
-    m_audioRender = new SDLAudioRenderer();
+    api->env = env;
     napi_property_descriptor descriptors[] = {
         {"startConnection", nullptr, MoonBridge_startConnection, nullptr, nullptr, nullptr, napi_default, nullptr},
-        {"onVideoStatus", nullptr, MoonBridge_onVideoStatus, nullptr, nullptr, nullptr, napi_default, nullptr},
+       
         {"stopConnection", nullptr, MoonBridge_stopConnection, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"interruptConnection", nullptr, MoonBridge_interruptConnection, nullptr, nullptr, nullptr, napi_default, nullptr},
-
+        {"onVideoStatus", nullptr, MoonBridge_onVideoStatus, nullptr, nullptr, nullptr, napi_default, nullptr},
+        {"onClStage", nullptr, On, nullptr, nullptr, nullptr, napi_default, nullptr},
+        {"onClStageFailed", nullptr, On, nullptr, nullptr, nullptr, napi_default, nullptr},
+        {"onClConnection", nullptr, On, nullptr, nullptr, nullptr, napi_default, nullptr},
     };
 
     napi_value result = nullptr;
@@ -611,8 +453,6 @@ void MoonBridgeJavascriptClassInit(napi_env env, napi_value exports) {
     napi_value exportInstance;
     if (napi_get_named_property(env, exports, "__NATIVE_XCOMPONENT_OBJ__", &exportInstance) != napi_ok) {
         OH_LOG_Print(LOG_APP, LOG_ERROR, 0, "PluginManager", "Export: napi_get_named_property fail");
-    } else {
-        OH_LOG_Print(LOG_APP, LOG_ERROR, 0, "PluginManager", "napi_get_named_property success");
     }
     OH_NativeXComponent *nativeXComponent = nullptr;
     if (napi_unwrap(env, exportInstance, reinterpret_cast<void **>(&nativeXComponent)) != napi_ok) {
@@ -636,28 +476,44 @@ void MoonBridgeJavascriptClassInit(napi_env env, napi_value exports) {
         }
         std::string id(idStr);
         PluginRender *pr = PluginRender::GetInstance(id);
-
         pr->Export(env, exports);
     }
 }
-
-napi_value MoonBridge::Emit(char *eventName, napi_value *value) {
-    auto it = MoonBridge::m_funRefs.find(eventName);
-    if (it != MoonBridge::m_funRefs.end()) {
-        napi_value callback;
-        napi_get_reference_value(env, it->second, &callback);
-        napi_call_function(env, nullptr, callback, sizeof(value), value, nullptr);
+napi_threadsafe_function MoonBridgeApi::getFunByName(char *eventName) {
+    auto it = m_funRefs.find(eventName);
+    if (it != m_funRefs.end()) {
+        return it->second;
     }
     return nullptr;
 }
-napi_value MoonBridge::On(napi_env env, napi_callback_info info) {
+int MoonBridgeApi::setFunByName(char *name, napi_threadsafe_function tsf) {
+    napi_threadsafe_function d = getFunByName(name);
+    if (d != nullptr) {
+        napi_release_threadsafe_function(d, napi_tsfn_release);
+    }
+    m_funRefs[name] = tsf;
+    return 0;
+}
+static void Napi_OnCallback(napi_env env, napi_value js_callback, void *context, void *data){
+    napi_value* params = (napi_value*)data;
+    napi_call_function(env, nullptr, js_callback, sizeof(params), params, nullptr);
+}
+
+napi_value MoonBridgeApi::Emit(char *eventName, void *value) {
+    napi_threadsafe_function tsf = api->getFunByName(eventName);
+    if(tsf != nullptr){
+        napi_threadsafe_function tsfn = api->getFunByName(eventName);
+        napi_call_threadsafe_function(tsfn, value, napi_tsfn_nonblocking);
+    }
+}
+napi_value MoonBridgeApi::On(napi_env env, napi_callback_info info) {
     size_t argc = 2;
     napi_value argv[2];
     napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
     char *eventName = get_value_string(env, argv[0]);
-    // 获取回调函数
-    napi_ref callbackRef;
-    napi_create_reference(env, argv[1], 1, &callbackRef);
-    m_funRefs[eventName] = callbackRef;
+    napi_value resourceName;
+    napi_create_string_latin1(env, eventName, NAPI_AUTO_LENGTH, &resourceName);
+    napi_create_threadsafe_function(env, argv[0], NULL, resourceName, 0, 1, NULL, NULL, NULL, Napi_OnCallback, &tsfn);
+    MoonBridgeApi::api->setFunByName(eventName, tsfn);
     return nullptr;
 };

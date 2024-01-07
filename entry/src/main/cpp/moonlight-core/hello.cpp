@@ -81,12 +81,10 @@ static napi_value Init(napi_env env, napi_value exports) {
         {"openSlEsPlayer_sendPcmData", nullptr, OpenSlEsPlayer_sendPcmData, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"get_signature_from_pemCert", nullptr, getSignatureFromPemCert, nullptr, nullptr, nullptr, napi_default, nullptr},
     };
-
     status = napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc);
     if (status != napi_ok)
         return NULL;
-
-    MoonBridgeJavascriptClassInit(env, exports);
+    MoonBridgeApi::api->Export(env, exports);
     HttpCurlInit(env, exports);
 
     return exports;

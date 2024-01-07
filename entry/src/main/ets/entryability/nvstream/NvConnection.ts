@@ -33,21 +33,17 @@ export class NvConnection {
   public async start(connectionListener: NvConnectionListener) {
     const context = this.context;
     this.context.connListener = connectionListener;
-    hilog.info(0x0000, "testTag", "start")
    // this.context.videoCapabilities = videoDecoderRenderer;
     const appName = this.context.streamConfig.app.appName;
     this.context.connListener.stageStarting(appName);
     try {
 
       if (!await this.startApp()) {
-        hilog.info(0x0000, "testTag", "start failure")
         this.context.connListener.stageFailed(appName, 0, 0);
         return;
       }
-      hilog.info(0x0000, "testTag", "start end")
       this.context.connListener.stageComplete(appName);
     } catch (e) {
-      hilog.info(0x0000, "testTag", "start error" + e)
       this.context.connListener.displayMessage(e.message);
       this.context.connListener.stageFailed(appName, 0, -1);
       return;
@@ -58,7 +54,6 @@ export class NvConnection {
       dd.writeUInt32BE(context.riKeyId)
       rikeyId = new Uint8Array(dd.buffer)
     } catch (e) {
-      hilog.info(0x0000, "testTag", "error: " + e)
       this.context.connListener.displayMessage(e.message);
       this.context.connListener.stageFailed(appName, 0, 0);
       return;

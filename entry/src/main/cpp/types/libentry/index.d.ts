@@ -15,17 +15,24 @@ export declare class CurlClient {
   get(url: string, timeout: Number, client: string, key: string): Promise<string>;
 }
 export declare class VideoStatus{
+  decoder: string
   totalFps: Number
   receivedFps: Number
   decodedFps: Number
   renderedFps: Number
+  networkDroppedRate: number
   networkDroppedFrames: number
+  decodeTime: number
+  receivedTime: number
 }
 export declare class MoonBridgeNapi {
-  on(key:string, callback:(any:any)=> void)
-  onBridgeClStageStarting(callback:(stage:string)=> void)
-  onBridgeClStageComplete(callback:(stage:string)=> void)
-  onBridgeClStageFailed(callback:(stage:string)=> void)
+  // BridgeClStageStarting,BridgeClStageComplete, BridgeClStageFailed
+  onClStage(key:string, callback:(stage:string)=> void)
+  // BridgeClStageFailed
+  onClStageFailed(key:string, callback:(stage:string, code: number)=> void)
+  // BridgeClConnectionStarted, BridgeClConnectionTerminated, BridgeClConnectionStatusUpdate
+  OnClConnection(callback:(code:number)=> void)
+
   onVideoStatus(callback:(any:VideoStatus)=> void)
   startConnection(
     address: string, appVersion: string, gfeVersion: string,
