@@ -21,7 +21,9 @@ static napi_threadsafe_function tsfn;
 MoonBridgeApi *MoonBridgeApi::api = new MoonBridgeApi();
 
 MoonBridgeApi::MoonBridgeApi() {
+    #ifdef FFMPEG_ENABLED
     m_decoder = new FFmpegVideoDecoder();
+    #endif
     m_audioRender = new SDLAudioRenderer();
     BridgeVideoRendererCallbacks = {
         .setup = BridgeDrSetup,

@@ -7,15 +7,22 @@ set(OPENSSL_INCLUDE_DIR ${OPENSSL_DIR}/include)
 set(CURL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/curl)
 set(CURL_INCLUDE_DIR ${CURL_DIR}/include)
 
+set(FFmpeg FALSE)
 
 include_directories(
 ${CMAKE_CURRENT_SOURCE_DIR}
-${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg/include
 ${CMAKE_CURRENT_SOURCE_DIR}/sdl/sdl-ohos/include
 ${CMAKE_CURRENT_SOURCE_DIR}/opus/include
 ${OPENSSL_INCLUDE_DIR}
 ${CURL_INCLUDE_DIR}
 )
+
+if (FFmpeg)
+    include_directories(${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg/include)
+    add_library(ffmpeg SHARED IMPORTED)
+    set_target_properties(ffmpeg PROPERTIES IMPORTED_LOCATION ${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg/${CMAKE_OHOS_ARCH_ABI}/libohosffmpeg.z.so)
+endif()
+
 # 导入静态库
 add_library(libssl STATIC IMPORTED)
 set_target_properties(libssl PROPERTIES IMPORTED_LOCATION ${OPENSSL_DIR}/${CMAKE_OHOS_ARCH_ABI}/libssl.a)
@@ -31,8 +38,7 @@ add_library(libcurl STATIC IMPORTED)
 set_target_properties(libcurl PROPERTIES IMPORTED_LOCATION ${CURL_DIR}/${CMAKE_OHOS_ARCH_ABI}/libcurl.a)
 set_target_properties(libcurl PROPERTIES INTERFACE_INCLUDE_DIRECTORIES ${CURL_INCLUDE_DIR})
 
-add_library(ffmpeg SHARED IMPORTED)
-set_target_properties(ffmpeg PROPERTIES IMPORTED_LOCATION ${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg/${CMAKE_OHOS_ARCH_ABI}/libohosffmpeg.z.so)
+
 
 
 add_subdirectory(opus)
@@ -50,13 +56,16 @@ moon_bridge.cpp
 utils/x509Utils.cpp
 utils/http_curl.cpp
 video/AVFrameHolder.cpp
-video/FFmpegVideoDecoder.cpp
 #video/NativeVideoDecoder.cpp
 video/render/eglRender.cpp
 video/render/plugin_render.cpp
 audio/SDLAudioRenderer.cpp
 )
-
+if (FFmpeg)
+    target_compile_definitions(entry PRIVATE FFMPEG_ENABLED)
+    target_sources(entry video/FFmpegVideoDecoder.cpp)
+    target_link_libraries(entry PRIVATE ffmpeg)
+endif()
 
 target_link_libraries(entry PRIVATE
 libssl
@@ -84,7 +93,6 @@ libhilog_ndk.z.so
 #libnative_media_codecbase.so
 # libnative_media_core.so
 #libnative_media_vdec.so
-ffmpeg
 libcurl
 EGL.so
 GLESv3.so
