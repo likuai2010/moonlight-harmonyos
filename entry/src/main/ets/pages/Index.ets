@@ -3,7 +3,6 @@ import router from '@ohos.router';
 import { LimelightCertProvider } from '../entryability/crypto/LimelightCryptoProvider';
 import { AddressTuple } from '../entryability/http/ComputerDetails';
 import { NvHttp } from '../entryability/http/NvHttp';
-import  { openSlEsPlayer_sendPcmData } from 'libentry.so'
 
 @Entry
 @Component
@@ -41,22 +40,12 @@ struct Index {
               console.log(e);
             }
           })
-        Button("audio")
+        Button("pc")
           .fontSize(50)
           .fontWeight(FontWeight.Bold)
           .onClick(async  () => {
             try {
-              let size = 240 * 2 * 2
-              let offset = 0;
-              getContext(this).resourceManager.getRawFileContent('mix.pcm').then((d)=>{
-                for (let index = 0; offset + size <= d.byteLength; index++) {
-                  const dd =  d.buffer.slice(offset, offset + size)
-                  const data = new Uint8Array(dd)
-                  openSlEsPlayer_sendPcmData(data)
-                  offset += size;
-                }
-              })
-
+              router.pushUrl({ url:"pages/PcPage" })
             }catch (e){
               console.log(e);
             }

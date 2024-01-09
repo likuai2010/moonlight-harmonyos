@@ -2,7 +2,7 @@ import hilog from '@ohos.hilog';
 import { Game } from 'ets/entryability/Game'
 import { VideoStatus } from 'libentry.so';
 import { MoonBridge } from '../entryability/nvstream/MoonBridge';
-import { Loading } from './Loading'
+import { Loading } from './compoments/Loading'
 const game = new Game()
 
 @Entry
