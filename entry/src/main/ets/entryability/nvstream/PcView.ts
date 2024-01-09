@@ -1,4 +1,4 @@
-import { ComputerDetails } from '../http/ComputerDetails';
+import { ComputerDetails } from '../computers/ComputerDetails';
 
 
 export function doPair(computer:ComputerDetails){

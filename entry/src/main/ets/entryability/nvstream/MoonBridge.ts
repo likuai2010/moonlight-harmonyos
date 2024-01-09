@@ -4,9 +4,8 @@ import Buffer from '@ohos.buffer'
 import crypto from '@ohos.security.cryptoFramework'
 import { NvApp } from '../http/NvApp'
 import { NvHttp } from '../http/NvHttp'
-import { AddressTuple, ComputerDetails } from '../http/ComputerDetails';
+import { AddressTuple, ComputerDetails } from '../computers/ComputerDetails';
 import { LimelightCertProvider, readFile, writeFile } from '../crypto/LimelightCryptoProvider';
-import { getHttps } from '../http/Http';
 import { bytesToHex, hexToBytes } from '../crypto/CryptoManager';
 import { NvConnectionListener } from './ConnetionListener';
 

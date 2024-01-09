@@ -16,6 +16,6 @@ struct AppPage {
       }
       .rowsTemplate('1fr 1fr 1fr')
       .columnsTemplate('1fr 1fr 1fr')
-    }.padding(10).height("100%").width("100%").backgroundColor(Color.Gray)
+    }.padding(10).height("100%").width("100%").backgroundColor($r("app.color.page_background"))
   }
 }

@@ -1,7 +1,7 @@
 import hilog from '@ohos.hilog';
 import router from '@ohos.router';
-import { LimelightCertProvider } from '../entryability/crypto/LimelightCryptoProvider';
-import { AddressTuple } from '../entryability/http/ComputerDetails';
+import LimelightCertProvider from '../entryability/crypto/LimelightCryptoProvider';
+import { AddressTuple } from '../entryability/computers/ComputerDetails';
 import { NvHttp } from '../entryability/http/NvHttp';
 
 @Entry
@@ -31,9 +31,7 @@ struct Index {
           .fontWeight(FontWeight.Bold)
           .onClick(async  () => {
             try {
-              const lime = new LimelightCertProvider()
-              await lime.initCertKeyPair()
-              const http = new NvHttp(new AddressTuple("192.168.3.5", 47989), 47984, null, lime)
+              const http = new NvHttp(new AddressTuple("192.168.3.5", 47989), 47984, null, LimelightCertProvider)
               const server = await http.getServerInfo(true)
               await http.pm.pair(server, "12345")
             }catch (e){
@@ -53,6 +51,6 @@ struct Index {
       }
     }
     .width('100%')
-    .height('100%')
+    .height('100%').backgroundColor($r("app.color.page_background"))
   }
 }

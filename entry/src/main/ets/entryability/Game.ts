@@ -1,5 +1,5 @@
 import { NvConnectionListener } from './nvstream/ConnetionListener';
-import { AddressTuple } from './http/ComputerDetails';
+import { AddressTuple } from './computers/ComputerDetails';
 import { NvApp } from './http/NvApp';
 import { NvHttp } from './http/NvHttp';
 import { NvConnection } from './nvstream/NvConnection';

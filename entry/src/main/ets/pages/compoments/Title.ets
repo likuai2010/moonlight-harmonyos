@@ -5,19 +5,20 @@ export struct NavTitle {
   title: string
   build() {
     Row(){
-      Text(this.title)
-        .fontSize(18).textAlign(TextAlign.Center)
+      Text(this.title).fontColor(Color.White)
+        .fontSize(23).textAlign(TextAlign.Center)
     }.width("100%").justifyContent(FlexAlign.Center)
     .height(50)
   }
 }
 
 @Component
-export struct Icon{
+export struct Icon {
   icon: Resource
+  iconSize: number = 48
   build(){
     Image(this.icon)
-      .width(50).height(50)
+      .width(this.iconSize).height(this.iconSize)
   }
 }
 
@@ -26,10 +27,10 @@ export struct MainTitle {
   title: string
   build() {
     Row(){
-      Icon({icon:$r("app.media.ic_public_settings")}).onClick(()=>{
+      Icon({icon:$r("app.media.settings")}).onClick(()=>{
         router.pushUrl({ url:"pages/SettingsPage" })
       })
-      Icon({icon: $r('app.media.ic_public_add_norm')}).onClick(()=>{
+      Icon({icon: $r('app.media.ic_add_to_queue_white_48px')}).onClick(()=>{
         router.pushUrl({ url:"pages/AddPage" })
       })
     }.justifyContent(FlexAlign.SpaceBetween)

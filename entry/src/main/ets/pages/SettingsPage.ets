@@ -15,6 +15,6 @@ struct SettingsPage {
           }.margin({ top: 10 }).backgroundColor(0xFFFFFF).borderRadius(15).padding({ left: 12 }).width('100%')
         }, item => item)
       }
-    }.scrollable(ScrollDirection.Vertical).edgeEffect(EdgeEffect.Spring)
+    }.height('100%').scrollable(ScrollDirection.Vertical).edgeEffect(EdgeEffect.Spring).backgroundColor($r("app.color.page_background"))
   }
 }

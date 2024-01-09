@@ -1,6 +1,6 @@
 import { MoonBridgeNapi, VideoStatus } from 'libentry.so';
 import { ConnectionContext } from './ConnectionContext';
-import { AddressTuple, ComputerDetails } from '../http/ComputerDetails';
+import { AddressTuple, ComputerDetails } from '../computers/ComputerDetails';
 import { NvHttp } from '../http/NvHttp';
 import { generateRiKey, generateRiKeyId } from '../crypto/CryptoManager';
 import {  MoonBridge } from './MoonBridge';
@@ -114,7 +114,7 @@ export class NvConnection {
       context.connListener.displayMessage("Server version malformed");
       return false;
     }
-    const details = h.getComputerDetails(serverInfo);
+    const details = h.getComputerDetailsByInfo(serverInfo);
     context.isNvidiaServerSoftware = details.nvidiaServer;
     // May be missing for older servers
     context.serverGfeVersion = h.getGfeVersion(serverInfo);

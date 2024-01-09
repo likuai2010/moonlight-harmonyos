@@ -1,5 +1,5 @@
-import { NvHttp } from './NvHttp'
-import { PairingManager, PairState } from './PairingManager'
+import { NvHttp } from '../http/NvHttp'
+import { PairingManager, PairState } from '../http/PairingManager'
 export enum ComputerState {
   ONLINE = 'ONLINE',
   OFFLINE = 'OFFLINE',

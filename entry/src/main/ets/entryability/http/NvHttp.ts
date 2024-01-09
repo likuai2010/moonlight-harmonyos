@@ -3,7 +3,7 @@ import Url from '@ohos.url'
 import xml from '@ohos.xml';
 
 import { PairingManager, PairState } from './PairingManager'
-import { AddressTuple, ComputerDetails, ComputerState } from './ComputerDetails'
+import { AddressTuple, ComputerDetails, ComputerState } from '../computers/ComputerDetails'
 import hilog from '@ohos.hilog';
 import util from '@ohos.util';
 import { LimelightCertProvider } from '../crypto/LimelightCryptoProvider';
@@ -256,8 +256,10 @@ export class NvHttp {
       return NvHttp.DEFAULT_HTTP_PORT
     }
   }
-
-  getComputerDetails(serverInfo: string): ComputerDetails {
+  async getComputerDetails(likelyOnline:boolean): Promise<ComputerDetails> {
+    return this.getComputerDetailsByInfo(await this.getServerInfo(likelyOnline));
+  }
+  getComputerDetailsByInfo(serverInfo: string): ComputerDetails {
     const details = new ComputerDetails();
     details.name = NvHttp.getXmlString(serverInfo, "hostname", false) || "UNKNOWN";
     // UUID is mandatory to determine which machine is responding

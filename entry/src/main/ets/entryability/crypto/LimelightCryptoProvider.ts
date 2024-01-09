@@ -1,5 +1,4 @@
 import cryptoCert from '@ohos.security.cert';
-import crypto from '@ohos.security.cryptoFramework';
 import fs from '@ohos.file.fs';
 import { generate_x509_certificate } from 'libentry.so';
 
@@ -14,11 +13,13 @@ export class LimelightCertProvider {
   public keyBytes: Uint8Array;
 
   constructor() {
-    this.certPath = LimelightCertProvider.filesDir + "/client.pem"
-    this.keyPath = LimelightCertProvider.filesDir + "/private.pem"
   }
 
-  async initCertKeyPair() {
+  async initCertKeyPair(filesDir: string) {
+    LimelightCertProvider.filesDir = filesDir
+    this.certPath = LimelightCertProvider.filesDir + "/client.pem"
+    this.keyPath = LimelightCertProvider.filesDir + "/private.pem"
+
     if (!fs.accessSync(this.certPath) || !fs.accessSync(this.keyPath) ) {
       generate_x509_certificate(this.certPath, this.keyPath)
     }
@@ -29,8 +30,6 @@ export class LimelightCertProvider {
     this.keyBytes = readFile(this.keyPath)
   }
 }
-
-
 export function readFile(filePath: string): Uint8Array {
   const file = fs.openSync(filePath)
   const stats = fs.statSync(filePath)
@@ -46,3 +45,5 @@ export function writeFile(filePath: string, data: string) {
   fs.fsyncSync(file.fd)
   fs.closeSync(file);
 }
+const provider = new LimelightCertProvider()
+export default  provider
