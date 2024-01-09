@@ -31,7 +31,7 @@ void OnSurfaceCreatedCB(OH_NativeXComponent *component, void *window)
     OH_LOG_Print(LOG_APP, LOG_INFO, LOG_DOMAIN, "Callback", "OnSurfaceCreatedCB");
     if ((nullptr == component) || (nullptr == window)) {
         OH_LOG_Print(LOG_APP, LOG_ERROR, LOG_DOMAIN, "Callback",
-            "OnSurfaceCreatedCB: component or window is null");
+            "OnSurfaceCreatedCB: component or  window is null");
         return;
     }
 

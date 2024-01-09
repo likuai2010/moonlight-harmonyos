@@ -27,7 +27,8 @@ class MoonBridgeApi {
 
     static MoonBridgeApi *api;
     
-    FFmpegVideoDecoder *m_decoder;
+    IVideoDecoder *m_decoder;
+    EglVideoRenderer *m_videoRender;
     SDLAudioRenderer *m_audioRender;
     void *nativewindow;
     void Export(napi_env env, napi_value exports);
@@ -42,7 +43,7 @@ class MoonBridgeApi {
     AUDIO_RENDERER_CALLBACKS BridgeAudioRendererCallbacks;
     CONNECTION_LISTENER_CALLBACKS BridgeConnListenerCallbacks;
     static POPUS_MULTISTREAM_CONFIGURATION config;
-
+   
     static napi_value MoonBridge_startConnection(napi_env env, napi_callback_info info);
     static napi_value MoonBridge_stopConnection(napi_env env, napi_callback_info info);
     static napi_value MoonBridge_interruptConnection(napi_env env, napi_callback_info info);
@@ -52,10 +53,10 @@ class MoonBridgeApi {
         param.video_format = videoFormat;
         param.width = width;
         param.height = height;
-        param.context = api->nativewindow;
+        param.context = context;
         param.frame_rate = redrawRate;
         param.dr_flags = drFlags;
-        return api->m_decoder->setup(&param);
+        return api->m_decoder->setup(param);
     }
     static void BridgeDrStart(void) {
         api->m_decoder->start();

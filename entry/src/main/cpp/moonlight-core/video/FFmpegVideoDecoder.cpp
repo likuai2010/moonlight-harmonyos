@@ -6,7 +6,6 @@
 #include <Limelight.h>
 #include "FFmpegVideoDecoder.h"
 #include <hilog/log.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include "video/AVFrameHolder.h"
 #define ffDecodeLog(...)  OH_LOG_Print(LOG_APP, LOG_INFO, LOG_DOMAIN, "testTag", __VA_ARGS__);
@@ -17,8 +16,12 @@
 FFmpegVideoDecoder::FFmpegVideoDecoder() {}
 FFmpegVideoDecoder::~FFmpegVideoDecoder() {}
 
-int FFmpegVideoDecoder::setup(DECODER_PARAMETERS *params) {
-
+DECODER_PARAMETERS* FFmpegVideoDecoder::getParams(){
+    return &m_params;
+}
+int FFmpegVideoDecoder::setup(DECODER_PARAMETERS dparams) {
+    m_params = dparams;
+    DECODER_PARAMETERS* params = &dparams;
     m_stream_fps = params->frame_rate;
     ffDecodeLog(
         "FFmpeg: Setup with format: %{public}s, width: %{public}d, height: %{public}d, fps: %{public}d",

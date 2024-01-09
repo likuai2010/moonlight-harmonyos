@@ -21,13 +21,15 @@ class FFmpegVideoDecoder : public IVideoDecoder {
   public:
     explicit FFmpegVideoDecoder();
     ~FFmpegVideoDecoder();
-    DECODER_PARAMETERS* params;
-    int setup(DECODER_PARAMETERS* params) override;
+   
+    int setup(DECODER_PARAMETERS params) override;
     void cleanup() override;
     int submitDecodeUnit(PDECODE_UNIT decode_unit) override;
     VIDEO_STATS* video_decode_stats() override;
+    DECODER_PARAMETERS* getParams() override;
     AVFrame* m_frame = nullptr;
   private:
+    DECODER_PARAMETERS m_params;
     int decode(char* indata, int inlen);
     int m_stream_fps = 0;
     int m_frames_in = 0;
