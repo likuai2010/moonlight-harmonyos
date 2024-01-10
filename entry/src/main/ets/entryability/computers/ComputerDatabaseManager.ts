@@ -1,6 +1,5 @@
 import relationalStore from '@ohos.data.relationalStore'; // 导入模块
-import Context from '@ohos.app.ability.Ability'; // 导入模块
-im
+import common from '@ohos.app.ability.common'; // 导入模块
 import { ComputerDetails, ComputerState } from './ComputerDetails';
 import { NvHttp } from '../http/NvHttp';
 
@@ -8,24 +7,26 @@ export class ComputerDatabaseManager {
   store: relationalStore.RdbStore
 
   constructor() {
-
   }
 
-  init(context: BaseContext) {
+  init(context: common.UIAbilityContext) {
     const STORE_CONFIG = {
       name: 'Computer.db', // 数据库文件名
       securityLevel: relationalStore.SecurityLevel.S1 // 数据库安全级别
     };
     relationalStore.getRdbStore(context, STORE_CONFIG, (err, store) => {
       this.store = store;
+      this.initDb()
     })
-
   }
 
-  initDb(c: Context) {
-    const SQL_CREATE_TABLE = "CREATE TABLE IF NOT EXISTS Computers(UUID TEXT PRIMARY KEY, ComputerName TEXT NOT NULL, Addresses TEXT NOT NULL, MacAddress TEXT, ServerCert TEXT)"
-    this.store.executeSql(SQL_CREATE_TABLE); // 创建数据表
-
+  initDb() {
+    try {
+      const SQL_CREATE_TABLE = "CREATE TABLE IF NOT EXISTS Computers(UUID TEXT PRIMARY KEY, ComputerName TEXT NOT NULL, Addresses TEXT NOT NULL, MacAddress TEXT, ServerCert TEXT)"
+      this.store.executeSql(SQL_CREATE_TABLE); // 创建数据表
+    }catch (e){
+      console.error(e)
+    }
   }
 
   deleteComputer(details: ComputerDetails) {
@@ -56,14 +57,16 @@ export class ComputerDatabaseManager {
       this.store.insert("Computers", data)
   }
 
-  async getAllComputers() {
+  async getAllComputers(): Promise<ComputerDetails[]> {
     const predicates = new relationalStore.RdbPredicates('Computers')
     const cursor = await this.store.query(predicates)
     const list = []
-    while (cursor.rowIndex < cursor.rowCount) {
+    cursor.goToNextRow()
+    while (cursor.rowIndex >= 0 && cursor.rowIndex < cursor.rowCount) {
       list.push(this.getComputerFromCursor(cursor))
       cursor.goToNextRow()
     }
+    return list;
   }
 
   getComputerFromCursor(c: relationalStore.ResultSet) {
@@ -91,3 +94,5 @@ export class ComputerDatabaseManager {
     return details;
   }
 }
+const computerDatabaseManager = new ComputerDatabaseManager();
+export default computerDatabaseManager

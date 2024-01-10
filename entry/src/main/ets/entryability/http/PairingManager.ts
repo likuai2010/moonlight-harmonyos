@@ -139,7 +139,7 @@ export class PairingManager {
 
 export enum PairState {
   NOT_PAIRED = 'NOT_PAIRED',
-  PAIRED = 'OFFLINE',
+  PAIRED = 'PAIRED',
   PIN_WRONG = 'PIN_WRONG',
   FAILED = 'FAILED',
   ALREADY_IN_PROGRESS = 'ALREADY_IN_PROGRESS'

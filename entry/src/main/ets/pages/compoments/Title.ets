@@ -4,11 +4,18 @@ import router from '@ohos.router'
 export struct NavTitle {
   title: string
   build() {
-    Row(){
-      Text(this.title).fontColor(Color.White)
-        .fontSize(23).textAlign(TextAlign.Center)
-    }.width("100%").justifyContent(FlexAlign.Center)
-    .height(50)
+    Stack({alignContent:Alignment.Start}){
+      Row(){
+        Text(this.title).fontColor(Color.White)
+          .fontSize(23).textAlign(TextAlign.Center)
+      }.
+      width("100%")
+      .justifyContent(FlexAlign.Center)
+      .height(50)
+      Icon({icon:$r('app.media.arrow_left')}).onClick(()=>{
+        router.back()
+      })
+    }.width("100%").padding(10)
   }
 }
 
@@ -34,7 +41,7 @@ export struct MainTitle {
         router.pushUrl({ url:"pages/AddPage" })
       })
     }.justifyContent(FlexAlign.SpaceBetween)
-    .width("100%")
-    .height(40)
+    .width("100%").padding(10)
+    .height(50)
   }
 }

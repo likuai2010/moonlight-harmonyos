@@ -3,13 +3,26 @@ import uri from '@ohos.uri';
 import { NvHttp } from '../http/NvHttp';
 import { MoonBridge } from '../nvstream/MoonBridge';
 import limelightCertProvider from '../crypto/LimelightCryptoProvider'
+import dbManger from './ComputerDatabaseManager'
 
 class ComputerManagerViewModel {
+  async getComputerList(): Promise<ComputerDetails[]> {
+    return await dbManger.getAllComputers()
+  }
+
+  onDetailsLinster: (news: ComputerDetails) => void
+
+  onDetailsUpdate(callBack: (ComputerDetails) => void) {
+    this.onDetailsLinster = callBack
+  }
+
   async addComputerBlocking(fakeDetails: ComputerDetails): Promise<boolean> {
     let detail = await this.pollComputer(fakeDetails)
-    this.runPoll(detail, true, 0);
-    if (detail.state == ComputerState.ONLINE) {
-      //addTuple(fakeDetails);
+    if(detail != null){
+      await this.runPoll(detail, true, 0);
+      fakeDetails.update(detail)
+    }
+    if (fakeDetails.state == ComputerState.ONLINE) {
       return true;
     }
     else {
@@ -17,9 +30,21 @@ class ComputerManagerViewModel {
     }
     return false
   }
-  async runPoll(detail: ComputerDetails,  newPc:boolean,  offlineCount:number){
 
+  async runPoll(details: ComputerDetails, newPc: boolean, offlineCount: number) {
+    if (details.state != ComputerState.ONLINE) {
+      // PC未在线, 获取PC状态
+      const d = await this.pollComputer(details)
+      details.update(d)
+      if (!d || d.state != ComputerState.ONLINE) {
+        details.state = ComputerState.OFFLINE
+      }
+      await dbManger.addOrUpdateComputer(details)
+    } else { // PC在线,持久化
+      await dbManger.addOrUpdateComputer(details)
+    }
   }
+
   async pollComputer(detail: ComputerDetails): Promise<ComputerDetails> {
     if (detail.localAddress) {
       const info = await this.tryPollIp(detail, detail.localAddress)
@@ -83,7 +108,12 @@ class ComputerManagerViewModel {
         port = NvHttp.DEFAULT_HTTP_PORT;
       }
       details.manualAddress = new AddressTuple(host, port);
+
       success = await this.addComputerBlocking(details);
+
+      if (this.onDetailsUpdate) {
+        this.onDetailsLinster(details)
+      }
     } else {
       success = false;
       invalidInput = true;
