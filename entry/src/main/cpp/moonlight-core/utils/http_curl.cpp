@@ -56,7 +56,7 @@ void getCurl(napi_env env, AsyncCallbackInfo* cb) {
             curl_easy_setopt(curl, CURLOPT_SSLCERT, cb->clientPath);
         if (cb->keyPath != nullptr){
             // dev use DER product PEM
-            curl_easy_setopt(curl, CURLOPT_SSLKEYTYPE, "DER");
+            curl_easy_setopt(curl, CURLOPT_SSLKEYTYPE, "PEM");
             curl_easy_setopt(curl, CURLOPT_SSLKEY, cb->keyPath);
         }
             

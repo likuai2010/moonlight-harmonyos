@@ -1,4 +1,3 @@
-
 import { Icon, MainTitle, NavTitle } from './compoments/Title'
 import viewModel from '../entryability/computers/ComputerManagerViewModel'
 import { ComputerDetails, ComputerState } from '../entryability/computers/ComputerDetails'
@@ -6,8 +5,11 @@ import promptAction from '@ohos.promptAction'
 import { PairState } from '../entryability/http/PairingManager'
 import limelightCertProvider from '../entryability/crypto/LimelightCryptoProvider'
 import { NvHttp } from '../entryability/http/NvHttp'
+import router from '@ohos.router'
 
-
+async function getResString(com: any, r: Resource): Promise<string> {
+  return await getContext(com).resourceManager.getStringValue(r)
+}
 // promptAction.showDialog({
 //   title: '连接错误',
 //   message: 'Message InfoMessage InfoMessage InfoMessage InfoMessage InfoMessage Info',
@@ -25,61 +27,69 @@ import { NvHttp } from '../entryability/http/NvHttp'
 //   console.info('showDialog success callback, click button: ' + data.index);
 // });
 
+
 @Component
 struct PcView {
   @State detail: ComputerDetails = new ComputerDetails()
   @State isLoading: string = "false"
+
   @Builder
-  pcMenu(){
-    Menu(){
-      if(this.detail.pairState == PairState.PAIRED){
-        MenuItem({content:"浏览游戏列表"})
-      }else{
-        MenuItem({content:"和电脑配对"})
+  pcMenu() {
+    Menu() {
+      if (this.detail.pairState == PairState.PAIRED) {
+        MenuItem({ content: "浏览游戏列表" })
+      } else {
+        MenuItem({ content: "和电脑配对" })
       }
-      MenuItem({content:"测试网络连接"})
-      MenuItem({content:"查看详情"}).onClick(()=>{
-        promptAction.showDialog({ title:"查看详情",message: this.detail.toString(),})
+      MenuItem({ content: "测试网络连接" })
+      MenuItem({ content: "查看详情" }).onClick(() => {
+        promptAction.showDialog({ title: "查看详情", message: this.detail.toString(), })
       })
     }
   }
-  click(){
-    if(this.detail.state == ComputerState.ONLINE && this.detail.pairState != PairState.PAIRED){
+
+  click() {
+    if (this.detail.state == ComputerState.ONLINE && this.detail.pairState != PairState.PAIRED) {
       this.doPair()
-    }else{
-      promptAction.showDialog({ title:"查看详情",message: this.detail.toString(),})
+    } else {
+      promptAction.showDialog({ title: "查看详情", message: this.detail.toString(), })
     }
     //router.pushUrl({url:"pages/AppPage"})
   }
-  async doPair(){
-   let message;
+
+  async doPair() {
+    let message;
     let success = false;
     const computer = this.detail
     const httpConn = new NvHttp(this.detail.activeAddress,
       this.detail.httpsPort, null,
       limelightCertProvider);
-    if (await httpConn.fetchPairState() == PairState.PAIRED) {
+    const state = await httpConn.fetchPairState()
+    if (state == PairState.PAIRED) {
       // Don't display any toast, but open the app list
       message = null;
       success = true;
-    }else{
+    } else {
       const pinStr = "12345";
-      promptAction.showDialog({ title:"配对中", message: "请在目标电脑上输入以下PIN码: ${pinStr}",})
+      promptAction.showDialog({
+        title: "配对中",
+        message: await getResString(this, $r('app.string.pair_pairing_msg')) + " " + pinStr + "\n\n" + await getResString(this, $r('app.string.pair_pairing_help'))
+      })
       const pm = httpConn.pm
       const pairState = await pm.pair(await httpConn.getServerInfo(true), pinStr);
       if (pairState == PairState.PIN_WRONG) {
-        message = $r('app.string.pair_incorrect_pin')
+        message = await getResString(this, $r('app.string.pair_incorrect_pin'))
       }
       else if (pairState == PairState.FAILED) {
         if (computer.runningGameId != 0) {
-          message = $r('app.string.pair_pc_ingame')
+          message = await getResString(this, $r('app.string.pair_pc_ingame'))
         }
         else {
-          message = $r('app.string.pair_fail')
+          message = await getResString(this, $r('app.string.pair_fail'))
         }
       }
       else if (pairState == PairState.ALREADY_IN_PROGRESS) {
-        message =  $r('app.string.pair_already_in_progress')
+          message = await getResString(this, $r('app.string.pair_already_in_progress'))
       }
       else if (pairState == PairState.PAIRED) {
         // Just navigate to the app view without displaying a toast
@@ -91,48 +101,61 @@ struct PcView {
 
         // Invalidate reachability information after pairing to force
         // a refresh before reading pair state again
-        viewModel.invalidateStateForComputer(computer.uuid);
+        //viewModel.invalidateStateForComputer(computer.uuid);
       }
       else {
         // Should be no other values
         message = null;
       }
+
+      if (message)
+        promptAction.showToast({ message: message })
+      if(success){
+        this.doAppList(computer, true, false);
+      }
     }
   }
-  aboutToAppear(){
-    if(this.detail.state != ComputerState.ONLINE){
+  doAppList(computer: ComputerDetails ,  newlyPaired:boolean,  showHiddenGames:boolean){
+      router.pushUrl({url:"pages/AppPage"})
+  }
+
+  aboutToAppear() {
+    if (this.detail.state != ComputerState.ONLINE) {
       this.isLoading = "true"
-      viewModel.runPoll(this.detail, false, 0).then(()=>{
+      viewModel.runPoll(this.detail, false, 0).then(() => {
         this.isLoading = "false"
-      }).catch((e)=>{
-        promptAction.showToast({message: e})
+      }).catch((e) => {
+        promptAction.showToast({ message: e })
         this.isLoading = "false"
       })
     }
   }
-  build(){
-    Column(){
-      Stack({alignContent:Alignment.Center}){
-        Icon({icon: $r('app.media.desktop_windows'), iconSize: 120})
 
-        if (this.isLoading =="true"){
-          LoadingProgress().width(50).height(50).color(Color.White).offset({y:-10})
+  build() {
+    Column() {
+      Stack({ alignContent: Alignment.Center }) {
+        Icon({ icon: $r('app.media.desktop_windows'), iconSize: 120 })
+
+        if (this.isLoading == "true") {
+          LoadingProgress().width(50).height(50).color(Color.White).offset({ y: -10 })
         } else {
-          if (this.detail.state == ComputerState.ONLINE){
-              if (this.detail.pairState != PairState.PAIRED) {
-                Icon({icon: $r('app.media.baseline_lock'), iconSize: 48}).offset({y:-10})
-              }
+          if (this.detail.state == ComputerState.ONLINE) {
+            if (this.detail.pairState != PairState.PAIRED) {
+              Icon({ icon: $r('app.media.baseline_lock'), iconSize: 48 }).offset({ y: -10 })
+            }
           } else {
-            Icon({icon: $r('app.media.baseline_warning'), iconSize: 48}).offset({y:-10})
+            Icon({ icon: $r('app.media.baseline_warning'), iconSize: 48 }).offset({ y: -10 })
           }
         }
       }
+
       Text(this.detail.name || "-").fontColor(Color.White)
-    }.onClick(()=>{
+    }.onClick(() => {
       this.click()
     }).bindContextMenu(this.pcMenu, ResponseType.LongPress)
   }
 }
+
 @Entry
 @Component
 struct PcPage {
@@ -140,37 +163,37 @@ struct PcPage {
   @State pcList: Array<ComputerDetails> = []
   heightValue: number
   gridRowTemplate: string
+
   aboutToAppear() {
-    viewModel.getComputerList().then((d)=>{
+    viewModel.getComputerList().then((d) => {
       this.pcList = d
     })
-    viewModel.onDetailsUpdate((news: ComputerDetails)=>{
-       var indexes = this.pcList.findIndex((d) => d.uuid == news.uuid)
-        if (indexes < 0) {
-          this.pcList.push(news)
-        } else {
-          this.pcList[indexes] = news
-        }
-        this.updateGrid()
+    viewModel.onDetailsUpdate((news: ComputerDetails) => {
+      var indexes = this.pcList.findIndex((d) => d.uuid == news.uuid)
+      if (indexes < 0) {
+        this.pcList.push(news)
+      } else {
+        this.pcList[indexes] = news
+      }
+      this.updateGrid()
     })
     this.updateGrid()
   }
-  updateGrid(){
+
+  updateGrid() {
     var rows = Math.max(3, Math.round(this.pcList.length / 3))
     this.gridRowTemplate = '1fr '.repeat(rows);
     this.heightValue = rows * 192 - 8;
   }
 
-
-
-  build(){
-    Column(){
+  build() {
+    Column() {
       MainTitle()
       Scroll(this.scroller) {
         Grid() {
-          ForEach(this.pcList, (d)=>{
-            GridItem(){
-              PcView({detail: d})
+          ForEach(this.pcList, (d) => {
+            GridItem() {
+              PcView({ detail: d })
             }
           }, (item) => JSON.stringify(item))
         }

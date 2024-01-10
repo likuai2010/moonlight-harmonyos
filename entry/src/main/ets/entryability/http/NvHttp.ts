@@ -33,7 +33,6 @@ export class NvHttp {
   private httpsPort: number;
   private serverCert: any;
 
-  //private serverCert: X509Certificate;
 
   constructor(address: AddressTuple,
               httpsPort: number,
@@ -393,6 +392,12 @@ export class NvHttp {
 
 
   private getHttpsUrl(likelyOnline: boolean): Url.URL {
+    if (this.httpsPort == 0) {
+      // Fetch the HTTPS port if we don't have it already
+      // this.httpsPort = getHttpsPort(openHttpConnectionToString(likelyOnline ? httpClientLongConnectTimeout : httpClientShortConnectTimeout,
+      //   baseUrlHttp, "serverinfo"));
+      this.httpsPort = 47984
+    }
     return Url.URL.parseURL(`https://${this.baseUrlHttp.hostname}:${this.httpsPort}`)
   }
 
@@ -416,11 +421,12 @@ export class NvHttp {
 
   async getServerInfo(likelyOnline: boolean): Promise<string> {
     if (this.serverCert != null) {
-      let info = await this.openHttpConnectionToString(this.getHttpsUrl(true), "serverinfo", null)
+      let info = await this.openHttpConnectionToString(this.getHttpsUrl(likelyOnline), "serverinfo", null)
       if (!info) {
         info = await this.openHttpConnectionToString(this.baseUrlHttp, "serverinfo", null)
       }
-      this.getServerVersion(info)
+      if(info)
+        this.getServerVersion(info)
       return info
     }
     else {
