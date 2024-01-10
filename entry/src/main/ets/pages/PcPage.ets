@@ -4,6 +4,8 @@ import viewModel from '../entryability/computers/ComputerManagerViewModel'
 import { ComputerDetails, ComputerState } from '../entryability/computers/ComputerDetails'
 import promptAction from '@ohos.promptAction'
 import { PairState } from '../entryability/http/PairingManager'
+import limelightCertProvider from '../entryability/crypto/LimelightCryptoProvider'
+import { NvHttp } from '../entryability/http/NvHttp'
 
 
 // promptAction.showDialog({
@@ -26,26 +28,94 @@ import { PairState } from '../entryability/http/PairingManager'
 @Component
 struct PcView {
   @State detail: ComputerDetails = new ComputerDetails()
-  isLoading: Boolean = true
+  @State isLoading: string = "false"
   @Builder
   pcMenu(){
     Menu(){
-      MenuItem({content:"浏览游戏列表"})
+      if(this.detail.pairState == PairState.PAIRED){
+        MenuItem({content:"浏览游戏列表"})
+      }else{
+        MenuItem({content:"和电脑配对"})
+      }
       MenuItem({content:"测试网络连接"})
       MenuItem({content:"查看详情"}).onClick(()=>{
         promptAction.showDialog({ title:"查看详情",message: this.detail.toString(),})
       })
     }
   }
+  click(){
+    if(this.detail.state == ComputerState.ONLINE && this.detail.pairState != PairState.PAIRED){
+      this.doPair()
+    }else{
+      promptAction.showDialog({ title:"查看详情",message: this.detail.toString(),})
+    }
+    //router.pushUrl({url:"pages/AppPage"})
+  }
+  async doPair(){
+   let message;
+    let success = false;
+    const computer = this.detail
+    const httpConn = new NvHttp(this.detail.activeAddress,
+      this.detail.httpsPort, null,
+      limelightCertProvider);
+    if (await httpConn.fetchPairState() == PairState.PAIRED) {
+      // Don't display any toast, but open the app list
+      message = null;
+      success = true;
+    }else{
+      const pinStr = "12345";
+      promptAction.showDialog({ title:"配对中", message: "请在目标电脑上输入以下PIN码: ${pinStr}",})
+      const pm = httpConn.pm
+      const pairState = await pm.pair(await httpConn.getServerInfo(true), pinStr);
+      if (pairState == PairState.PIN_WRONG) {
+        message = $r('app.string.pair_incorrect_pin')
+      }
+      else if (pairState == PairState.FAILED) {
+        if (computer.runningGameId != 0) {
+          message = $r('app.string.pair_pc_ingame')
+        }
+        else {
+          message = $r('app.string.pair_fail')
+        }
+      }
+      else if (pairState == PairState.ALREADY_IN_PROGRESS) {
+        message =  $r('app.string.pair_already_in_progress')
+      }
+      else if (pairState == PairState.PAIRED) {
+        // Just navigate to the app view without displaying a toast
+        message = null;
+        success = true;
+
+        // Pin this certificate for later HTTPS use
+        //viewModel.getComputer(computer.uuid).serverCert = pm.getPairedCert();
+
+        // Invalidate reachability information after pairing to force
+        // a refresh before reading pair state again
+        viewModel.invalidateStateForComputer(computer.uuid);
+      }
+      else {
+        // Should be no other values
+        message = null;
+      }
+    }
+  }
   aboutToAppear(){
-    this.isLoading = true
+    if(this.detail.state != ComputerState.ONLINE){
+      this.isLoading = "true"
+      viewModel.runPoll(this.detail, false, 0).then(()=>{
+        this.isLoading = "false"
+      }).catch((e)=>{
+        promptAction.showToast({message: e})
+        this.isLoading = "false"
+      })
+    }
   }
   build(){
     Column(){
       Stack({alignContent:Alignment.Center}){
         Icon({icon: $r('app.media.desktop_windows'), iconSize: 120})
 
-        if (this.isLoading){
+        if (this.isLoading =="true"){
           LoadingProgress().width(50).height(50).color(Color.White).offset({y:-10})
         } else {
           if (this.detail.state == ComputerState.ONLINE){
@@ -58,12 +128,8 @@ struct PcView {
         }
       }
       Text(this.detail.name || "-").fontColor(Color.White)
-    }.onClick( () => {
-
-      if(this.detail.state == ComputerState.ONLINE && this.detail.pairState != PairState.PAIRED){
-          promptAction.showDialog({ title:"查看详情",message: this.detail.toString(),})
-      }
-      //router.pushUrl({url:"pages/AppPage"})
+    }.onClick(()=>{
+      this.click()
     }).bindContextMenu(this.pcMenu, ResponseType.LongPress)
   }
 }
@@ -92,7 +158,7 @@ struct PcPage {
   updateGrid(){
     var rows = Math.max(3, Math.round(this.pcList.length / 3))
     this.gridRowTemplate = '1fr '.repeat(rows);
-    this.heightValue = rows * 180 - 8;
+    this.heightValue = rows * 192 - 8;
   }
 
 
@@ -104,7 +170,7 @@ struct PcPage {
         Grid() {
           ForEach(this.pcList, (d)=>{
             GridItem(){
-              PcView({detail: d, isLoading:true})
+              PcView({detail: d})
             }
           }, (item) => JSON.stringify(item))
         }

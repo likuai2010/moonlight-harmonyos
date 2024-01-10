@@ -46,4 +46,4 @@ export function writeFile(filePath: string, data: string) {
   fs.closeSync(file);
 }
 const provider = new LimelightCertProvider()
-export default  provider
+export default provider

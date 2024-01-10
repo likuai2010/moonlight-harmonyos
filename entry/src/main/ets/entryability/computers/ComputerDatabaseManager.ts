@@ -24,7 +24,7 @@ export class ComputerDatabaseManager {
     try {
       const SQL_CREATE_TABLE = "CREATE TABLE IF NOT EXISTS Computers(UUID TEXT PRIMARY KEY, ComputerName TEXT NOT NULL, Addresses TEXT NOT NULL, MacAddress TEXT, ServerCert TEXT)"
       this.store.executeSql(SQL_CREATE_TABLE); // 创建数据表
-    }catch (e){
+    } catch (e) {
       console.error(e)
     }
   }
@@ -57,6 +57,18 @@ export class ComputerDatabaseManager {
       this.store.insert("Computers", data)
   }
 
+  async getComputerByUUID(uuid: string): Promise<ComputerDetails> {
+    const predicates = new relationalStore.RdbPredicates('Computers')
+    predicates.equalTo('UUID', uuid);
+    const cursor = await this.store.query(predicates);
+    if (cursor.columnCount > 0) {
+      cursor.goToNextRow();
+      return this.getComputerFromCursor(cursor);
+    } else {
+      return null;
+    }
+  }
+
   async getAllComputers(): Promise<ComputerDetails[]> {
     const predicates = new relationalStore.RdbPredicates('Computers')
     const cursor = await this.store.query(predicates)
@@ -69,7 +81,7 @@ export class ComputerDatabaseManager {
     return list;
   }
 
-  getComputerFromCursor(c: relationalStore.ResultSet) {
+  getComputerFromCursor(c: relationalStore.ResultSet): ComputerDetails {
     const details = new ComputerDetails();
     details.uuid = c.getString(0);
     details.name = c.getString(1);
@@ -94,5 +106,7 @@ export class ComputerDatabaseManager {
     return details;
   }
 }
+
 const computerDatabaseManager = new ComputerDatabaseManager();
+
 export default computerDatabaseManager

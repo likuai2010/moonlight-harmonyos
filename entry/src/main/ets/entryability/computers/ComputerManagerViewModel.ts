@@ -4,6 +4,7 @@ import { NvHttp } from '../http/NvHttp';
 import { MoonBridge } from '../nvstream/MoonBridge';
 import limelightCertProvider from '../crypto/LimelightCryptoProvider'
 import dbManger from './ComputerDatabaseManager'
+import LimeLog from '../LimeLog';
 
 class ComputerManagerViewModel {
   async getComputerList(): Promise<ComputerDetails[]> {
@@ -18,9 +19,9 @@ class ComputerManagerViewModel {
 
   async addComputerBlocking(fakeDetails: ComputerDetails): Promise<boolean> {
     let detail = await this.pollComputer(fakeDetails)
-    if(detail != null){
-      await this.runPoll(detail, true, 0);
+    if (detail != null) {
       fakeDetails.update(detail)
+      await this.runPoll(fakeDetails, true, 0);
     }
     if (fakeDetails.state == ComputerState.ONLINE) {
       return true;
@@ -35,35 +36,65 @@ class ComputerManagerViewModel {
     if (details.state != ComputerState.ONLINE) {
       // PC未在线, 获取PC状态
       const d = await this.pollComputer(details)
-      details.update(d)
+      if (d) {
+        details.update(d)
+      }
       if (!d || d.state != ComputerState.ONLINE) {
         details.state = ComputerState.OFFLINE
       }
       await dbManger.addOrUpdateComputer(details)
     } else { // PC在线,持久化
-      await dbManger.addOrUpdateComputer(details)
+      if(!newPc){
+        const existingComputer = await dbManger.getComputerByUUID(details.uuid);
+        // Check if it's in the database because it could have been
+        // removed after this was issued
+        if (existingComputer == null) {
+          // It's gone
+          return false;
+        }
+        existingComputer.update(details);
+        await dbManger.addOrUpdateComputer(existingComputer)
+      }
+      else{
+        // If the active address is a site-local address (RFC 1918),
+        // then use STUN to populate the external address field if
+        // it's not set already.
+        if (details.remoteAddress == null) {
+          // TODO
+        }
+        await dbManger.addOrUpdateComputer(details)
+      }
     }
   }
 
   async pollComputer(detail: ComputerDetails): Promise<ComputerDetails> {
     if (detail.localAddress) {
       const info = await this.tryPollIp(detail, detail.localAddress)
-      if (info)
+      if (info) {
+        info.activeAddress = detail.localAddress
         return info;
+      }
     }
     if (detail.manualAddress) {
       const info = await this.tryPollIp(detail, detail.manualAddress)
-      if (info)
+      if (info) {
+        info.activeAddress = detail.manualAddress
         return info;
+      }
     }
     if (detail.remoteAddress) {
       const info = await this.tryPollIp(detail, detail.remoteAddress)
-      if (info)
+      if (info) {
+        info.activeAddress = detail.remoteAddress
         return info;
+      }
     }
     if (detail.ipv6Address) {
       const info = await this.tryPollIp(detail, detail.ipv6Address)
-      return info;
+      if (info) {
+        info.activeAddress = detail.ipv6Address
+        return info;
+      }
     }
     return null;
   }
@@ -90,6 +121,7 @@ class ComputerManagerViewModel {
       }
       return newDetails;
     } catch (e) {
+      LimeLog.error(e)
     }
     return null;
   }

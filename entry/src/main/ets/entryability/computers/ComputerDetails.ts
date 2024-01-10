@@ -53,28 +53,28 @@ export class ComputerDetails {
     this.state = details.state;
     this.name = details.name;
     this.uuid = details.uuid;
-    if (details.activeAddress !== null) {
-      this.activeAddress = details.activeAddress;
+    if (details.activeAddress != null) {
+      this.activeAddress = makeTuple(details.activeAddress.address, details.activeAddress.port);
     }
     // We can get IPv4 loopback addresses with GS IPv6 Forwarder
-    if (details.localAddress !== null && !details.localAddress.address.startsWith("127.")) {
+    if (details.localAddress != null && !details.localAddress.address.startsWith("127.")) {
       this.localAddress = details.localAddress;
     }
-    if (details.remoteAddress !== null) {
+    if (details.remoteAddress != null) {
       this.remoteAddress = details.remoteAddress;
-    } else if (this.remoteAddress !== null && details.externalPort !== 0) {
+    } else if (this.remoteAddress != null && details.externalPort !== 0) {
       // If we have a remote address already (perhaps via STUN) but our updated details
       // don't have a new one (because GFE doesn't send one), propagate the external
       // port to the current remote address. We may have tried to guess it previously.
       this.remoteAddress.port = details.externalPort;
     }
-    if (details.manualAddress !== null) {
-      this.manualAddress = details.manualAddress;
+    if (details.manualAddress != null) {
+      this.manualAddress = makeTuple(details.manualAddress.address, details.manualAddress.port);
     }
-    if (details.ipv6Address !== null) {
+    if (details.ipv6Address != null) {
       this.ipv6Address = details.ipv6Address;
     }
-    if (details.macAddress !== null && details.macAddress !== "00:00:00:00:00:00") {
+    if (details.macAddress != null && details.macAddress !== "00:00:00:00:00:00") {
       this.macAddress = details.macAddress;
     }
     // if (details.serverCert !== null) {
@@ -92,12 +92,12 @@ export class ComputerDetails {
     let str = "";
     str += `Name: ${this.name}\n`;
     str += `State: ${this.state}\n`;
-    str += `Active Address: ${this.activeAddress}\n`;
+    str += `Active Address: ${this.activeAddress.toString()}\n`;
     str += `UUID: ${this.uuid}\n`;
     str += `Local Address: ${this.localAddress}\n`;
     str += `Remote Address: ${this.remoteAddress}\n`;
     str += `IPv6 Address: ${this.ipv6Address}\n`;
-    str += `Manual Address: ${this.manualAddress}\n`;
+    str += `Manual Address: ${this.manualAddress.toString()}\n`;
     str += `MAC Address: ${this.macAddress}\n`;
     str += `Pair State: ${this.pairState}\n`;
     str += `Running Game ID: ${this.runningGameId}\n`;
@@ -136,4 +136,11 @@ export class AddressTuple {
       return `${this.address}:${this.port}`;
     }
   }
+}
+
+export function makeTuple(address: string, port: number) {
+  if (address == null || address == "") {
+    return null;
+  }
+  return new AddressTuple(address, port);
 }

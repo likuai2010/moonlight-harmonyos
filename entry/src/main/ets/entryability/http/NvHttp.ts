@@ -1,9 +1,8 @@
-import http from '@ohos.net.http';
 import Url from '@ohos.url'
 import xml from '@ohos.xml';
 
 import { PairingManager, PairState } from './PairingManager'
-import { AddressTuple, ComputerDetails, ComputerState } from '../computers/ComputerDetails'
+import { AddressTuple, ComputerDetails, ComputerState, makeTuple } from '../computers/ComputerDetails'
 import hilog from '@ohos.hilog';
 import util from '@ohos.util';
 import { LimelightCertProvider } from '../crypto/LimelightCryptoProvider';
@@ -149,7 +148,7 @@ export class NvHttp {
 
   private getPairState(serverInfo: string): PairState {
     // appversion is present in all supported GFE versions
-    return NvHttp.getXmlString(serverInfo, "PairStatus", true) === "1" ?
+    return NvHttp.getXmlString(serverInfo, "PairStatus", true) == "1" ?
     PairState.PAIRED : PairState.NOT_PAIRED;
   }
 
@@ -256,9 +255,11 @@ export class NvHttp {
       return NvHttp.DEFAULT_HTTP_PORT
     }
   }
-  async getComputerDetails(likelyOnline:boolean): Promise<ComputerDetails> {
+
+  async getComputerDetails(likelyOnline: boolean): Promise<ComputerDetails> {
     return this.getComputerDetailsByInfo(await this.getServerInfo(likelyOnline));
   }
+
   getComputerDetailsByInfo(serverInfo: string): ComputerDetails {
     const details = new ComputerDetails();
     details.name = NvHttp.getXmlString(serverInfo, "hostname", false) || "UNKNOWN";
@@ -267,12 +268,12 @@ export class NvHttp {
     details.httpsPort = this.getHttpsPort(serverInfo);
     details.macAddress = NvHttp.getXmlString(serverInfo, "mac", false);
     // FIXME: Do we want to use the current port?
-    details.localAddress = new AddressTuple(NvHttp.getXmlString(serverInfo, "LocalIP", false), NvHttp.DEFAULT_HTTP_PORT);
+    details.localAddress = makeTuple(NvHttp.getXmlString(serverInfo, "LocalIP", false), NvHttp.DEFAULT_HTTP_PORT);
     // This is missing on recent GFE versions, but it's present on Sunshine
     details.externalPort = this.getExternalPort(serverInfo);
-    details.remoteAddress = new AddressTuple(NvHttp.getXmlString(serverInfo, "ExternalIP", false), details.externalPort);
+    details.remoteAddress = makeTuple(NvHttp.getXmlString(serverInfo, "ExternalIP", false), details.externalPort);
 
-    //details.pairState = this.getPairState(serverInfo);
+    details.pairState = this.getPairState(serverInfo);
     details.runningGameId = this.getCurrentGame(serverInfo);
     // The MJOLNIR codename was used by GFE but never by any third-party server
     details.nvidiaServer = NvHttp.getXmlString(serverInfo, "state", true).includes("MJOLNIR");
@@ -281,6 +282,8 @@ export class NvHttp {
 
     return details;
   }
+
+
 
   async executePairingCommand(additionalArguments: String, enableReadTimeout: boolean): Promise<string> {
     return this.openHttpConnectionToString(
@@ -321,11 +324,11 @@ export class NvHttp {
       let url = this.getCompleteUrl(baseUrl, path, query)
       let clientPath = null;
       let keyPath = null;
-      if (baseUrl.protocol.startsWith('https')){
+      if (baseUrl.protocol.startsWith('https')) {
         clientPath = this.clientCert.certPath
         keyPath = this.clientCert.keyPath
       }
-      const response = await httpClient.get(url,timeout == 0 ?9999 : 30, clientPath, keyPath)
+      const response = await httpClient.get(url, timeout == 0 ? 9999 : 30, clientPath, keyPath)
       httpClient.close()
       return response.toString();
     } catch (e) {
@@ -334,9 +337,11 @@ export class NvHttp {
     }
     return null;
   }
-  public async unpair(): Promise<void>{
+
+  public async unpair(): Promise<void> {
 
   }
+
   public async launchApp(context: ConnectionContext, verb: string, appId: number, enableHdr: boolean): Promise<boolean> {
     // Using an FPS value over 60 causes SOPS to default to 720p60,
     // so force it to 0 to ensure the correct resolution is set. We
