@@ -110,10 +110,9 @@ class ComputerManagerViewModel {
     return null;
   }
 
-  async getImages(details: ComputerDetails, app: NvApp): Promise<string>{
+  async getImages(details: ComputerDetails, app: NvApp): Promise<Uint8Array>{
     const http = new NvHttp(details.activeAddress, details.httpsPort, true, limelightCertProvider);
-    const images = await http.getBoxArt(app)
-    return images
+    return await http.getBoxArt(app)
   }
 
   async tryPollIp(details: ComputerDetails, address: AddressTuple): Promise<ComputerDetails> {

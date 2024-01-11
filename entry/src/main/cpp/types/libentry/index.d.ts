@@ -12,7 +12,7 @@ export const openSlEsPlayer_sendPcmData: (message: Uint8Array) => void;
 
 export declare class CurlClient {
   close()
-  get(url: string, timeout: Number, client: string, key: string): Promise<string>;
+  get(url: string, timeout: Number, client: string, key: string): Promise<Uint8Array>;
 }
 export declare class VideoStatus{
   decoder: string

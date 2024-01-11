@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include "string.h"
 #include "napi/native_api.h"
-
+#include "x509Utils.h"
 struct AsyncCallbackInfo {
     napi_env env;
     napi_async_work asyncWork;
@@ -19,31 +19,31 @@ struct AsyncCallbackInfo {
     const int timeout;
     const char *clientPath;
     const char *keyPath;
-    char *result;
+    void *result;
+    size_t size;
     const char *error;
 };
 
+struct HTTP_DATA {
+    char *memory;
+    size_t size;
+};
 
-size_t write_callback(void *contents, size_t size, size_t nmemb, void *output) {
-    size_t total_size = size * nmemb;
-    AsyncCallbackInfo *response_data = static_cast<AsyncCallbackInfo *>(output);
-     if (contents == nullptr)
-            return 0;
-    size_t destSize = (response_data->result != nullptr) ? strlen(response_data->result) : 0;
-    char* temp = new char[destSize + total_size + 1];
-   
-    if (response_data->result != nullptr) {
-        memcpy(temp, response_data->result, destSize);
-    }
-    memcpy(temp + destSize, contents, total_size);
-     temp[destSize + total_size] = '\0';
-    delete[] response_data->result;
-   
-    response_data->result = temp;
-    return total_size;
+size_t write_callback(void *contents, size_t size, size_t nmemb, void *userp) {
+    size_t realsize = size * nmemb;
+    HTTP_DATA *mem = (HTTP_DATA *)userp;
+
+    mem->memory = (char *)realloc(mem->memory, mem->size + realsize + 1);
+    if (mem->memory == NULL)
+        return 0;
+
+    memcpy(&(mem->memory[mem->size]), contents, realsize);
+    mem->size += realsize;
+    mem->memory[mem->size] = 0;
+    return realsize;
 }
 
-void getCurl(napi_env env, AsyncCallbackInfo* cb) {
+void getCurl(napi_env env, AsyncCallbackInfo *cb) {
     CURL *curl;
     CURLcode res;
     curl = curl_easy_init();
@@ -54,12 +54,12 @@ void getCurl(napi_env env, AsyncCallbackInfo* cb) {
         curl_easy_setopt(curl, CURLOPT_SSLCERTTYPE, "PEM");
         if (cb->clientPath != nullptr)
             curl_easy_setopt(curl, CURLOPT_SSLCERT, cb->clientPath);
-        if (cb->keyPath != nullptr){
+        if (cb->keyPath != nullptr) {
             // dev use DER product PEM
             curl_easy_setopt(curl, CURLOPT_SSLKEYTYPE, "PEM");
             curl_easy_setopt(curl, CURLOPT_SSLKEY, cb->keyPath);
         }
-            
+
         // 没有ca证书无法信任
         // 设置自签名证书的路径
         // curl_easy_setopt(curl, CURLOPT_CAINFO, "/data/storage/el2/base/haps/entry/cache/ca.pem");
@@ -68,13 +68,29 @@ void getCurl(napi_env env, AsyncCallbackInfo* cb) {
         curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
         curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
-        curl_easy_setopt(curl, CURLOPT_WRITEDATA, cb);
+
+        HTTP_DATA *http_data = (HTTP_DATA *)malloc(sizeof(HTTP_DATA));
+        http_data->memory = (char *)malloc(1);
+        http_data->size = 0;
+
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, http_data);
+
         // 执行请求
         res = curl_easy_perform(curl);
+
         if (res != CURLE_OK) {
             cb->error = curl_easy_strerror(res);
+            free(http_data->memory);
+            free(http_data);
+        } else if (http_data->memory == NULL) {
+            free(http_data->memory);
+            free(http_data);
+            cb->error = "Curl: memory = NULL";
         }
-
+        cb->result = http_data->memory;
+        cb->size = http_data->size;
+        free(http_data->memory);
+        free(http_data);
         curl_easy_cleanup(curl);
     }
 }
@@ -100,20 +116,19 @@ napi_value GetRequest(napi_env env, napi_callback_info info) {
         .timeout = timeout,
         .clientPath = clientPath,
         .keyPath = keyPath,
-        .result = nullptr
-    };
+        .result = nullptr};
     napi_value resourceName;
     napi_create_string_latin1(env, "GetRequest", NAPI_AUTO_LENGTH, &resourceName);
     napi_create_async_work(
         env, nullptr, resourceName,
         [](napi_env env, void *data) {
-            getCurl(env, (AsyncCallbackInfo*)data);
+            getCurl(env, (AsyncCallbackInfo *)data);
         },
         [](napi_env env, napi_status status, void *data) {
             AsyncCallbackInfo *asyncCallbackInfo = (AsyncCallbackInfo *)data;
-            if (asyncCallbackInfo-> error == nullptr) {
-                napi_value result;
-                napi_create_string_utf8(env, asyncCallbackInfo->result, strlen(asyncCallbackInfo->result), &result);
+            if (asyncCallbackInfo->error == nullptr) {
+                napi_value result = createTypedArray(env, asyncCallbackInfo->size, napi_uint8_array, asyncCallbackInfo->result);
+
                 // 触发回调
                 napi_resolve_deferred(asyncCallbackInfo->env, asyncCallbackInfo->deferred, result);
             } else {
@@ -131,7 +146,7 @@ napi_value GetRequest(napi_env env, napi_callback_info info) {
 }
 
 static napi_value CurlClientClassConstructor(napi_env env, napi_callback_info info) {
-    curl_global_init(CURL_GLOBAL_DEFAULT);
+
     napi_value thisArg = nullptr;
     void *data = nullptr;
     napi_get_cb_info(env, info, nullptr, nullptr, &thisArg, &data);
@@ -141,11 +156,12 @@ static napi_value CurlClientClassConstructor(napi_env env, napi_callback_info in
     return thisArg;
 }
 static napi_value Close(napi_env env, napi_callback_info info) {
-    curl_global_cleanup();
+    // curl_global_cleanup();
     return 0;
 }
 
 void HttpCurlInit(napi_env env, napi_value exports) {
+    curl_global_init(CURL_GLOBAL_DEFAULT);
     napi_property_descriptor descriptors[] = {
         {"get", nullptr, GetRequest, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"close", nullptr, Close, nullptr, nullptr, nullptr, napi_default, nullptr}};

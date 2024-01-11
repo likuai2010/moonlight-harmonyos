@@ -3,7 +3,6 @@ import xml from '@ohos.xml';
 
 import { PairingManager, PairState } from './PairingManager'
 import { AddressTuple, ComputerDetails, ComputerState, makeTuple } from '../computers/ComputerDetails'
-import hilog from '@ohos.hilog';
 import util from '@ohos.util';
 import { LimelightCertProvider } from '../crypto/LimelightCryptoProvider';
 import { ConnectionContext } from '../nvstream/ConnectionContext';
@@ -319,7 +318,7 @@ export class NvHttp {
     return true;
   }
 
-  async openHttpConnectionToString(baseUrl: Url.URL, path: string, query: string = null, timeout: number = 0): Promise<string> {
+  async openHttpConnectionToUint8Array(baseUrl: Url.URL, path: string, query: string = null, timeout: number = 0): Promise<Uint8Array> {
     var httpClient = new CurlClient()
     try {
       let url = this.getCompleteUrl(baseUrl, path, query)
@@ -331,7 +330,27 @@ export class NvHttp {
       }
       const response = await httpClient.get(url, timeout == 0 ? 9999 : 30, clientPath, keyPath)
       httpClient.close()
-      return response.toString();
+      return response
+    } catch (e) {
+      httpClient.close()
+      LimeLog.error(`${e}`)
+    }
+    return null;
+  }
+  async openHttpConnectionToString(baseUrl: Url.URL, path: string, query: string = null, timeout: number = 0): Promise<string> {
+    var httpClient = new CurlClient()
+    try {
+      let url = this.getCompleteUrl(baseUrl, path, query)
+      let clientPath = null;
+      let keyPath = null;
+      if (baseUrl.protocol.startsWith('https')) {
+        clientPath = this.clientCert.certPath
+        keyPath = this.clientCert.keyPath
+      }
+      const response = await httpClient.get(url, timeout == 0 ? 9999 : 30, clientPath, keyPath)
+      const td = util.TextDecoder.create('utf-8', { ignoreBOM : true })
+      httpClient.close()
+      return td.decodeWithStream(response)
     } catch (e) {
       httpClient.close()
       LimeLog.error(`${e}`)
@@ -340,7 +359,6 @@ export class NvHttp {
   }
 
   public async unpair(): Promise<void> {
-
   }
 
   public async launchApp(context: ConnectionContext, verb: string, appId: number, enableHdr: boolean): Promise<boolean> {
@@ -412,9 +430,8 @@ export class NvHttp {
     return NvHttp.getAppListByReader(applist)
   }
 
-  async getBoxArt(app: NvApp): Promise<string> {
-      const resp = await this.openHttpConnectionToString(this.getHttpsUrl(true), "appasset", "appid=" + app.appId+ "&AssetType=2&AssetIdx=0");
-      return resp
+  async getBoxArt(app: NvApp): Promise<Uint8Array> {
+      return await this.openHttpConnectionToUint8Array(this.getHttpsUrl(true), "appasset", "appid=" + app.appId+ "&AssetType=2&AssetIdx=0");
   }
 
   async getServerInfo(likelyOnline: boolean): Promise<string> {

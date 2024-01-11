@@ -5,6 +5,7 @@ import { ComputerDetails } from '../entryability/computers/ComputerDetails'
 import { NvHttp } from '../entryability/http/NvHttp'
 import { Icon, NavTitle } from './compoments/Title'
 import { NvApp } from '../entryability/http/NvApp'
+import image from '@ohos.multimedia.image'
 
 
 
@@ -12,15 +13,29 @@ import { NvApp } from '../entryability/http/NvApp'
 struct AppView {
   computer: ComputerDetails
   app: NvApp
+  @State image: PixelMap = undefined;
   aboutToAppear(){
-    viewModel.getImages(this.computer, this.app).then((e)=>{
-      console.log(e);
+    viewModel.getImages(this.computer, this.app).then((res)=>{
+      let options = {
+        alphaType: 0,                     // 透明度
+        editable: false,                  // 是否可编辑
+        pixelFormat: 3,                   // 像素格式
+        scaleMode: 1,                     // 缩略值
+        size: { height: 100, width: 100}
+      }
+      let imageSource = image.createImageSource(res.buffer);
+      if(imageSource)
+        imageSource.createPixelMap(options).then((pixelMap) => {
+          this.image = pixelMap
+        })
     })
   }
   build(){
     Column(){
-      Icon({icon: $r('app.media.desktop_windows')})
-      Text(this.app.appName).fontColor(Color.White)
+      Stack(){
+        Image(this.image).height(100).width(100)
+        Text(this.app.appName).fontColor(Color.White)
+      }
     }
   }
 }
