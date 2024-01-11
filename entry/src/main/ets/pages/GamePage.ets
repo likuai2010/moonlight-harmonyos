@@ -40,7 +40,6 @@ struct GamePage {
     Stack({ alignContent: Alignment.TopStart }){
       XComponent({ id: 'xcomponentId1', type: 'surface', libraryname: 'entry' })
         .onLoad((context: any) => {
-          console.log("xxxxxx", context.add)
           this.xComponentContext = context
         })
         .onDestroy(() => {

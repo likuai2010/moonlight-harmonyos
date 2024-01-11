@@ -5,7 +5,6 @@ import router from '@ohos.router'
 @Entry
 @Component
 struct AddPage {
-
   viewModel = viewModel
   @State ip: string = ''
   build(){

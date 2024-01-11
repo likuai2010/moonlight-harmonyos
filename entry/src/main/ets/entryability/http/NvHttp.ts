@@ -12,6 +12,7 @@ import { NvApp } from './NvApp';
 import List from '@ohos.util.List';
 import Stack from '@ohos.util.Stack';
 import { CurlClient } from 'libentry.so';
+import LimeLog from '../LimeLog';
 
 
 export class NvHttp {
@@ -93,7 +94,7 @@ export class NvHttp {
     return v
   }
 
-  public static getAppListByReader(r: string): List<NvApp> {
+  public static getAppListByReader(r: string): NvApp[] {
     const appList = new List<NvApp>();
     let textEncoder = new util.TextEncoder();
     let arraybuffer = textEncoder.encodeInto(r);
@@ -128,7 +129,7 @@ export class NvHttp {
         return false
       return true
     } })
-    return appList;
+    return appList.convertToArray();
   }
 
 
@@ -276,6 +277,7 @@ export class NvHttp {
     details.runningGameId = this.getCurrentGame(serverInfo);
     // The MJOLNIR codename was used by GFE but never by any third-party server
     details.nvidiaServer = NvHttp.getXmlString(serverInfo, "state", true).includes("MJOLNIR");
+
     // We could reach it, so it's online
     details.state = ComputerState.ONLINE;
 
@@ -332,7 +334,7 @@ export class NvHttp {
       return response.toString();
     } catch (e) {
       httpClient.close()
-      hilog.info(0x0000, "testTag", `${e}`)
+      LimeLog.error(`${e}`)
     }
     return null;
   }
@@ -405,18 +407,14 @@ export class NvHttp {
     return this.openHttpConnectionToString(this.getHttpsUrl(true), "applist");
   }
 
-  async getAppList(): Promise<List<NvApp>> {
+  async getAppList(): Promise<NvApp[]> {
     const applist = await this.getAppListRaw()
-    const mock = `<?xml
-        version="1.0" encoding="utf-8"?><root status_code="200"><App><IsHdrSupported>1</IsHdrSupported><AppTitle>Desktop</AppTitle><ID>881448767</ID></App>
-            <App>
-                <IsHdrSupported>1</IsHdrSupported>
-                <AppTitle>Steam Big Picture</AppTitle>
-                <ID>1093255277</ID>
-            </App>
-        </root>
-`
     return NvHttp.getAppListByReader(applist)
+  }
+
+  async getBoxArt(app: NvApp): Promise<string> {
+      const resp = await this.openHttpConnectionToString(this.getHttpsUrl(true), "appasset", "appid=" + app.appId+ "&AssetType=2&AssetIdx=0");
+      return resp
   }
 
   async getServerInfo(likelyOnline: boolean): Promise<string> {

@@ -37,11 +37,16 @@ struct PcView {
   pcMenu() {
     Menu() {
       if (this.detail.pairState == PairState.PAIRED) {
-        MenuItem({ content: "浏览游戏列表" })
+        MenuItem({ content: "浏览游戏列表" }).onClick(()=>{
+          this.goPc()
+        })
       } else {
         MenuItem({ content: "和电脑配对" })
       }
       MenuItem({ content: "测试网络连接" })
+      MenuItem({ content: "删除电脑" }).onClick(() => {
+        promptAction.showDialog({ title: "查看详情", message: this.detail.toString(), })
+      })
       MenuItem({ content: "查看详情" }).onClick(() => {
         promptAction.showDialog({ title: "查看详情", message: this.detail.toString(), })
       })
@@ -52,9 +57,13 @@ struct PcView {
     if (this.detail.state == ComputerState.ONLINE && this.detail.pairState != PairState.PAIRED) {
       this.doPair()
     } else {
-      promptAction.showDialog({ title: "查看详情", message: this.detail.toString(), })
+      this.goPc()
+      promptAction.showDialog({ title: "查看详情", message: this.detail.toString(),})
     }
-    //router.pushUrl({url:"pages/AppPage"})
+
+  }
+  goPc(){
+    router.pushUrl({url:"pages/AppPage", params: { uuid:  this.detail.uuid, computerName: this.detail.name, rawAppList: this.detail.rawAppList}})
   }
 
   async doPair() {
@@ -110,7 +119,7 @@ struct PcView {
 
       if (message)
         promptAction.showToast({ message: message })
-      if(success){
+      if (success){
         this.doAppList(computer, true, false);
       }
     }
@@ -122,7 +131,7 @@ struct PcView {
   aboutToAppear() {
     if (this.detail.state != ComputerState.ONLINE) {
       this.isLoading = "true"
-      viewModel.runPoll(this.detail, false, 0).then(() => {
+      viewModel.runPoll(this.detail, false).then(() => {
         this.isLoading = "false"
       }).catch((e) => {
         promptAction.showToast({ message: e })

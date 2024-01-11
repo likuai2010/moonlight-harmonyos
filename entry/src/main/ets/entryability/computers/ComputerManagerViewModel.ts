@@ -5,10 +5,20 @@ import { MoonBridge } from '../nvstream/MoonBridge';
 import limelightCertProvider from '../crypto/LimelightCryptoProvider'
 import dbManger from './ComputerDatabaseManager'
 import LimeLog from '../LimeLog';
+import { NvApp } from '../http/NvApp';
 
 class ComputerManagerViewModel {
   async getComputerList(): Promise<ComputerDetails[]> {
     return await dbManger.getAllComputers()
+  }
+  async getComputerByUUid(uuid): Promise<ComputerDetails>{
+    const detail = await dbManger.getComputerByUUID(uuid)
+    try {
+      await this.runPoll(detail, false);
+    }catch (e){
+      LimeLog.error(`{e}`)
+    }
+    return detail;
   }
 
   onDetailsLinster: (news: ComputerDetails) => void
@@ -21,7 +31,7 @@ class ComputerManagerViewModel {
     let detail = await this.pollComputer(fakeDetails)
     if (detail != null) {
       fakeDetails.update(detail)
-      await this.runPoll(fakeDetails, true, 0);
+      await this.runPoll(fakeDetails, true);
     }
     if (fakeDetails.state == ComputerState.ONLINE) {
       return true;
@@ -32,7 +42,7 @@ class ComputerManagerViewModel {
     return false
   }
 
-  async runPoll(details: ComputerDetails, newPc: boolean, offlineCount: number) {
+  async runPoll(details: ComputerDetails, newPc: boolean) {
     if (details.state != ComputerState.ONLINE) {
       // PC未在线, 获取PC状态
       const d = await this.pollComputer(details)
@@ -68,17 +78,18 @@ class ComputerManagerViewModel {
   }
 
   async pollComputer(detail: ComputerDetails): Promise<ComputerDetails> {
-    if (detail.localAddress) {
-      const info = await this.tryPollIp(detail, detail.localAddress)
-      if (info) {
-        info.activeAddress = detail.localAddress
-        return info;
-      }
-    }
+
     if (detail.manualAddress) {
       const info = await this.tryPollIp(detail, detail.manualAddress)
       if (info) {
         info.activeAddress = detail.manualAddress
+        return info;
+      }
+    }
+    if (detail.localAddress) {
+      const info = await this.tryPollIp(detail, detail.localAddress)
+      if (info) {
+        info.activeAddress = detail.localAddress
         return info;
       }
     }
@@ -99,6 +110,12 @@ class ComputerManagerViewModel {
     return null;
   }
 
+  async getImages(details: ComputerDetails, app: NvApp): Promise<string>{
+    const http = new NvHttp(details.activeAddress, details.httpsPort, true, limelightCertProvider);
+    const images = await http.getBoxArt(app)
+    return images
+  }
+
   async tryPollIp(details: ComputerDetails, address: AddressTuple): Promise<ComputerDetails> {
     // If the current address's port number matches the active address's port number, we can also assume
     // the HTTPS port will also match. This assumption is currently safe because Sunshine sets all ports
@@ -110,6 +127,7 @@ class ComputerManagerViewModel {
     const isLikelyOnline = details.state == ComputerState.ONLINE && address === details.activeAddress;
     try {
       const newDetails = await http.getComputerDetails(isLikelyOnline);
+      newDetails.rawAppList = await http.getAppListRaw()
       // Check if this is the PC we expected
       if (newDetails.uuid == null) {
         return null;
@@ -119,6 +137,7 @@ class ComputerManagerViewModel {
         // We got the wrong PC!
         return null;
       }
+
       return newDetails;
     } catch (e) {
       LimeLog.error(e)
