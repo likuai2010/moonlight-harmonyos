@@ -1,3 +1,4 @@
+import { NvApp } from '../http/NvApp';
 import { NvHttp } from '../http/NvHttp'
 import { PairingManager, PairState } from '../http/PairingManager'
 export enum ComputerState {
@@ -26,6 +27,7 @@ export class ComputerDetails {
   pairState: PairState;
   runningGameId: number;
   rawAppList: string;
+  appList: NvApp[];
   nvidiaServer: boolean;
 
   constructor() {
@@ -85,7 +87,12 @@ export class ComputerDetails {
     this.pairState = details.pairState;
     this.runningGameId = details.runningGameId;
     this.nvidiaServer = details.nvidiaServer;
-    this.rawAppList = details.rawAppList;
+    if(details.rawAppList){
+      this.rawAppList = details.rawAppList;
+    }
+    if(details.rawAppList){
+      this.rawAppList = details.rawAppList;
+    }
   }
 
   toString(): string {

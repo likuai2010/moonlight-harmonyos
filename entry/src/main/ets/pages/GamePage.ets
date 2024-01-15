@@ -14,7 +14,7 @@ struct GamePage {
   xComponentContext: any | undefined = undefined;
   dialogController: CustomDialogController = new CustomDialogController({
     builder: Loading({
-      textValue: $textValue,
+
     }),
     cancel: ()=>{
     },

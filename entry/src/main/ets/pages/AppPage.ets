@@ -1,6 +1,6 @@
 
 import router from '@ohos.router'
-import viewModel from '../entryability/computers/ComputerManagerViewModel'
+import viewModel from '../entryability/ComputerManagerViewModel'
 import { ComputerDetails } from '../entryability/computers/ComputerDetails'
 import { NvHttp } from '../entryability/http/NvHttp'
 import { Icon, NavTitle } from './compoments/Title'
@@ -15,7 +15,7 @@ struct AppView {
   app: NvApp
   @State image: PixelMap = undefined;
   aboutToAppear(){
-    viewModel.getImages(this.computer, this.app).then((res)=>{
+    viewModel.readImageByDisk(this.app).then((res)=>{
       let options = {
         alphaType: 0,                     // 透明度
         editable: false,                  // 是否可编辑
@@ -33,8 +33,17 @@ struct AppView {
   build(){
     Column(){
       Stack(){
-        Image(this.image).height(100).width(100)
-        Text(this.app.appName).fontColor(Color.White)
+        if (this.image){
+          Image(this.image).height(100).width(100)
+        } else {
+          Text(this.app.appName).fontColor(Color.White)
+        }
+        if(this.computer.runningGameId == this.app.appId){
+          Column(){
+            Icon({icon: $r("app.media.play_arrow_FILL1_wght700_GRAD200_opsz48"), iconSize:48})
+            Icon({icon: $r("app.media.stop_FILL1_wght700_GRAD200_opsz48"), iconSize: 48})
+          }
+        }
       }
     }
   }
@@ -51,7 +60,7 @@ struct AppPage {
     const params = router.getParams();
     viewModel.getComputerByUUid(params["uuid"]).then((d)=>{
       this.computer = d
-      const appList = NvHttp.getAppListByReader(d.rawAppList)
+      const appList =  d.appList
       this.appList = appList.filter((d) => d.appId != null);
     })
   }

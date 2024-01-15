@@ -1,18 +1,29 @@
 
 import { NavTitle } from './compoments/Title'
-import viewModel from '../entryability/computers/ComputerManagerViewModel'
+import viewModel from '../entryability/ComputerManagerViewModel'
 import router from '@ohos.router'
 import { Loading } from './compoments/Loading'
+
+
 
 @Entry
 @Component
 struct AddPage {
   viewModel = viewModel
   @State ip: string = ''
-  dialogController: CustomDialogController = new CustomDialogController({
+  loadingDialog: CustomDialogController = new CustomDialogController({
     builder: Loading({
       title:"连接中",
       textValue: "建立连接中建立连接中建立连接中建立连接中建立连接中建立连接中建立连接中建立连接中",
+    }),
+    autoCancel: false,
+    alignment: DialogAlignment.Center,
+    customStyle: true
+  })
+  alertDialog: CustomDialogController = new CustomDialogController({
+    builder: Loading({
+      title:"连接中",
+      textValue: "",
     }),
     autoCancel: false,
     alignment: DialogAlignment.Center,
@@ -26,12 +37,13 @@ struct AddPage {
           this.ip = value;
         }).layoutWeight(1).type(InputType.Normal)
         Button("确定").width(150).margin({left:5}).onClick(()=>{
-            this.dialogController.open()
+            this.loadingDialog.open()
             this.viewModel.addPc(this.ip).then((result)=>{
-
-                this.dialogController.close()
+                this.loadingDialog.close()
                 if(result){
                   router.back()
+                }else{
+
                 }
             })
         })

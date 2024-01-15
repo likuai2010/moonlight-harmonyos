@@ -1,13 +1,16 @@
-import { AddressTuple, ComputerDetails, ComputerState } from './ComputerDetails';
+import { AddressTuple, ComputerDetails, ComputerState } from './computers/ComputerDetails';
 import uri from '@ohos.uri';
-import { NvHttp } from '../http/NvHttp';
-import { MoonBridge } from '../nvstream/MoonBridge';
-import limelightCertProvider, { writeFile } from '../crypto/LimelightCryptoProvider'
-import dbManger from './ComputerDatabaseManager'
-import LimeLog from '../LimeLog';
-import { NvApp } from '../http/NvApp';
+import common from '@ohos.app.ability.common';
+import { NvHttp } from './http/NvHttp';
+import { MoonBridge } from './nvstream/MoonBridge';
+import limelightCertProvider, { readFile, writeFile } from './crypto/LimelightCryptoProvider'
+import dbManger from './computers/ComputerDatabaseManager'
+import LimeLog from './LimeLog';
+import { NvApp } from './http/NvApp';
 
 class ComputerManagerViewModel {
+  private context: common.UIAbilityContext
+
   async getComputerList(): Promise<ComputerDetails[]> {
     return await dbManger.getAllComputers()
   }
@@ -15,6 +18,7 @@ class ComputerManagerViewModel {
     const detail = await dbManger.getComputerByUUID(uuid)
     try {
       await this.runPoll(detail, false);
+      await this.downloadImageToDisk(detail, detail.appList)
     }catch (e){
       LimeLog.error(`{e}`)
     }
@@ -77,8 +81,62 @@ class ComputerManagerViewModel {
     }
   }
 
-  async pollComputer(detail: ComputerDetails): Promise<ComputerDetails> {
 
+
+  async getImages(details: ComputerDetails, app: NvApp): Promise<Uint8Array>{
+    const http = new NvHttp(details.activeAddress, details.httpsPort, true, limelightCertProvider);
+    return await http.getBoxArt(app)
+  }
+
+  async downloadImageToDisk(details: ComputerDetails, appList:NvApp[]){
+    for (let app of appList){
+      const bytes = await this.getImages(details, app)
+      if (this.context){
+        writeFile(this.context.filesDir + "/" + app.appId + ".png", bytes)
+      }
+    }
+  }
+  async readImageByDisk(app: NvApp): Promise<Uint8Array>{
+    if (this.context){
+      return readFile(this.context.filesDir + "/" + app.appId + ".png")
+    }
+    return null;
+  }
+
+  async tryPollIp(details: ComputerDetails, address: AddressTuple): Promise<ComputerDetails> {
+    // If the current address's port number matches the active address's port number, we can also assume
+    // the HTTPS port will also match. This assumption is currently safe because Sunshine sets all ports
+    // as offsets from the base HTTP port and doesn't allow custom HttpsPort responses for WAN vs LAN.
+    const portMatchesActiveAddress = details.state == ComputerState.ONLINE &&
+    details.activeAddress != null && address.port == details.activeAddress.port;
+    const http = new NvHttp(address, portMatchesActiveAddress ? details.httpsPort : 0, true, limelightCertProvider);
+    // If this PC is currently online at this address, extend the timeouts to allow more time for the PC to respond.
+    const isLikelyOnline = details.state == ComputerState.ONLINE && address === details.activeAddress;
+    try {
+      const newDetails = await http.getComputerDetails(isLikelyOnline);
+      newDetails.rawAppList = await http.getAppListRaw()
+      try {
+        newDetails.appList = NvHttp.getAppListByReader(newDetails.rawAppList)
+      }catch (e){
+      }
+      // Check if this is the PC we expected
+      if (newDetails.uuid == null) {
+        return null;
+      }
+      // details.uuid can be null on initial PC add
+      else if (details.uuid != null && details.uuid != '' && details.uuid != newDetails.uuid) {
+        // We got the wrong PC!
+        return null;
+      }
+
+      return newDetails;
+    } catch (e) {
+      LimeLog.error(e)
+    }
+    return null;
+  }
+
+  async pollComputer(detail: ComputerDetails): Promise<ComputerDetails> {
     if (detail.manualAddress) {
       const info = await this.tryPollIp(detail, detail.manualAddress)
       if (info) {
@@ -109,48 +167,6 @@ class ComputerManagerViewModel {
     }
     return null;
   }
-
-  async getImages(details: ComputerDetails, app: NvApp): Promise<Uint8Array>{
-    const http = new NvHttp(details.activeAddress, details.httpsPort, true, limelightCertProvider);
-    return await http.getBoxArt(app)
-  }
-
-  async downloadImageToDisk(details: ComputerDetails, appList:NvApp[]){
-    for (let app of appList){
-      const bytes = await this.getImages(details, app)
-      writeFile("", bytes)
-    }
-  }
-
-  async tryPollIp(details: ComputerDetails, address: AddressTuple): Promise<ComputerDetails> {
-    // If the current address's port number matches the active address's port number, we can also assume
-    // the HTTPS port will also match. This assumption is currently safe because Sunshine sets all ports
-    // as offsets from the base HTTP port and doesn't allow custom HttpsPort responses for WAN vs LAN.
-    const portMatchesActiveAddress = details.state == ComputerState.ONLINE &&
-    details.activeAddress != null && address.port == details.activeAddress.port;
-    const http = new NvHttp(address, portMatchesActiveAddress ? details.httpsPort : 0, true, limelightCertProvider);
-    // If this PC is currently online at this address, extend the timeouts to allow more time for the PC to respond.
-    const isLikelyOnline = details.state == ComputerState.ONLINE && address === details.activeAddress;
-    try {
-      const newDetails = await http.getComputerDetails(isLikelyOnline);
-      newDetails.rawAppList = await http.getAppListRaw()
-      // Check if this is the PC we expected
-      if (newDetails.uuid == null) {
-        return null;
-      }
-      // details.uuid can be null on initial PC add
-      else if (details.uuid != null && details.uuid != '' && details.uuid != newDetails.uuid) {
-        // We got the wrong PC!
-        return null;
-      }
-
-      return newDetails;
-    } catch (e) {
-      LimeLog.error(e)
-    }
-    return null;
-  }
-
   async addPc(ip: string): Promise<Boolean> {
     const details = new ComputerDetails();
     const url = this.parseRawUserInputToUri(ip);

@@ -1,5 +1,5 @@
 import { Icon, MainTitle, NavTitle } from './compoments/Title'
-import viewModel from '../entryability/computers/ComputerManagerViewModel'
+import viewModel from '../entryability/ComputerManagerViewModel'
 import { ComputerDetails, ComputerState } from '../entryability/computers/ComputerDetails'
 import promptAction from '@ohos.promptAction'
 import { PairState } from '../entryability/http/PairingManager'
@@ -32,7 +32,7 @@ async function getResString(com: any, r: Resource): Promise<string> {
 struct PcView {
   @State detail: ComputerDetails = new ComputerDetails()
   @State isLoading: string = "false"
-
+  onDelete: (ComputerDetails) => void
   @Builder
   pcMenu() {
     Menu() {
@@ -45,7 +45,7 @@ struct PcView {
       }
       MenuItem({ content: "测试网络连接" })
       MenuItem({ content: "删除电脑" }).onClick(() => {
-        promptAction.showDialog({ title: "查看详情", message: this.detail.toString(), })
+        onDelete(this.detail)
       })
       MenuItem({ content: "查看详情" }).onClick(() => {
         promptAction.showDialog({ title: "查看详情", message: this.detail.toString(), })
@@ -143,7 +143,6 @@ struct PcView {
     Column() {
       Stack({ alignContent: Alignment.Center }) {
         Icon({ icon: $r('app.media.desktop_windows'), iconSize: 120 })
-
         if (this.isLoading == "true") {
           LoadingProgress().width(50).height(50).color(Color.White).offset({ y: -10 })
         } else {
@@ -156,7 +155,6 @@ struct PcView {
           }
         }
       }
-
       Text(this.detail.name || "-").fontColor(Color.White)
     }.onClick(() => {
       this.click()
@@ -168,7 +166,7 @@ struct PcView {
 @Component
 struct PcPage {
   scroller: Scroller = new Scroller();
-  @State pcList: Array<ComputerDetails> = []
+  @State pcList: ComputerDetails[] = []
   heightValue: number
   gridRowTemplate: string
 
@@ -201,7 +199,9 @@ struct PcPage {
         Grid() {
           ForEach(this.pcList, (d) => {
             GridItem() {
-              PcView({ detail: d })
+              PcView({ detail: d, onDelete:(d)=>{
+
+              }})
             }
           }, (item) => JSON.stringify(item))
         }
