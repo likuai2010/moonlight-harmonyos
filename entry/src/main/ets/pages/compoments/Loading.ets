@@ -2,17 +2,19 @@
 
 @CustomDialog
 export struct Loading {
-  @Link textValue: string
+  title: string = "建立连接中"
+  @State textValue: string = "建立连接中建立连接中建立连接中建立连接中建立连接中建立连接中建立连接中建立连接中"
   controller: CustomDialogController
   build() {
     Column(){
-      Text("建立连接中")
+      Text(this.title).fontSize(18)
       Row(){
-        LoadingProgress().width("30%")
-        Text("message")
-      }.padding({bottom: 5})
-    }.alignItems(HorizontalAlign.Start).backgroundColor(Color.White)
+        LoadingProgress().height(100).width(80)
+        Text(this.textValue).maxLines(2).height(100).textOverflow({overflow: TextOverflow.Ellipsis}).layoutWeight(1)
+      }
+    }.padding(10)
+    .alignItems(HorizontalAlign.Start).backgroundColor(Color.White).borderRadius(10)
     .width("40%")
-    .height("20%")
+    .height("30%")
   }
 }

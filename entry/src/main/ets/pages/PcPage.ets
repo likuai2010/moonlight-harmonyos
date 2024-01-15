@@ -124,10 +124,9 @@ struct PcView {
       }
     }
   }
-  doAppList(computer: ComputerDetails ,  newlyPaired:boolean,  showHiddenGames:boolean){
+  doAppList(computer: ComputerDetails , newlyPaired:boolean,  showHiddenGames:boolean){
       router.pushUrl({url:"pages/AppPage"})
   }
-
   aboutToAppear() {
     if (this.detail.state != ComputerState.ONLINE) {
       this.isLoading = "true"

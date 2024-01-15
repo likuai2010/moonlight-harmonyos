@@ -2,7 +2,7 @@ import { AddressTuple, ComputerDetails, ComputerState } from './ComputerDetails'
 import uri from '@ohos.uri';
 import { NvHttp } from '../http/NvHttp';
 import { MoonBridge } from '../nvstream/MoonBridge';
-import limelightCertProvider from '../crypto/LimelightCryptoProvider'
+import limelightCertProvider, { writeFile } from '../crypto/LimelightCryptoProvider'
 import dbManger from './ComputerDatabaseManager'
 import LimeLog from '../LimeLog';
 import { NvApp } from '../http/NvApp';
@@ -115,6 +115,13 @@ class ComputerManagerViewModel {
     return await http.getBoxArt(app)
   }
 
+  async downloadImageToDisk(details: ComputerDetails, appList:NvApp[]){
+    for (let app of appList){
+      const bytes = await this.getImages(details, app)
+      writeFile("", bytes)
+    }
+  }
+
   async tryPollIp(details: ComputerDetails, address: AddressTuple): Promise<ComputerDetails> {
     // If the current address's port number matches the active address's port number, we can also assume
     // the HTTPS port will also match. This assumption is currently safe because Sunshine sets all ports
@@ -144,7 +151,7 @@ class ComputerManagerViewModel {
     return null;
   }
 
-  async addPc(ip: string) {
+  async addPc(ip: string): Promise<Boolean> {
     const details = new ComputerDetails();
     const url = this.parseRawUserInputToUri(ip);
     let wrongSiteLocal = false;
@@ -158,9 +165,7 @@ class ComputerManagerViewModel {
         port = NvHttp.DEFAULT_HTTP_PORT;
       }
       details.manualAddress = new AddressTuple(host, port);
-
       success = await this.addComputerBlocking(details);
-
       if (this.onDetailsUpdate) {
         this.onDetailsLinster(details)
       }
@@ -178,7 +183,7 @@ class ComputerManagerViewModel {
       // Don't bother with the test if we succeeded or the IP address was bogus
       portTestResult = MoonBridge.ML_TEST_RESULT_INCONCLUSIVE;
     }
-
+    return success
   }
 
   parseRawUserInputToUri(rawUserInput) {

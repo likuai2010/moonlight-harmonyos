@@ -21,9 +21,10 @@ export class NvHttp {
 
   private static readonly DEFAULT_HTTPS_PORT: number = 47984;
   public static readonly DEFAULT_HTTP_PORT: number = 47989;
-  public static readonly SHORT_CONNECTION_TIMEOUT: number = 3000;
-  public static readonly LONG_CONNECTION_TIMEOUT: number = 5000;
-  public static readonly READ_TIMEOUT: number = 7000;
+
+  public static readonly SHORT_CONNECTION_TIMEOUT: number = 3;
+  public static readonly LONG_CONNECTION_TIMEOUT: number = 5;
+  public static readonly NO_READ_TIMEOUT: number = 9999;
 
   // Print URL and content to logcat on debug builds
   private static verbose: boolean = false; // Assuming DEBUG builds are for development
@@ -287,11 +288,11 @@ export class NvHttp {
 
   async executePairingCommand(additionalArguments: String, enableReadTimeout: boolean): Promise<string> {
     return this.openHttpConnectionToString(
-      this.baseUrlHttp, "pair", "devicename=roth&updateState=1&" + additionalArguments, enableReadTimeout ? 30000 : 3600000,);
+      this.baseUrlHttp, "pair", "devicename=roth&updateState=1&" + additionalArguments, enableReadTimeout ? NvHttp.LONG_CONNECTION_TIMEOUT : NvHttp.NO_READ_TIMEOUT,);
   }
 
   async executePairingChallenge(): Promise<string> {
-    return await this.openHttpConnectionToString(this.getHttpsUrl(true), "pair", "devicename=roth&updateState=1&phrase=pairchallenge",);
+    return await this.openHttpConnectionToString(this.getHttpsUrl(true), "pair", "devicename=roth&updateState=1&phrase=pairchallenge", NvHttp.LONG_CONNECTION_TIMEOUT);
   }
 
   private getCompleteUrl(baseUrl: Url.URL, path: string, query: string): string {
@@ -347,7 +348,7 @@ export class NvHttp {
         clientPath = this.clientCert.certPath
         keyPath = this.clientCert.keyPath
       }
-      const response = await httpClient.get(url, timeout == 0 ? 9999 : 30, clientPath, keyPath)
+      const response = await httpClient.get(url, timeout == 0 ? 360 : timeout, clientPath, keyPath)
       const td = util.TextDecoder.create('utf-8', { ignoreBOM : true })
       httpClient.close()
       return td.decodeWithStream(response)
@@ -397,7 +398,7 @@ export class NvHttp {
     const xmlStr = await this.openHttpConnectionToString(
       this.getHttpsUrl(true),
       verb,
-      query
+      query, NvHttp.LONG_CONNECTION_TIMEOUT
     );
     if ((verb === "launch" && NvHttp.getXmlString(xmlStr, "gamesession", true) !== "0" ||
     (verb === "resume" && NvHttp.getXmlString(xmlStr, "resume", true) !== "0"))) {
@@ -426,26 +427,25 @@ export class NvHttp {
   }
 
   async getAppList(): Promise<NvApp[]> {
-    const applist = await this.getAppListRaw()
-    return NvHttp.getAppListByReader(applist)
+    return NvHttp.getAppListByReader(await this.getAppListRaw())
   }
 
   async getBoxArt(app: NvApp): Promise<Uint8Array> {
-      return await this.openHttpConnectionToUint8Array(this.getHttpsUrl(true), "appasset", "appid=" + app.appId+ "&AssetType=2&AssetIdx=0");
+      return await this.openHttpConnectionToUint8Array(this.getHttpsUrl(true), "appasset", "appid=" + app.appId+ "&AssetType=2&AssetIdx=0",  NvHttp.LONG_CONNECTION_TIMEOUT);
   }
 
   async getServerInfo(likelyOnline: boolean): Promise<string> {
     if (this.serverCert != null) {
-      let info = await this.openHttpConnectionToString(this.getHttpsUrl(likelyOnline), "serverinfo", null)
+      let info = await this.openHttpConnectionToString(this.getHttpsUrl(likelyOnline), "serverinfo", null , NvHttp.SHORT_CONNECTION_TIMEOUT)
       if (!info) {
-        info = await this.openHttpConnectionToString(this.baseUrlHttp, "serverinfo", null)
+        info = await this.openHttpConnectionToString(this.baseUrlHttp, "serverinfo", null, NvHttp.SHORT_CONNECTION_TIMEOUT)
       }
       if(info)
         this.getServerVersion(info)
       return info
     }
     else {
-      return await this.openHttpConnectionToString(this.baseUrlHttp, "serverinfo", null)
+      return await this.openHttpConnectionToString(this.baseUrlHttp, "serverinfo", null,  NvHttp.SHORT_CONNECTION_TIMEOUT)
     }
   }
 }
