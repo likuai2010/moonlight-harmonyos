@@ -28,6 +28,16 @@ class ComputerManagerViewModel {
     }
     return detail;
   }
+  async batchPollComputerList(list: ComputerDetails[]){
+
+     for(let d of list){
+       await this.runPoll(d, false)
+       d.isLoading = false;
+       let newDetails = new ComputerDetails();
+       newDetails.update(d);
+       this.onDetailsLinster(newDetails);
+     }
+  }
 
   onDetailsLinster: (news: ComputerDetails) => void
 

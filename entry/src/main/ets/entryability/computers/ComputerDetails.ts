@@ -18,6 +18,7 @@ export class ComputerDetails {
   ipv6Address: AddressTuple;
   macAddress: string;
   serverCert: Boolean;
+  isLoading: Boolean;
 
   // Transient attributes
   state: ComputerState;

@@ -34,7 +34,7 @@ struct AppView {
     Column(){
       Stack(){
         if (this.image){
-          Image(this.image).height(100).width(100)
+          Image(this.image).height(150).width(100)
         } else {
           Text(this.app.appName).fontColor(Color.White)
         }

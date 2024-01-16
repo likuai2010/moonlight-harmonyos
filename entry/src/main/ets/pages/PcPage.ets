@@ -31,7 +31,6 @@ async function getResString(com: any, r: Resource): Promise<string> {
 @Component
 struct PcView {
   @State detail: ComputerDetails = new ComputerDetails()
-  @State isLoading: string = "false"
   onDelete: (ComputerDetails) => void
   @Builder
   pcMenu() {
@@ -41,7 +40,7 @@ struct PcView {
           this.doAppList(this.detail, false, false)
         })
       } else {
-        MenuItem({ content: "和电脑配对" }).onTouch(()=>{
+        MenuItem({ content: "和电脑配对" }).onClick(()=>{
 
         })
       }
@@ -49,7 +48,7 @@ struct PcView {
       MenuItem({ content: "删除电脑" }).onClick(() => {
         this.onDelete(this.detail)
       })
-      MenuItem({ content: "查看详情" }).onClick(() => {
+      MenuItem({ content: "查看详情" }).onClick((e) => {
         promptAction.showDialog({ title: "查看详情", message: this.detail.toString(), })
       })
     }
@@ -60,9 +59,7 @@ struct PcView {
       this.doPair()
     } else {
       this.doAppList(this.detail, false, false)
-      //promptAction.showDialog({ title: "查看详情", message: this.detail.toString(),})
     }
-
   }
 
   async doPair() {
@@ -103,7 +100,8 @@ struct PcView {
         // Just navigate to the app view without displaying a toast
         message = null;
         success = true;
-
+        this.detail.serverCert = true
+        viewModel.runPoll(this.detail, false)
         // Pin this certificate for later HTTPS use
         //viewModel.getComputer(computer.uuid).serverCert = pm.getPairedCert();
 
@@ -127,22 +125,13 @@ struct PcView {
     router.pushUrl({url:"pages/AppPage", params: { uuid:  this.detail.uuid, computerName: this.detail.name, rawAppList: this.detail.rawAppList}})
   }
   aboutToAppear() {
-    if (this.detail.state != ComputerState.ONLINE) {
-      this.isLoading = "true"
-      viewModel.runPoll(this.detail, false).then(() => {
-        this.isLoading = "false"
-      }).catch((e) => {
-        promptAction.showToast({ message: e })
-        this.isLoading = "false"
-      })
-    }
   }
 
   build() {
     Column() {
       Stack({ alignContent: Alignment.Center }) {
         Icon({ icon: $r('app.media.desktop_windows'), iconSize: 120 })
-        if (this.isLoading == "true") {
+        if (this.detail.isLoading) {
           LoadingProgress().width(50).height(50).color(Color.White).offset({ y: -10 })
         } else {
           if (this.detail.state == ComputerState.ONLINE) {
@@ -170,8 +159,12 @@ struct PcPage {
   gridRowTemplate: string
 
   aboutToAppear() {
-    viewModel.getComputerList().then((d) => {
-      this.pcList = d
+    viewModel.getComputerList().then((list) => {
+      for(let d of list){
+        d.isLoading = true
+      }
+      this.pcList = list
+      viewModel.batchPollComputerList(this.pcList)
     })
     viewModel.onDetailsUpdate((news: ComputerDetails) => {
       var indexes = this.pcList.findIndex((d) => d.uuid == news.uuid)
@@ -199,7 +192,6 @@ struct PcPage {
           ForEach(this.pcList, (d) => {
             GridItem() {
               PcView({ detail: d, onDelete:(d)=>{
-
               }})
             }
           }, (item) => JSON.stringify(item))
@@ -207,7 +199,7 @@ struct PcPage {
         .rowsTemplate(this.gridRowTemplate)
         .columnsTemplate('1fr 1fr 1fr')
         .height(this.heightValue)
-      }.layoutWeight(1).scrollable(ScrollDirection.Vertical).edgeEffect(EdgeEffect.Spring)
+      }.layoutWeight(1).scrollable(ScrollDirection.Vertical)
     }.padding(20).height("100%").width("100%").backgroundColor($r("app.color.page_background"))
   }
 }

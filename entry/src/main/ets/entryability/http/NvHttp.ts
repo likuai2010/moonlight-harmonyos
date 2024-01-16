@@ -351,7 +351,7 @@ export class NvHttp {
         clientPath = this.clientCert.certPath
         keyPath = this.clientCert.keyPath
       }
-      const response = await this.httpClient.get(url, timeout == 0 ? 9999 : 30, clientPath, keyPath)
+      const response = await this.httpClient.get(url, timeout == 0 ? 120 : timeout, clientPath, keyPath)
       const td = util.TextDecoder.create('utf-8', { ignoreBOM : true })
       return td.decodeWithStream(response)
     } catch (e) {
