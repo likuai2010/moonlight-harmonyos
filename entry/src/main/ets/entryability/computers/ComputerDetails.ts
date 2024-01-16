@@ -90,8 +90,8 @@ export class ComputerDetails {
     if(details.rawAppList){
       this.rawAppList = details.rawAppList;
     }
-    if(details.rawAppList){
-      this.rawAppList = details.rawAppList;
+    if(details.appList){
+      this.appList = details.appList;
     }
   }
 

@@ -2,11 +2,8 @@ import UIAbility from '@ohos.app.ability.UIAbility';
 import hilog from '@ohos.hilog';
 import window from '@ohos.window';
 import limelightCertProvider from './crypto/LimelightCryptoProvider';
-import fileIo from '@ohos.file.fs';
 import inputDevice from '@ohos.multimodalInput.inputDevice';
-import  computerDatabaseManager from  './computers/ComputerDatabaseManager'
-import Want from '@ohos.app.ability.Want';
-
+import viewModel from '../entryability/ComputerManagerViewModel'
 let windowStage_ = null;
 let sub_windowClass = null;
 
@@ -55,11 +52,13 @@ export default class EntryAbility extends UIAbility {
 
   onWindowStageCreate(windowStage: window.WindowStage) {
     // Main window is created, set main page for this ability
+
     let names = [];
     windowStage.getMainWindowSync().setWindowSystemBarEnable(names)
     windowStage_ = windowStage;
     // 开发者可以在适当的时机，如主窗口上按钮点击事件等，创建子窗口。并不一定需要在onWindowStageCreate调用，这里仅作展示
-    computerDatabaseManager.init(this.context)
+
+    viewModel.initContext(this.context)
 
     // this.context.resourceManager.getRawFd('client.pem').then((i)=>{
     //   fileIo.copyFile(i.fd, this.context.cacheDir + "/client.pem").then((d)=>{

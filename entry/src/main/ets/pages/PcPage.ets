@@ -38,14 +38,16 @@ struct PcView {
     Menu() {
       if (this.detail.pairState == PairState.PAIRED) {
         MenuItem({ content: "浏览游戏列表" }).onClick(()=>{
-          this.goPc()
+          this.doAppList(this.detail, false, false)
         })
       } else {
-        MenuItem({ content: "和电脑配对" })
+        MenuItem({ content: "和电脑配对" }).onTouch(()=>{
+
+        })
       }
       MenuItem({ content: "测试网络连接" })
       MenuItem({ content: "删除电脑" }).onClick(() => {
-        onDelete(this.detail)
+        this.onDelete(this.detail)
       })
       MenuItem({ content: "查看详情" }).onClick(() => {
         promptAction.showDialog({ title: "查看详情", message: this.detail.toString(), })
@@ -57,13 +59,10 @@ struct PcView {
     if (this.detail.state == ComputerState.ONLINE && this.detail.pairState != PairState.PAIRED) {
       this.doPair()
     } else {
-      this.goPc()
-      promptAction.showDialog({ title: "查看详情", message: this.detail.toString(),})
+      this.doAppList(this.detail, false, false)
+      //promptAction.showDialog({ title: "查看详情", message: this.detail.toString(),})
     }
 
-  }
-  goPc(){
-    router.pushUrl({url:"pages/AppPage", params: { uuid:  this.detail.uuid, computerName: this.detail.name, rawAppList: this.detail.rawAppList}})
   }
 
   async doPair() {
@@ -125,7 +124,7 @@ struct PcView {
     }
   }
   doAppList(computer: ComputerDetails , newlyPaired:boolean,  showHiddenGames:boolean){
-      router.pushUrl({url:"pages/AppPage"})
+    router.pushUrl({url:"pages/AppPage", params: { uuid:  this.detail.uuid, computerName: this.detail.name, rawAppList: this.detail.rawAppList}})
   }
   aboutToAppear() {
     if (this.detail.state != ComputerState.ONLINE) {

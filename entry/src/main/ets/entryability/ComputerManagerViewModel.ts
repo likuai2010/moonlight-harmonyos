@@ -10,7 +10,10 @@ import { NvApp } from './http/NvApp';
 
 class ComputerManagerViewModel {
   private context: common.UIAbilityContext
-
+  initContext(context: common.UIAbilityContext){
+    this.context = context
+    dbManger.init(this.context)
+  }
   async getComputerList(): Promise<ComputerDetails[]> {
     return await dbManger.getAllComputers()
   }
@@ -18,6 +21,7 @@ class ComputerManagerViewModel {
     const detail = await dbManger.getComputerByUUID(uuid)
     try {
       await this.runPoll(detail, false);
+
       await this.downloadImageToDisk(detail, detail.appList)
     }catch (e){
       LimeLog.error(`{e}`)

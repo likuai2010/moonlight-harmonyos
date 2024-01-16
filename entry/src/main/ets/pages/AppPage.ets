@@ -60,7 +60,7 @@ struct AppPage {
     const params = router.getParams();
     viewModel.getComputerByUUid(params["uuid"]).then((d)=>{
       this.computer = d
-      const appList =  d.appList
+      const appList = d.appList
       this.appList = appList.filter((d) => d.appId != null);
     })
   }

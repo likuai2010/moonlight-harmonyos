@@ -41,7 +41,7 @@ export function readFile(filePath: string): Uint8Array {
 }
 export function writeFile(filePath: string, data: Uint8Array) {
   const file = fs.openSync(filePath, fs.OpenMode.CREATE | fs.OpenMode.READ_WRITE)
-  fs.writeSync(file.fd, data);
+  fs.writeSync(file.fd, data.buffer);
   fs.fsyncSync(file.fd)
   fs.closeSync(file);
 }

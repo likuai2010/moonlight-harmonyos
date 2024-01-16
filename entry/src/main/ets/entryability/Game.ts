@@ -6,6 +6,7 @@ import { NvConnection } from './nvstream/NvConnection';
 import { StreamConfiguration } from './nvstream/StreamConfiguration';
 
 
+
 export class Game implements NvConnectionListener {
   conn: NvConnection
 
