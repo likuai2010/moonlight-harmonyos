@@ -3,10 +3,11 @@ import uri from '@ohos.uri';
 import common from '@ohos.app.ability.common';
 import { NvHttp } from './http/NvHttp';
 import { MoonBridge } from './nvstream/MoonBridge';
-import limelightCertProvider, { readFile, writeFile } from './crypto/LimelightCryptoProvider'
+import limelightCertProvider, { accessFile, readFile, writeFile } from './crypto/LimelightCryptoProvider'
 import dbManger from './computers/ComputerDatabaseManager'
 import LimeLog from './LimeLog';
 import { NvApp } from './http/NvApp';
+import File from '@system.file';
 
 class ComputerManagerViewModel {
   private context: common.UIAbilityContext
@@ -21,7 +22,6 @@ class ComputerManagerViewModel {
     const detail = await dbManger.getComputerByUUID(uuid)
     try {
       await this.runPoll(detail, false);
-
       await this.downloadImageToDisk(detail, detail.appList)
     }catch (e){
       LimeLog.error(`{e}`)
@@ -94,9 +94,11 @@ class ComputerManagerViewModel {
 
   async downloadImageToDisk(details: ComputerDetails, appList:NvApp[]){
     for (let app of appList){
-      const bytes = await this.getImages(details, app)
       if (this.context){
-        writeFile(this.context.filesDir + "/" + app.appId + ".png", bytes)
+        if(!accessFile(this.context.filesDir + "/" + app.appId + ".png")){
+          const bytes = await this.getImages(details, app)
+          writeFile(this.context.filesDir + "/" + app.appId + ".png", bytes)
+        }
       }
     }
   }

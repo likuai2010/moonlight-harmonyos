@@ -45,5 +45,8 @@ export function writeFile(filePath: string, data: Uint8Array) {
   fs.fsyncSync(file.fd)
   fs.closeSync(file);
 }
+export function accessFile(filePath: string): Boolean {
+  return fs.accessSync(filePath)
+}
 const provider = new LimelightCertProvider()
 export default provider

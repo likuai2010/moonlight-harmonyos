@@ -5,7 +5,7 @@ set(OPENSSL_CRYPTO_LIBRARY libcrypto)
 set(OPENSSL_INCLUDE_DIR ${OPENSSL_DIR}/include)
 
 set(CURL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/curl)
-set(CURL_INCLUDE_DIR ${CURL_DIR}/include)
+set(CURL_INCLUDE_DIR ${CURL_DIR}/curl-8.5.0/include)
 
 set(FFmpeg FALSE)
 
@@ -34,17 +34,20 @@ set_target_properties(libcrypto PROPERTIES IMPORTED_LOCATION ${OPENSSL_DIR}/${CM
 set_target_properties(libcrypto PROPERTIES INTERFACE_INCLUDE_DIRECTORIES ${OPENSSL_INCLUDE_DIR})
 
 
-add_library(libcurl STATIC IMPORTED)
-set_target_properties(libcurl PROPERTIES IMPORTED_LOCATION ${CURL_DIR}/${CMAKE_OHOS_ARCH_ABI}/libcurl.a)
+add_library(libcurl SHARED IMPORTED)
+set_target_properties(libcurl PROPERTIES IMPORTED_LOCATION ${CURL_DIR}/${CMAKE_OHOS_ARCH_ABI}/libcurl-d.so)
 set_target_properties(libcurl PROPERTIES INTERFACE_INCLUDE_DIRECTORIES ${CURL_INCLUDE_DIR})
 
 
 
+#set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 
 add_subdirectory(opus)
 add_subdirectory(sdl)
 add_subdirectory(moonlight-common-c)
 
+#set(OPENSSL_LIBRARIES libssl libcrypto)
+#add_subdirectory(curl/curl-8.5.0)
 
 add_library(entry SHARED
 hello.cpp
@@ -68,11 +71,12 @@ if (FFmpeg)
 endif()
 
 target_link_libraries(entry PRIVATE
-libssl
+#libssl
 libcrypto
 opus
 sdl3
 moonlight-common-c
+libcurl
 )
 
 target_include_directories(entry SYSTEM PRIVATE
@@ -93,7 +97,6 @@ libhilog_ndk.z.so
 #libnative_media_codecbase.so
 # libnative_media_core.so
 #libnative_media_vdec.so
-libcurl
 EGL.so
 GLESv3.so
 libuv.so
