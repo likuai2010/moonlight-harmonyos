@@ -33,18 +33,19 @@ struct AddPage {
     Column(){
       NavTitle({ title: "手动添加电脑" })
       Row(){
-        TextInput({placeholder:'串流电脑的ip地址', text: "221.217.48.5"}).fontColor(Color.White).onChange((value: string) => {
+        TextInput({placeholder:'串流电脑的ip地址', text: "[2409:8a00:79a1:5ae1:27d5:8223:fcba:4b17]"}).fontColor(Color.White).onChange((value: string) => {
           this.ip = value;
         }).layoutWeight(1).type(InputType.Normal)
         Button("确定").width(150).margin({left:5}).onClick(()=>{
             this.loadingDialog.open()
             this.viewModel.addPc(this.ip).then((result)=>{
                 this.loadingDialog.close()
-                if(result){
+                if(result.success){
                   router.back()
                 }else{
-
                 }
+            }).catch(()=>{
+                this.loadingDialog.close()
             })
         })
       }.width("100%")

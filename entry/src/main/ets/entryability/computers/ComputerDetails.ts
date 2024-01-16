@@ -130,7 +130,7 @@ export class AddressTuple {
 
     // If this was an escaped IPv6 address, remove the brackets
     if (address.startsWith("[") && address.endsWith("]")) {
-      address = address.substring(1, address.length - 1);
+      //address = address.substring(1, address.length - 1);
     }
 
     this.address = address;

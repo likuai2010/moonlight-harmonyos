@@ -9,6 +9,17 @@ import LimeLog from './LimeLog';
 import { NvApp } from './http/NvApp';
 import File from '@system.file';
 
+export class ResultInfo{
+    success: boolean
+    message:string
+
+  constructor(success: boolean, message:string) {
+    this.success = success
+    this.message = message
+  }
+}
+
+
 class ComputerManagerViewModel {
   private context: common.UIAbilityContext
   initContext(context: common.UIAbilityContext){
@@ -183,7 +194,7 @@ class ComputerManagerViewModel {
     }
     return null;
   }
-  async addPc(ip: string): Promise<Boolean> {
+  async addPc(ip: string): Promise<ResultInfo> {
     const details = new ComputerDetails();
     const url = this.parseRawUserInputToUri(ip);
     let wrongSiteLocal = false;
@@ -215,7 +226,7 @@ class ComputerManagerViewModel {
       // Don't bother with the test if we succeeded or the IP address was bogus
       portTestResult = MoonBridge.ML_TEST_RESULT_INCONCLUSIVE;
     }
-    return success
+    return new ResultInfo(success, "")
   }
 
   parseRawUserInputToUri(rawUserInput) {
