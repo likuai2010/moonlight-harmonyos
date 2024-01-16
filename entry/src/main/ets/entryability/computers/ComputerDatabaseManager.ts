@@ -49,7 +49,7 @@ export class ComputerDatabaseManager {
         ipv6Address: details.ipv6Address,
       }),
       MacAddress: details.macAddress,
-      ServerCert: null
+      ServerCert: `${details.serverCert}`
     }
     if (old.rowCount > 0)
       this.store.update(data, predicates)
@@ -91,6 +91,7 @@ export class ComputerDatabaseManager {
       details.remoteAddress = addresses.remoteAddress;
       details.manualAddress = addresses.manualAddress;
       details.ipv6Address = addresses.ipv6Address;
+
     } catch (e) {
     }
     // External port is persisted in the remote address field
@@ -101,6 +102,7 @@ export class ComputerDatabaseManager {
       details.externalPort = NvHttp.DEFAULT_HTTP_PORT;
     }
     details.macAddress = c.getString(3);
+    details.serverCert = (c.getString(4) == "true")
     // This signifies we don't have dynamic state (like pair state)
     details.state = ComputerState.UNKNOWN;
     return details;

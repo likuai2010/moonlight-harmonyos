@@ -60,17 +60,7 @@ export default class EntryAbility extends UIAbility {
 
     viewModel.initContext(this.context)
 
-    // this.context.resourceManager.getRawFd('client.pem').then((i)=>{
-    //   fileIo.copyFile(i.fd, this.context.cacheDir + "/client.pem").then((d)=>{
-    //     console.log(d+"");
-    //   })
-    // })
-    // this.context.resourceManager.getRawFd('client.key').then((i)=>{
-    //   fileIo.copyFile(i.fd, this.context.cacheDir + "/private.pem")
-    //     .then((d)=>{
-    //       console.log(d+"");
-    //     })
-    // })
+
     limelightCertProvider.initCertKeyPair(this.context.cacheDir)
     windowStage.loadContent('pages/Index', (err, data) => {
       if (err.code) {

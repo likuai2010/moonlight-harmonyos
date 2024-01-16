@@ -15,6 +15,7 @@ import LimeLog from '../LimeLog';
 
 
 export class NvHttp {
+
   private uniqueId: string;
   pm: PairingManager;
   private clientCert: LimelightCertProvider;
@@ -33,7 +34,7 @@ export class NvHttp {
 
   private httpsPort: number;
   private serverCert: any;
-
+  private httpClient: CurlClient = new CurlClient()
 
   constructor(address: AddressTuple,
               httpsPort: number,
@@ -91,6 +92,8 @@ export class NvHttp {
       }
       return true
     } })
+    if (v == '')
+      return null
     return v
   }
 
@@ -339,7 +342,7 @@ export class NvHttp {
     return null;
   }
   async openHttpConnectionToString(baseUrl: Url.URL, path: string, query: string = null, timeout: number = 0): Promise<string> {
-    var httpClient = new CurlClient()
+
     try {
       let url = this.getCompleteUrl(baseUrl, path, query)
       let clientPath = null;
@@ -348,12 +351,10 @@ export class NvHttp {
         clientPath = this.clientCert.certPath
         keyPath = this.clientCert.keyPath
       }
-      const response = await httpClient.get(url, timeout == 0 ? 360 : timeout, clientPath, keyPath)
+      const response = await this.httpClient.get(url, timeout == 0 ? 9999 : 30, clientPath, keyPath)
       const td = util.TextDecoder.create('utf-8', { ignoreBOM : true })
-      httpClient.close()
       return td.decodeWithStream(response)
     } catch (e) {
-      httpClient.close()
       LimeLog.error(`${e}`)
     }
     return null;
@@ -435,13 +436,19 @@ export class NvHttp {
   }
 
   async getServerInfo(likelyOnline: boolean): Promise<string> {
-    if (this.serverCert != null) {
-      let info = await this.openHttpConnectionToString(this.getHttpsUrl(likelyOnline), "serverinfo", null , NvHttp.SHORT_CONNECTION_TIMEOUT)
-      if (!info) {
+
+    if (this.serverCert) {
+      let info = await this.openHttpConnectionToString(this.getHttpsUrl(likelyOnline), "serverinfo", null, NvHttp.SHORT_CONNECTION_TIMEOUT)
+      try {
+        const version = this.getServerVersion(info)
+        if (!version)
+          info = null
+      } catch (ignore){
+        info = null;
+      }
+      if (!info){
         info = await this.openHttpConnectionToString(this.baseUrlHttp, "serverinfo", null, NvHttp.SHORT_CONNECTION_TIMEOUT)
       }
-      if(info)
-        this.getServerVersion(info)
       return info
     }
     else {

@@ -17,7 +17,7 @@ export class ComputerDetails {
   manualAddress: AddressTuple;
   ipv6Address: AddressTuple;
   macAddress: string;
-  //serverCert: X509Certificate;
+  serverCert: Boolean;
 
   // Transient attributes
   state: ComputerState;
@@ -30,9 +30,11 @@ export class ComputerDetails {
   appList: NvApp[];
   nvidiaServer: boolean;
 
+
   constructor() {
     // Use defaults
     this.state = ComputerState.UNKNOWN;
+    this.serverCert = undefined;
   }
 
   guessExternalPort(): number {
@@ -79,9 +81,9 @@ export class ComputerDetails {
     if (details.macAddress != null && details.macAddress !== "00:00:00:00:00:00") {
       this.macAddress = details.macAddress;
     }
-    // if (details.serverCert !== null) {
-    //   this.serverCert = details.serverCert;
-    // }
+    if (details.serverCert != null) {
+      this.serverCert = details.serverCert;
+    }
     this.externalPort = details.externalPort;
     this.httpsPort = details.httpsPort;
     this.pairState = details.pairState;
@@ -99,12 +101,12 @@ export class ComputerDetails {
     let str = "";
     str += `Name: ${this.name}\n`;
     str += `State: ${this.state}\n`;
-    str += `Active Address: ${this.activeAddress.toString()}\n`;
+    str += `Active Address: ${this.activeAddress}\n`;
     str += `UUID: ${this.uuid}\n`;
     str += `Local Address: ${this.localAddress}\n`;
     str += `Remote Address: ${this.remoteAddress}\n`;
     str += `IPv6 Address: ${this.ipv6Address}\n`;
-    str += `Manual Address: ${this.manualAddress.toString()}\n`;
+    str += `Manual Address: ${this.manualAddress}\n`;
     str += `MAC Address: ${this.macAddress}\n`;
     str += `Pair State: ${this.pairState}\n`;
     str += `Running Game ID: ${this.runningGameId}\n`;

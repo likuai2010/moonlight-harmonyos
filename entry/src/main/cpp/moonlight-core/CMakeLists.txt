@@ -5,7 +5,7 @@ set(OPENSSL_CRYPTO_LIBRARY libcrypto)
 set(OPENSSL_INCLUDE_DIR ${OPENSSL_DIR}/include)
 
 set(CURL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/curl)
-set(CURL_INCLUDE_DIR ${CURL_DIR}/curl-8.5.0/include)
+set(CURL_INCLUDE_DIR ${CURL_DIR}/include)
 
 set(FFmpeg FALSE)
 

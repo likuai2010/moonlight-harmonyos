@@ -42,6 +42,60 @@ size_t write_callback(void *contents, size_t size, size_t nmemb, void *userp) {
     mem->memory[mem->size] = 0;
     return realsize;
 }
+static CURL *curl;
+
+int http_init( AsyncCallbackInfo *cb) {
+    if (!curl) {
+        curl_global_init(CURL_GLOBAL_ALL);
+    } else {
+        return 0;
+    }
+
+    curl = curl_easy_init();
+
+    if (!curl)
+        return 1;
+
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
+    curl_easy_setopt(curl, CURLOPT_SSLENGINE_DEFAULT, 1L);
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
+    curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1L);
+    curl_easy_setopt(curl, CURLOPT_SSL_SESSIONID_CACHE, 0L);
+
+    return 0;
+}
+void http_request(AsyncCallbackInfo *cb) {
+
+    HTTP_DATA *http_data = (HTTP_DATA *)malloc(sizeof(HTTP_DATA));
+    http_data->memory = (char *)malloc(1);
+    http_data->size = 0;
+
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, http_data);
+    curl_easy_setopt(curl, CURLOPT_URL, cb->url);
+    curl_easy_setopt(curl, CURLOPT_TIMEOUT, cb->timeout);
+    if (cb->clientPath != nullptr) {
+        curl_easy_setopt(curl, CURLOPT_SSLCERTTYPE, "PEM");
+        curl_easy_setopt(curl, CURLOPT_SSLCERT, cb->clientPath);
+    }
+    if (cb->keyPath != nullptr) {
+        curl_easy_setopt(curl, CURLOPT_SSLKEYTYPE, "PEM");
+        curl_easy_setopt(curl, CURLOPT_SSLKEY, cb->keyPath);
+    }
+
+    CURLcode res = curl_easy_perform(curl);
+
+    if (res != CURLE_OK) {
+        cb->error = curl_easy_strerror(res);
+    } else if (http_data->memory == NULL) {
+        cb->error = "Curl: memory = NULL";
+    }
+
+    cb->result = http_data->memory;
+    cb->size = http_data->size;
+    free(http_data->memory);
+    free(http_data);
+}
 
 void getCurl(napi_env env, AsyncCallbackInfo *cb) {
     CURL *curl;
@@ -51,19 +105,20 @@ void getCurl(napi_env env, AsyncCallbackInfo *cb) {
         // 设置要访问的URL
         curl_easy_setopt(curl, CURLOPT_URL, cb->url);
         curl_easy_setopt(curl, CURLOPT_TIMEOUT, cb->timeout);
-        curl_easy_setopt(curl, CURLOPT_SSLCERTTYPE, "PEM");
-        if (cb->clientPath != nullptr)
-            curl_easy_setopt(curl, CURLOPT_SSLCERT, cb->clientPath);
-        if (cb->keyPath != nullptr) {
-            // dev use DER product PEM
-            curl_easy_setopt(curl, CURLOPT_SSLKEYTYPE, "PEM");
-            curl_easy_setopt(curl, CURLOPT_SSLKEY, cb->keyPath);
-        }
 
         // 没有ca证书无法信任
         // 设置自签名证书的路径
         // curl_easy_setopt(curl, CURLOPT_CAINFO, "/data/storage/el2/base/haps/entry/cache/ca.pem");
         // 忽略SSL证书验证
+
+//        if (cb->clientPath != nullptr) {
+//            curl_easy_setopt(curl, CURLOPT_SSLCERTTYPE, "PEM");
+//            curl_easy_setopt(curl, CURLOPT_SSLCERT, cb->clientPath);
+//        }
+//        if (cb->keyPath != nullptr) {
+//            curl_easy_setopt(curl, CURLOPT_SSLKEYTYPE, "PEM");
+//            curl_easy_setopt(curl, CURLOPT_SSLKEY, cb->keyPath);
+//        }
         curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
         curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
         curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
@@ -80,18 +135,13 @@ void getCurl(napi_env env, AsyncCallbackInfo *cb) {
 
         if (res != CURLE_OK) {
             cb->error = curl_easy_strerror(res);
-            free(http_data->memory);
-            free(http_data);
         } else if (http_data->memory == NULL) {
-            free(http_data->memory);
-            free(http_data);
             cb->error = "Curl: memory = NULL";
         }
         cb->result = http_data->memory;
         cb->size = http_data->size;
         free(http_data->memory);
         free(http_data);
-        curl_easy_cleanup(curl);
     }
 }
 
@@ -118,17 +168,17 @@ napi_value GetRequest(napi_env env, napi_callback_info info) {
         .keyPath = keyPath,
         .result = nullptr};
     napi_value resourceName;
-    napi_create_string_latin1(env, "GetRequest", NAPI_AUTO_LENGTH, &resourceName);
+    napi_create_string_latin1(env, url, NAPI_AUTO_LENGTH, &resourceName);
     napi_create_async_work(
         env, nullptr, resourceName,
         [](napi_env env, void *data) {
-            getCurl(env, (AsyncCallbackInfo *)data);
+            http_request((AsyncCallbackInfo *)data);
+            //getCurl(env, (AsyncCallbackInfo *)data);
         },
         [](napi_env env, napi_status status, void *data) {
             AsyncCallbackInfo *asyncCallbackInfo = (AsyncCallbackInfo *)data;
             if (asyncCallbackInfo->error == nullptr) {
                 napi_value result = createTypedArray(env, asyncCallbackInfo->size, napi_uint8_array, asyncCallbackInfo->result);
-
                 // 触发回调
                 napi_resolve_deferred(asyncCallbackInfo->env, asyncCallbackInfo->deferred, result);
             } else {
@@ -140,13 +190,12 @@ napi_value GetRequest(napi_env env, napi_callback_info info) {
             delete asyncCallbackInfo;
         },
         (void *)asyncCallbackInfo, &asyncCallbackInfo->asyncWork);
-    // 将异步工作排队，等待 Node.js 事件循环处理
     napi_queue_async_work(env, asyncCallbackInfo->asyncWork);
     return promise;
 }
 
 static napi_value CurlClientClassConstructor(napi_env env, napi_callback_info info) {
-
+    http_init(nullptr);
     napi_value thisArg = nullptr;
     void *data = nullptr;
     napi_get_cb_info(env, info, nullptr, nullptr, &thisArg, &data);
@@ -157,11 +206,14 @@ static napi_value CurlClientClassConstructor(napi_env env, napi_callback_info in
 }
 static napi_value Close(napi_env env, napi_callback_info info) {
     // curl_global_cleanup();
+    
     return 0;
 }
 
 void HttpCurlInit(napi_env env, napi_value exports) {
-    curl_global_init(CURL_GLOBAL_DEFAULT);
+    //curl_global_init(CURL_GLOBAL_DEFAULT);
+    // char *clientPath = get_value_string(env, args[2]);
+    //   char *keyPath = get_value_string(env, args[3]);
     napi_property_descriptor descriptors[] = {
         {"get", nullptr, GetRequest, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"close", nullptr, Close, nullptr, nullptr, nullptr, napi_default, nullptr}};

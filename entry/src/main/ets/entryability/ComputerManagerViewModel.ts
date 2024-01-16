@@ -115,7 +115,7 @@ class ComputerManagerViewModel {
     // as offsets from the base HTTP port and doesn't allow custom HttpsPort responses for WAN vs LAN.
     const portMatchesActiveAddress = details.state == ComputerState.ONLINE &&
     details.activeAddress != null && address.port == details.activeAddress.port;
-    const http = new NvHttp(address, portMatchesActiveAddress ? details.httpsPort : 0, true, limelightCertProvider);
+    const http = new NvHttp(address, portMatchesActiveAddress ? details.httpsPort : 0, details.serverCert, limelightCertProvider);
     // If this PC is currently online at this address, extend the timeouts to allow more time for the PC to respond.
     const isLikelyOnline = details.state == ComputerState.ONLINE && address === details.activeAddress;
     try {
