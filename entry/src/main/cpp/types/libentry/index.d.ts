@@ -26,12 +26,12 @@ export declare class VideoStatus{
   receivedTime: number
 }
 export declare class MoonBridgeNapi {
-  // BridgeClStageStarting,BridgeClStageComplete, BridgeClStageFailed
+  // BridgeClStageStarting,BridgeClStageComplete
   onClStage(key:string, callback:(stage:string)=> void)
   // BridgeClStageFailed
   onClStageFailed(key:string, callback:(stage:string, code: number)=> void)
   // BridgeClConnectionStarted, BridgeClConnectionTerminated, BridgeClConnectionStatusUpdate
-  OnClConnection(callback:(code:number)=> void)
+  onClConnection(key:string, callback:(code:number)=> void)
 
   onVideoStatus(callback:(any:VideoStatus)=> void)
   startConnection(

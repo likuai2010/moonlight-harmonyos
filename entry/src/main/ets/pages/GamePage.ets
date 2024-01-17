@@ -1,30 +1,28 @@
 import gameViewModel from 'ets/entryability/GameViewModel'
 import { VideoStatus } from 'libentry.so';
 import router from '@ohos.router';
-import { Loading, Alert } from './compoments/Loading'
+import { Spinner } from './compoments/Loading'
 @Entry
 @Component
 struct GamePage {
-  @State message: string = 'Hello World'
   @State videoStatus: VideoStatus = null
   xComponentContext: any | undefined = undefined;
   dialogController: CustomDialogController =  new CustomDialogController({
-    builder: Loading({ title: $r('app.string.conn_establishing_title'), message: this.message }),
+    builder: Spinner({ title: $r('app.string.conn_establishing_title'), text: "" }),
     autoCancel: false,
     alignment: DialogAlignment.Center,
     customStyle: true
   })
   aboutToDisappear() {
+    this.dialogController.close()
+    gameViewModel.stop()
     delete this.dialogController, // 删除dialogController
     this.dialogController = undefined // 将dialogController置空
-    gameViewModel.stop()
+
   }
   aboutToAppear(){
-
+    this.dialogController.open()
     gameViewModel.init(router.getParams()["computer"], router.getParams()["app"])
-    gameViewModel.onDialogMessage((m)=>{
-      this.message = m
-    })
     gameViewModel.start(this.dialogController, getContext(this))
     gameViewModel.conn.onVideoStatus((s)=>{
       this.videoStatus = s;

@@ -7,7 +7,10 @@ import { StreamConfiguration } from './nvstream/StreamConfiguration';
 import { BuildDialog } from '../uitls/Dialog';
 import { Loading } from '../pages/compoments/Loading';
 import { getResStringByContext } from '../uitls/ResString';
-
+import emitter from '@ohos.events.emitter'
+import { SpinnerEventId } from '../uitls/CommonEvents';
+import LimeLog from './LimeLog';
+import promptAction from '@ohos.promptAction';
 class GameViewModel implements NvConnectionListener {
   conn: NvConnection
   context: Context
@@ -65,6 +68,7 @@ class GameViewModel implements NvConnectionListener {
 
   displayMessage(message: string): void {
     console.debug("displayMessage")
+    promptAction.showToast({message: message})
   }
 
   connectionStatusUpdate(connectionStatus: number): void {
@@ -72,18 +76,17 @@ class GameViewModel implements NvConnectionListener {
   }
 
   connectionTerminated(errorCode: number): void {
-    console.debug("connectionTerminated")
-    this.loadingDialog.close()
+    LimeLog.error("Connection terminated: " + errorCode);
+    this.spinnerDialog.close()
   }
 
   connectionStarted(): void {
     console.debug("connectionStarted")
-    this.onDialogCallback("connectionStarted")
   }
 
   stageFailed(stage: string, portFlags: number, errorCode: number): void {
-    console.error("stageFailed")
-    this.loadingDialog.close()
+    LimeLog.error(stage + " failed: " + errorCode);
+    this.spinnerDialog.close()
   }
 
   stageComplete(stage: string): void {
@@ -91,23 +94,52 @@ class GameViewModel implements NvConnectionListener {
   }
 
   stageStarting(stage: string): void {
-    console.error("stageStarting")
+    getResStringByContext(this.context,$r("app.string.conn_starting") ).then((m)=>{
+      this.sendMessageToSpinner(m + " " + stage)
+    })
+  }
+  private spinnerDialog: CustomDialogController
 
+  private sendMessageToSpinner(message: string | Resource){
+    if (typeof message === "string"){
+      emitter.emit({eventId: SpinnerEventId}, {data:{ message: message}})
+    } else {
+      getResStringByContext(this.context, message).then((m)=>{
+        emitter.emit({eventId: SpinnerEventId}, {data:{ message: m}})
+      })
+    }
   }
-  private loadingDialog: CustomDialogController
-  private onDialogCallback: ((string) => void) = (string)=>{}
-  async onDialogMessage(callback: (string)=> void){
-    this.onDialogCallback = callback
-  }
+
   async start(dialog: CustomDialogController, context: Context) {
-    dialog.open()
-    this.onDialogCallback("xxx")
-    this.loadingDialog = dialog
+    this.spinnerDialog = dialog
+    this.context = context
+    this.sendMessageToSpinner($r("app.string.conn_establishing_msg"))
+    this.initMoonBridge()
     await this.conn.start(this);
-    this.onDialogCallback("22222")
   }
   stop() {
     this.conn.api.stopConnection();
+  }
+
+  initMoonBridge(){
+    this.conn.api.onClStageFailed("BridgeClStageFailed",(stage:string, code: number)=>{
+      this.stageFailed(stage, 0,code)
+    })
+    this.conn.api.onClStage("BridgeClStageStarting",(stage:string)=>{
+      this.stageStarting(stage)
+    })
+    this.conn.api.onClStage("BridgeClStageComplete",(stage:string)=>{
+      this.stageComplete(stage)
+    })
+    this.conn.api.onClConnection("BridgeClConnectionStarted", (code:number)=>{
+      this.connectionStarted()
+    })
+    this.conn.api.onClConnection("BridgeClConnectionStatusUpdate", (code:number)=>{
+      this.connectionStatusUpdate(code)
+    })
+    this.conn.api.onClConnection("BridgeClConnectionTerminated", (code:number)=>{
+      this.connectionTerminated(code)
+    })
   }
 }
 

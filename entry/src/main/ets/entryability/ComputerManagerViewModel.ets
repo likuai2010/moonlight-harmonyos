@@ -7,7 +7,6 @@ import limelightCertProvider, { accessFile, readFile, writeFile } from './crypto
 import dbManger from './computers/ComputerDatabaseManager'
 import LimeLog from './LimeLog';
 import { NvApp } from './http/NvApp';
-import File from '@system.file';
 import { getResStringByContext } from '../uitls/ResString';
 
 export class ResultInfo{

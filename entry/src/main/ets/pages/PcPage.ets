@@ -6,6 +6,7 @@ import { PairState } from '../entryability/http/PairingManager'
 import limelightCertProvider from '../entryability/crypto/LimelightCryptoProvider'
 import { NvHttp } from '../entryability/http/NvHttp'
 import router from '@ohos.router'
+import { Alert } from './compoments/Loading'
 
 async function getResString(com: any, r: Resource): Promise<string> {
   return await getContext(com).resourceManager.getStringValue(r)
@@ -41,7 +42,7 @@ struct PcView {
         })
       } else {
         MenuItem({ content: "和电脑配对" }).onClick(()=>{
-
+          this.doPair()
         })
       }
       MenuItem({ content: "测试网络连接" })
@@ -49,16 +50,28 @@ struct PcView {
         this.onDelete(this.detail)
       })
       MenuItem({ content: "查看详情" }).onClick((e) => {
-        promptAction.showDialog({ title: "查看详情", message: this.detail.toString(), })
+        let alertDialog = new CustomDialogController({
+          builder: Alert({
+            title: "查看详情",
+            message: this.detail.toString(),
+          }),
+          autoCancel: true,
+          alignment: DialogAlignment.Center,
+          customStyle: true
+        })
+        alertDialog.open()
       })
     }
   }
 
+
   click() {
     if (this.detail.state == ComputerState.ONLINE && this.detail.pairState != PairState.PAIRED) {
       this.doPair()
-    } else {
+    } else if(this.detail.state == ComputerState.ONLINE) {
       this.doAppList(this.detail, false, false)
+    } else {
+
     }
   }
 
@@ -76,10 +89,17 @@ struct PcView {
       success = true;
     } else {
       const pinStr = "12345";
-      promptAction.showDialog({
-        title: "配对中",
-        message: await getResString(this, $r('app.string.pair_pairing_msg')) + " " + pinStr + "\n\n" + await getResString(this, $r('app.string.pair_pairing_help'))
+      const dialogText =  await getResString(this, $r('app.string.pair_pairing_msg')) + " " + pinStr + "\n\n" + await getResString(this, $r('app.string.pair_pairing_help'))
+      let alertDialog = new CustomDialogController({
+        builder: Alert({
+          title: "配对中",
+          message: dialogText,
+        }),
+        autoCancel: false,
+        alignment: DialogAlignment.Center,
+        customStyle: true
       })
+      alertDialog.open()
       const pm = httpConn.pm
       const pairState = await pm.pair(await httpConn.getServerInfo(true), pinStr);
       if (pairState == PairState.PIN_WRONG) {
@@ -113,7 +133,8 @@ struct PcView {
         // Should be no other values
         message = null;
       }
-
+      alertDialog.close()
+      alertDialog = undefined
       if (message)
         promptAction.showToast({ message: message })
       if (success){

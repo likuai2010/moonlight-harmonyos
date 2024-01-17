@@ -127,20 +127,21 @@ export class AddressTuple {
     if (port <= 0) {
       throw new Error("Invalid port");
     }
-
-    // If this was an escaped IPv6 address, remove the brackets
-    if (address.startsWith("[") && address.endsWith("]")) {
-      //address = address.substring(1, address.length - 1);
-    }
-
     this.address = address;
     this.port = port;
+  }
+  toAddress():string{
+    let address = this.address
+    if (address.startsWith("[") && address.endsWith("]")) {
+      address = address.substring(1, address.length - 1);
+    }
+    return address;
   }
 
   toString(): string {
     if (this.address.includes(":")) {
       // IPv6
-      return `[${this.address}]:${this.port}`;
+      return `[${this.toAddress()}]:${this.port}`;
     } else {
       // IPv4 and hostnames
       return `${this.address}:${this.port}`;

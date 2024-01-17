@@ -14,22 +14,13 @@ struct AddPage {
   loadingDialog: CustomDialogController = new CustomDialogController({
     builder: Loading({
       title: $r("app.string.title_add_pc"),
-      message: null,
       text: $r("app.string.msg_add_pc"),
     }),
     autoCancel: false,
     alignment: DialogAlignment.Center,
     customStyle: true
   })
-  alertDialog: CustomDialogController = new CustomDialogController({
-    builder: Alert({
-      title:"连接中",
-      message: "",
-    }),
-    autoCancel: false,
-    alignment: DialogAlignment.Center,
-    customStyle: true
-  })
+
   build(){
     Column(){
       NavTitle({ title: $r("app.string.title_add_pc")})

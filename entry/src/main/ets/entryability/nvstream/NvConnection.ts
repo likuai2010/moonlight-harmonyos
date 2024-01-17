@@ -9,6 +9,7 @@ import { NvConnectionListener } from './ConnetionListener';
 import buffer from '@ohos.buffer';
 import { LimelightCertProvider } from '../crypto/LimelightCryptoProvider';
 import hilog from '@ohos.hilog';
+import LimeLog from '../LimeLog';
 
 export class NvConnection {
   api: MoonBridgeNapi = new MoonBridgeNapi()
@@ -60,10 +61,10 @@ export class NvConnection {
     // Moonlight-core is not thread-safe with respect to connection start and stop, so
     // we must not invoke that functionality in parallel.
     //MoonBridge.api.setupBridge(videoDecoderRenderer, audioRenderer, connectionListener);
-    hilog.info(0x0000, "testTag", "startConnection")
+    LimeLog.info("startConnection")
     try {
       const ret = this.api.startConnection(
-        context.serverAddress.address,
+        context.serverAddress.toAddress(),
         context.serverAppVersion,
         context.serverGfeVersion,
         context.rtspSessionUrl,
@@ -96,9 +97,9 @@ export class NvConnection {
       //                       16777216,
       //                       1,
       //                       0);
-      hilog.info(0x0000, "testTag", "ret=>"+ret)
+      LimeLog.info("ret=>"+ret)
     }catch (e){
-      hilog.info(0x0000, "testTag", "err=>"+e)
+      LimeLog.info("err=>"+e)
     }
 
 
@@ -174,14 +175,14 @@ export class NvConnection {
     let app = context.streamConfig.app;
     // If the client did not provide an exact app ID, do a lookup with the applist
     if (!context.streamConfig.app.initialized) {
-      console.info("Using deprecated app lookup method - Please specify an app ID in your StreamConfiguration instead");
+      LimeLog.info("Using deprecated app lookup method - Please specify an app ID in your StreamConfiguration instead");
       app = await h.getAppByName(context.streamConfig.app.appName);
       if (app == null) {
         context.connListener.displayMessage("The app " + context.streamConfig.app.appName + " is not in GFE app list");
         return false;
       }
     }
-    hilog.info(0x0000, "testTag", "startLaunch")
+   LimeLog.info("startLaunch")
     // If there's a game running, resume it
     if (h.getCurrentGame(serverInfo) != 0) {
       try {
@@ -207,16 +208,16 @@ export class NvConnection {
           "quit the session and start streaming again.");
           return false;
         } else {
-          hilog.info(0x0000, "testTag", "err")
-          throw Error(e);
+          LimeLog.info("err")
+          return false;
         }
-        hilog.info(0x0000, "testTag", e.toString())
+        LimeLog.info( e.toString())
       }
-      hilog.info(0x0000, "testTag", "Resumed existing game session ", )
+      LimeLog.info("Resumed existing game session ", )
       return true;
     }
     else {
-      hilog.info(0x0000, "testTag", "launchNotRunningApp")
+      LimeLog.info("launchNotRunningApp")
       return await this.launchNotRunningApp(h, context);
     }
   }

@@ -6,8 +6,7 @@ set(OPENSSL_INCLUDE_DIR ${OPENSSL_DIR}/include)
 
 set(CURL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/curl)
 set(CURL_INCLUDE_DIR ${CURL_DIR}/include)
-
-set(FFmpeg FALSE)
+set(FFmpeg True)
 
 include_directories(
 ${CMAKE_CURRENT_SOURCE_DIR}
@@ -64,14 +63,15 @@ video/render/eglRender.cpp
 video/render/plugin_render.cpp
 audio/SDLAudioRenderer.cpp
 )
+
 if (FFmpeg)
     target_compile_definitions(entry PRIVATE FFMPEG_ENABLED)
-    target_sources(entry video/FFmpegVideoDecoder.cpp)
+    target_sources(entry PRIVATE video/FFmpegVideoDecoder.cpp)
     target_link_libraries(entry PRIVATE ffmpeg)
 endif()
 
 target_link_libraries(entry PRIVATE
-#libssl
+libssl
 libcrypto
 opus
 sdl3
