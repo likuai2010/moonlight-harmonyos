@@ -14,8 +14,8 @@ struct AddPage {
   @State ip: string = ''
   loadingDialog: CustomDialogController = new CustomDialogController({
     builder: Loading({
-      title:"连接中",
-      textValue: "建立连接中建立连接中建立连接中建立连接中建立连接中建立连接中建立连接中建立连接中",
+      title: $r("app.string.title_add_pc"),
+      textValue: $r("app.string.msg_add_pc"),
     }),
     autoCancel: false,
     alignment: DialogAlignment.Center,
@@ -32,7 +32,7 @@ struct AddPage {
   })
   build(){
     Column(){
-      NavTitle({ title: "手动添加电脑" })
+      NavTitle({ title: $r("app.string.title_add_pc")})
       Row(){
         TextInput({placeholder:'串流电脑的ip地址', text: "[2409:8a00:79a1:5ae1:27d5:8223:fcba:4b17]"}).fontColor(Color.White).onChange((value: string) => {
           this.ip = value;

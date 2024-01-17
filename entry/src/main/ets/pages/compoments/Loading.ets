@@ -2,8 +2,8 @@
 
 @CustomDialog
 export struct Loading {
-  title: string = "建立连接中"
-  @State textValue: string = "建立连接中建立连接中建立连接中建立连接中建立连接中建立连接中建立连接中建立连接中"
+  title: string | Resource
+  textValue: string | Resource  = null
   controller: CustomDialogController
   build() {
     Column(){
@@ -21,8 +21,8 @@ export struct Loading {
 
 @CustomDialog
 export struct Alert {
-  title: string = "建立连接中"
-  @State textValue: string = "建立连接中建立连接中建立连接中建立连接中建立连接中建立连接中建立连接中建立连接中"
+  title: string | Resource = "建立连接中"
+  textValue: string | Resource
   controller: CustomDialogController
   build() {
     Column(){

@@ -161,9 +161,6 @@ export class MoonBridge {
   }
   public register(listener: NvConnectionListener){
     this.listener = listener;
-    this.api.bridgeClStageStarting(listener.stageStarting)
-    this.api.bridgeClStageComplete(listener.stageStarting)
-    this.api.bridgeClStageFailed(listener.stageFailed)
   }
 }
 

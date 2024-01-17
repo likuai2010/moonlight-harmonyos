@@ -212,7 +212,7 @@ class ComputerManagerViewModel {
       }
       details.manualAddress = new AddressTuple(host, port);
       success = await this.addComputerBlocking(details);
-      if (this.onDetailsUpdate) {
+      if (success && this.onDetailsUpdate) {
         this.onDetailsLinster(details)
       }
     } else {

@@ -2,7 +2,7 @@
 import router from '@ohos.router'
 @Component
 export struct NavTitle {
-  title: string
+  title: string | Resource
   build() {
     Stack({alignContent:Alignment.Start}){
       Row(){
