@@ -21,13 +21,13 @@ export class NvConnection {
     this.context.serverAddress = host;
     this.context.httpsPort = httpsPort;
     this.context.streamConfig = config;
-    generateRiKey().then((key)=>{
-      this.context.riKey = key
-    })
-    generateRiKeyId().then((id)=>{
-      this.context.riKeyId = id
-    })
+
     this.context.videoCapabilities = 16777221
+  }
+
+  public async initKey(){
+    this.context.riKey = await generateRiKey()
+    this.context.riKeyId = await generateRiKeyId()
   }
 
   public async start(connectionListener: NvConnectionListener) {

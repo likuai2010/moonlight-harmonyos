@@ -1,11 +1,9 @@
 
 import { Loading } from '../pages/compoments/Loading'
 
-
-export function BuildDialog(builder: any, ): CustomDialogController{
+export function BuildDialog(title): CustomDialogController{
   return new CustomDialogController({
-    builder: Loading({
-    }),
+    builder: Loading({ }),
     autoCancel: false,
     alignment: DialogAlignment.Center,
     customStyle: true

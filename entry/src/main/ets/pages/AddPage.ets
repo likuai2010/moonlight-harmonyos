@@ -2,9 +2,8 @@
 import { NavTitle } from './compoments/Title'
 import viewModel from '../entryability/ComputerManagerViewModel'
 import router from '@ohos.router'
-import { Loading } from './compoments/Loading'
+import { Loading,Alert } from './compoments/Loading'
 import promptAction from '@ohos.promptAction'
-import {getResString} from '../uitls/ResString'
 
 
 @Entry
@@ -15,16 +14,17 @@ struct AddPage {
   loadingDialog: CustomDialogController = new CustomDialogController({
     builder: Loading({
       title: $r("app.string.title_add_pc"),
-      textValue: $r("app.string.msg_add_pc"),
+      message: null,
+      text: $r("app.string.msg_add_pc"),
     }),
     autoCancel: false,
     alignment: DialogAlignment.Center,
     customStyle: true
   })
   alertDialog: CustomDialogController = new CustomDialogController({
-    builder: Loading({
+    builder: Alert({
       title:"连接中",
-      textValue: "",
+      message: "",
     }),
     autoCancel: false,
     alignment: DialogAlignment.Center,

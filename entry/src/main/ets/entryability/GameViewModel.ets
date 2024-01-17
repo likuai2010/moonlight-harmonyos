@@ -4,13 +4,19 @@ import { NvApp } from './http/NvApp';
 import { NvHttp } from './http/NvHttp';
 import { NvConnection } from './nvstream/NvConnection';
 import { StreamConfiguration } from './nvstream/StreamConfiguration';
+import { BuildDialog } from '../uitls/Dialog';
+import { Loading } from '../pages/compoments/Loading';
+import { getResStringByContext } from '../uitls/ResString';
 
 class GameViewModel implements NvConnectionListener {
   conn: NvConnection
-
+  context: Context
   constructor() {}
 
-  async init(computer: ComputerDetails, app: NvApp): Promise<Boolean>{
+  async init(
+    computer: ComputerDetails,
+    app: NvApp
+  ): Promise<Boolean>{
     let host = computer.activeAddress.address
     let port = computer.activeAddress.port
     let httpsPort = computer.httpsPort || 0
@@ -28,8 +34,8 @@ class GameViewModel implements NvConnectionListener {
     config.remote = 2
     config.sops = true
     config.enableAdaptiveResolution = false
-
     this.conn = new NvConnection(new AddressTuple(host, port), httpsPort, "58908e6f06d0b57c", config)
+    this.conn.initKey()
     return true
   }
 
@@ -67,14 +73,17 @@ class GameViewModel implements NvConnectionListener {
 
   connectionTerminated(errorCode: number): void {
     console.debug("connectionTerminated")
+    this.loadingDialog.close()
   }
 
   connectionStarted(): void {
     console.debug("connectionStarted")
+    this.onDialogCallback("connectionStarted")
   }
 
   stageFailed(stage: string, portFlags: number, errorCode: number): void {
     console.error("stageFailed")
+    this.loadingDialog.close()
   }
 
   stageComplete(stage: string): void {
@@ -83,13 +92,22 @@ class GameViewModel implements NvConnectionListener {
 
   stageStarting(stage: string): void {
     console.error("stageStarting")
-  }
 
-  async start() {
-    await this.conn.start(this);
   }
-  async stop() {
-    await this.conn.api.stopConnection();
+  private loadingDialog: CustomDialogController
+  private onDialogCallback: ((string) => void) = (string)=>{}
+  async onDialogMessage(callback: (string)=> void){
+    this.onDialogCallback = callback
+  }
+  async start(dialog: CustomDialogController, context: Context) {
+    dialog.open()
+    this.onDialogCallback("xxx")
+    this.loadingDialog = dialog
+    await this.conn.start(this);
+    this.onDialogCallback("22222")
+  }
+  stop() {
+    this.conn.api.stopConnection();
   }
 }
 
