@@ -1,8 +1,7 @@
-import { Game } from 'ets/entryability/Game'
+import gameViewModel from 'ets/entryability/GameViewModel'
 import { VideoStatus } from 'libentry.so';
+import router from '@ohos.router';
 import { Loading } from './compoments/Loading'
-const game = new Game()
-
 @Entry
 @Component
 struct GamePage {
@@ -12,25 +11,23 @@ struct GamePage {
   xComponentContext: any | undefined = undefined;
   dialogController: CustomDialogController = new CustomDialogController({
     builder: Loading({
-
     }),
     cancel: ()=>{
     },
     autoCancel: false,
     alignment: DialogAlignment.Center,
-    offset: { dx: 0, dy: 0 },
-    gridCount: 2,
     customStyle: true
   })
   aboutToDisappear() {
     delete this.dialogController, // 删除dialogController
     this.dialogController = undefined // 将dialogController置空
-    game.conn.api.stopConnection()
+    gameViewModel.stop()
   }
   aboutToAppear(){
+    gameViewModel.init(router.getParams()["computer"], router.getParams()["app"])
     this.dialogController.open()
-    game.surfaceChanged()
-    game.conn.onVideoStatus((s)=>{
+    gameViewModel.start()
+    gameViewModel.conn.onVideoStatus((s)=>{
       this.videoStatus = s;
     })
   }

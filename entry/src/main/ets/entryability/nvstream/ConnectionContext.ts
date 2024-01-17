@@ -29,5 +29,6 @@ export class ConnectionContext {
 
   public videoCapabilities: number;
   public constructor() {
+
   }
 }

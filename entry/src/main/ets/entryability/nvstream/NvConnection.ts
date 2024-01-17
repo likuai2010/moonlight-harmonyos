@@ -33,7 +33,6 @@ export class NvConnection {
   public async start(connectionListener: NvConnectionListener) {
     const context = this.context;
     this.context.connListener = connectionListener;
-   // this.context.videoCapabilities = videoDecoderRenderer;
     const appName = this.context.streamConfig.app.appName;
     this.context.connListener.stageStarting(appName);
     try {
@@ -63,40 +62,40 @@ export class NvConnection {
     //MoonBridge.api.setupBridge(videoDecoderRenderer, audioRenderer, connectionListener);
     hilog.info(0x0000, "testTag", "startConnection")
     try {
-      // const ret = this.api.startConnection(
-      //   context.serverAddress.address,
-      //   context.serverAppVersion,
-      //   context.serverGfeVersion,
-      //   context.rtspSessionUrl,
-      //   context.serverCodecModeSupport,
-      //   context.negotiatedWidth,
-      //   context.negotiatedHeight,
-      //   context.streamConfig.refreshRate,
-      //   context.streamConfig.bitrate,
-      //   context.negotiatedPacketSize,
-      //   context.negotiatedRemoteStreaming,
-      //   context.streamConfig.audioConfiguration,
-      //   context.streamConfig.supportedVideoFormats,
-      //   context.streamConfig.clientRefreshRateX100,
-      //   context.streamConfig.encryptionFlags,
-      //   context.riKey, rikeyId,
-      //   context.videoCapabilities,
-      //   context.streamConfig.colorSpace, context.streamConfig.colorRange
-      // )
-      const ret = this.api.startConnection("192.168.3.5",
-                            "7.1.431.-1", "3.23.0.74", "rtsp://192.168.3.5:48010",
-                            197377,
-                            1280, 720,
-                            60, 10000,
-                            1392, 2,
-                            197322,
-                            1,
-                            6000,
-                            1,
-                  context.riKey, rikeyId,
-                            16777216,
-                            1,
-                            0);
+      const ret = this.api.startConnection(
+        context.serverAddress.address,
+        context.serverAppVersion,
+        context.serverGfeVersion,
+        context.rtspSessionUrl,
+        context.serverCodecModeSupport,
+        context.negotiatedWidth,
+        context.negotiatedHeight,
+        context.streamConfig.refreshRate,
+        context.streamConfig.bitrate,
+        context.negotiatedPacketSize,
+        context.negotiatedRemoteStreaming,
+        context.streamConfig.audioConfiguration,
+        context.streamConfig.supportedVideoFormats,
+        context.streamConfig.clientRefreshRateX100,
+        context.streamConfig.encryptionFlags,
+        context.riKey, rikeyId,
+        context.videoCapabilities,
+        context.streamConfig.colorSpace, context.streamConfig.colorRange
+      )
+      // const ret = this.api.startConnection("192.168.3.5",
+      //                       "7.1.431.-1", "3.23.0.74", "rtsp://192.168.3.5:48010",
+      //                       197377,
+      //                       1280, 720,
+      //                       60, 10000,
+      //                       1392, 2,
+      //                       197322,
+      //                       1,
+      //                       6000,
+      //                       1,
+      //             context.riKey, rikeyId,
+      //                       16777216,
+      //                       1,
+      //                       0);
       hilog.info(0x0000, "testTag", "ret=>"+ret)
     }catch (e){
       hilog.info(0x0000, "testTag", "err=>"+e)

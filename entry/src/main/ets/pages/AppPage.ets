@@ -14,6 +14,16 @@ struct AppView {
   computer: ComputerDetails
   app: NvApp
   @State image: PixelMap = undefined;
+
+  @Builder
+  pcMenu() {
+    Menu() {
+      MenuItem({ content: $r("app.string.applist_menu_resume") })
+      MenuItem({ content: $r("app.string.applist_menu_quit")  })
+      MenuItem({ content: $r("app.string.applist_menu_quit_and_start") })
+    }
+  }
+
   aboutToAppear(){
     viewModel.readImageByDisk(this.app).then((res)=>{
       let options = {
@@ -45,7 +55,9 @@ struct AppView {
           }
         }
       }
-    }
+    }.onClick(()=>{
+        router.pushUrl({ url:"pages/GamePage", params: { app: this.app, computer: this.computer } })
+    })
   }
 }
 

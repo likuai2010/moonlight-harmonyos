@@ -56,7 +56,10 @@ class MoonBridgeApi {
         param.context = context;
         param.frame_rate = redrawRate;
         param.dr_flags = drFlags;
-        return api->m_decoder->setup(param);
+        if (api->m_decoder != nullptr){
+            api->m_decoder->setup(param);
+        }
+        return DR_OK;
     }
     static void BridgeDrStart(void) {
         api->m_decoder->start();

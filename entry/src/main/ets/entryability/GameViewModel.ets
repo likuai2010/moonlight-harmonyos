@@ -1,21 +1,24 @@
 import { NvConnectionListener } from './nvstream/ConnetionListener';
-import { AddressTuple } from './computers/ComputerDetails';
+import { AddressTuple, ComputerDetails } from './computers/ComputerDetails';
 import { NvApp } from './http/NvApp';
 import { NvHttp } from './http/NvHttp';
 import { NvConnection } from './nvstream/NvConnection';
 import { StreamConfiguration } from './nvstream/StreamConfiguration';
 
-
-
-export class Game implements NvConnectionListener {
+class GameViewModel implements NvConnectionListener {
   conn: NvConnection
 
-  constructor(uniqueId: string = "58908e6f06d0b57c", httpsPort: number = 47984) {
+  constructor() {}
+
+  async init(computer: ComputerDetails, app: NvApp): Promise<Boolean>{
+    let host = computer.activeAddress.address
+    let port = computer.activeAddress.port
+    let httpsPort = computer.httpsPort || 0
+    if (port == -1){
+      port = NvHttp.DEFAULT_HTTP_PORT
+    }
     const config = new StreamConfiguration()
-    config.app = new NvApp()
-    config.app.appName = "Desktop"
-    config.app.appId = 881448767
-    config.app.hdrSupported = false
+    config.app = app
     config.supportedVideoFormats = 257
     config.colorRange = 0
     config.colorSpace = 1
@@ -25,7 +28,9 @@ export class Game implements NvConnectionListener {
     config.remote = 2
     config.sops = true
     config.enableAdaptiveResolution = false
-    this.conn = new NvConnection(new AddressTuple("192.168.3.5", NvHttp.DEFAULT_HTTP_PORT), httpsPort, uniqueId, config)
+
+    this.conn = new NvConnection(new AddressTuple(host, port), httpsPort, "58908e6f06d0b57c", config)
+    return true
   }
 
   setControllerLED(controllerNumber: number, r: number, g: number, b: number): void {
@@ -80,7 +85,15 @@ export class Game implements NvConnectionListener {
     console.error("stageStarting")
   }
 
-  async surfaceChanged() {
+  async start() {
     await this.conn.start(this);
   }
+  async stop() {
+    await this.conn.api.stopConnection();
+  }
 }
+
+
+const vieModel = new GameViewModel()
+
+export default vieModel

@@ -103,6 +103,7 @@ export class ComputerDatabaseManager {
     }
     details.macAddress = c.getString(3);
     details.serverCert = (c.getString(4) == "true")
+    details.serverCert = true
     // This signifies we don't have dynamic state (like pair state)
     details.state = ComputerState.UNKNOWN;
     return details;
