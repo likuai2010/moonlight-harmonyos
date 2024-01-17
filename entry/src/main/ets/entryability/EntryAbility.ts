@@ -3,7 +3,7 @@ import hilog from '@ohos.hilog';
 import window from '@ohos.window';
 import limelightCertProvider from './crypto/LimelightCryptoProvider';
 import inputDevice from '@ohos.multimodalInput.inputDevice';
-import viewModel from '../entryability/ComputerManagerViewModel'
+import viewModel from './ComputerManagerViewModel'
 let windowStage_ = null;
 let sub_windowClass = null;
 

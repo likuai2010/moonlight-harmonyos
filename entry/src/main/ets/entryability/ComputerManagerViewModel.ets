@@ -8,12 +8,15 @@ import dbManger from './computers/ComputerDatabaseManager'
 import LimeLog from './LimeLog';
 import { NvApp } from './http/NvApp';
 import File from '@system.file';
+import { getResStringByContext } from '../uitls/ResString';
 
 export class ResultInfo{
     success: boolean
+    title: String
     message:string
 
-  constructor(success: boolean, message:string) {
+  constructor(success: boolean, title:string, message:string) {
+    this.title = title
     this.success = success
     this.message = message
   }
@@ -226,7 +229,22 @@ class ComputerManagerViewModel {
       // Don't bother with the test if we succeeded or the IP address was bogus
       portTestResult = MoonBridge.ML_TEST_RESULT_INCONCLUSIVE;
     }
-    return new ResultInfo(success, "")
+    let title = await getResStringByContext(this.context, $r('app.string.conn_error_title'))
+    let message = ""
+    if (invalidInput) {
+      message = await getResStringByContext(this.context, $r('app.string.addpc_unknown_host'))
+    }
+    else if (wrongSiteLocal) {
+      message = await this.context.resourceManager.getStringValue($r('app.string.addpc_wrong_sitelocal'))
+    } else if (!success) {
+      if (portTestResult != MoonBridge.ML_TEST_RESULT_INCONCLUSIVE && portTestResult != 0) {
+        message = await this.context.resourceManager.getStringValue($r('app.string.nettest_text_blocked'))
+      }
+      else {
+        message = await this.context.resourceManager.getStringValue($r('app.string.addpc_fail'))
+      }
+    }
+    return new ResultInfo(success, title, message)
   }
 
   parseRawUserInputToUri(rawUserInput) {

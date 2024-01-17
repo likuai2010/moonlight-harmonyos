@@ -12,10 +12,10 @@ export struct Loading {
         LoadingProgress().height(100).width(80)
         Text(this.textValue).maxLines(2).height(100).textOverflow({overflow: TextOverflow.Ellipsis}).layoutWeight(1)
       }
-    }.padding(10)
+    }.padding(20)
     .alignItems(HorizontalAlign.Start).backgroundColor(Color.White).borderRadius(10)
     .width("40%")
-    .height("30%")
+    .height(140)
   }
 }
 

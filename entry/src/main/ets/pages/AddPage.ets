@@ -3,7 +3,8 @@ import { NavTitle } from './compoments/Title'
 import viewModel from '../entryability/ComputerManagerViewModel'
 import router from '@ohos.router'
 import { Loading } from './compoments/Loading'
-
+import promptAction from '@ohos.promptAction'
+import {getResString} from '../uitls/ResString'
 
 
 @Entry
@@ -43,8 +44,10 @@ struct AddPage {
                 if(result.success){
                   router.back()
                 }else{
+                  promptAction.showDialog({ title:  $r('app.string.conn_error_title'), message: result.message})
                 }
             }).catch(()=>{
+                promptAction.showDialog({ title:  $r('app.string.conn_error_title'), message: "未知错误"})
                 this.loadingDialog.close()
             })
         })
