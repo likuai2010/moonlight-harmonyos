@@ -20,6 +20,12 @@ char *get_value_string(napi_env env, napi_value value);
 int MoonBridge_sendTouchEvent(OH_NativeXComponent_TouchEvent touchEvent, uint64_t width, uint64_t height);
 int MoonBridge_sendMouseEvent(OH_NativeXComponent_MouseEvent mouseEvent, uint64_t width, uint64_t height);
 
+struct MoonBridgeCallBackInfo{
+    char* stage;
+    int error;
+};
+
+
 class MoonBridgeApi {
   public:
     explicit MoonBridgeApi();
@@ -36,7 +42,7 @@ class MoonBridgeApi {
     int setFunByName(char *name, napi_threadsafe_function tsf);
   private:
     napi_env env;
-    static napi_value Emit(char *eventName, void *value);
+    static napi_value Emit(char *eventName, void* value);
     static napi_value On(napi_env env, napi_callback_info info);
     std::unordered_map<std::string, napi_threadsafe_function> m_funRefs;
     DECODER_RENDERER_CALLBACKS BridgeVideoRendererCallbacks;
@@ -94,9 +100,10 @@ class MoonBridgeApi {
 
     static void BridgeClStageStarting(int stage) {
         const char *name = LiGetStageName(stage);
-        napi_value params[1];
-        napi_create_string_utf8(api->env, name, NAPI_AUTO_LENGTH, &params[0]);
-        Emit("BridgeClStageStarting", params);
+        MoonBridgeCallBackInfo info = {
+            .stage = (char* )name
+        };
+        Emit("BridgeClStageStarting", static_cast<void*>(&info));
     }
     static void BridgeClStageComplete(int stage) {
         napi_value params[1];

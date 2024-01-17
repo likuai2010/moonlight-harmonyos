@@ -17,7 +17,7 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 
-static napi_threadsafe_function tsfn;
+
 MoonBridgeApi *MoonBridgeApi::api = new MoonBridgeApi();
 
 MoonBridgeApi::MoonBridgeApi() {
@@ -220,7 +220,7 @@ napi_value MoonBridgeApi::MoonBridge_interruptConnection(napi_env env, napi_call
 
 static void Napi_OnVideoStatus(napi_env env, napi_value js_callback, void *context, void *data) {
     VIDEO_STATS *status = (VIDEO_STATS *)data;
-   
+    napi_value params[1];
     napi_value stats;
     napi_create_object(env, &stats);
     napi_set_named_property(env, stats, "decodedFps", ConvertFloatToNapiValue(env, status->decodedFps));
@@ -231,8 +231,7 @@ static void Napi_OnVideoStatus(napi_env env, napi_value js_callback, void *conte
     napi_set_named_property(env, stats, "networkDroppedFrames", ConvertFloatToNapiValue(env, status->networkDroppedFrames));
     napi_set_named_property(env, stats, "decodeTime", ConvertFloatToNapiValue(env, status->totalDecodeTime / status->decodedFrames));
     napi_set_named_property(env, stats, "receivedTime", ConvertFloatToNapiValue(env, status->totalReassemblyTime / status->receivedFrames));
-    napi_value params[1];
-    params[0] = stats;
+   params[0] = stats;
     napi_call_function(env, nullptr, js_callback, 1, params, nullptr);
 }
 
@@ -242,6 +241,7 @@ static napi_value MoonBridge_onVideoStatus(napi_env env, napi_callback_info info
     napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
     napi_value resourceName;
     napi_create_string_latin1(env, "onVideoStatus", NAPI_AUTO_LENGTH, &resourceName);
+    napi_threadsafe_function tsfn;
     napi_create_threadsafe_function(env, args[0], NULL, resourceName, 0, 1, NULL, NULL, NULL, Napi_OnVideoStatus, &tsfn);
     MoonBridgeApi::api->setFunByName("OnVideoStatus", tsfn);
     return nullptr;
@@ -496,14 +496,17 @@ int MoonBridgeApi::setFunByName(char *name, napi_threadsafe_function tsf) {
     return 0;
 }
 static void Napi_OnCallback(napi_env env, napi_value js_callback, void *context, void *data){
-    napi_value* params = (napi_value*)data;
-    napi_call_function(env, nullptr, js_callback, sizeof(params), params, nullptr);
+    MoonBridgeCallBackInfo* info = static_cast<MoonBridgeCallBackInfo*>(data);
+    
+     
+    napi_value params[1];
+    napi_create_string_utf8(env, info->stage, NAPI_AUTO_LENGTH, &params[0]);
+    napi_call_function(env, nullptr, js_callback, 1, params, nullptr);
 }
 
 napi_value MoonBridgeApi::Emit(char *eventName, void *value) {
-    napi_threadsafe_function tsf = api->getFunByName(eventName);
-    if(tsf != nullptr){
-        napi_threadsafe_function tsfn = api->getFunByName(eventName);
+    napi_threadsafe_function tsfn = api->getFunByName(eventName);
+    if(tsfn != nullptr){
         napi_call_threadsafe_function(tsfn, value, napi_tsfn_nonblocking);
     }
     return  nullptr;
@@ -514,8 +517,9 @@ napi_value MoonBridgeApi::On(napi_env env, napi_callback_info info) {
     napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
     char *eventName = get_value_string(env, argv[0]);
     napi_value resourceName;
+    napi_threadsafe_function tsfn;
     napi_create_string_latin1(env, eventName, NAPI_AUTO_LENGTH, &resourceName);
-    napi_create_threadsafe_function(env, argv[0], NULL, resourceName, 0, 1, NULL, NULL, NULL, Napi_OnCallback, &tsfn);
+    napi_create_threadsafe_function(env, argv[1], NULL, resourceName, 0, 1, NULL, NULL, NULL, Napi_OnCallback, &tsfn);
     MoonBridgeApi::api->setFunByName(eventName, tsfn);
     return nullptr;
 };
