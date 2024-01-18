@@ -5,7 +5,7 @@ import { SpinnerEventId } from '../../uitls/CommonEvents'
 @CustomDialog
 export struct Spinner {
   title: string | Resource
-  @State text: string  = ""
+  @State text: string = ""
   controller: CustomDialogController
   aboutToAppear(){
     let innerEvent = {
@@ -20,7 +20,11 @@ export struct Spinner {
       Text(this.title).fontSize(18)
       Row(){
         LoadingProgress().height(100).width(80)
-        Text(this.text).maxLines(2).height(100).textOverflow({overflow: TextOverflow.Ellipsis}).layoutWeight(1)
+        if (this.text == ""){
+          Text($r("app.string.conn_establishing_msg")).maxLines(2).height(100).textOverflow({overflow: TextOverflow.Ellipsis}).layoutWeight(1)
+        } else {
+          Text(this.text).maxLines(2).height(100).textOverflow({overflow: TextOverflow.Ellipsis}).layoutWeight(1)
+        }
       }
     }.padding(20)
     .alignItems(HorizontalAlign.Start).backgroundColor(Color.White).borderRadius(10)

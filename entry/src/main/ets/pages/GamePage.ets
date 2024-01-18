@@ -22,6 +22,7 @@ struct GamePage {
   }
   aboutToAppear(){
     this.dialogController.open()
+
     gameViewModel.init(router.getParams()["computer"], router.getParams()["app"])
     gameViewModel.start(this.dialogController, getContext(this))
     gameViewModel.conn.onVideoStatus((s)=>{
