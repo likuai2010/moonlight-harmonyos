@@ -1,14 +1,74 @@
 import promptAction from '@ohos.promptAction';
 import { NavTitle } from './compoments/Title';
+import dataPreferences from '@ohos.data.preferences';
+
+
+export class StreamSettings{
+  resolution_list: string = "1280x720";
+  fps_list: string = "60";
+  seekbar_bitrate: string = "10";
+  frame_pacing: string = "balanced";
+  stretch_video: boolean = false;
+  audio_config_list: string = "2";
+  enable_audiofx: boolean = false;
+  seekbar_deadzone: string = "";
+  xb1_driver: boolean = false;
+  usb_bind_all: boolean = false;
+  mouse_emulation: boolean = false;
+  vibrate_fallback: boolean = false;
+  flip_face_buttons: boolean = false;
+  gamepad_touchpad_as_mouse: boolean = false;
+  gamepad_motion_sensors: boolean = false;
+  gamepad_motion_fallback: boolean = false;
+  touchscreen_trackpad: boolean = false;
+  mouse_nav_buttons: boolean = false;
+  absolute_mouse_mode: boolean = false;
+  show_onscreen_controls: boolean = false;
+  vibrate_osc: boolean = false;
+  only_l3r3: boolean = false;
+  osc_opacity: boolean = false;
+  reset_osc: boolean = false;
+  enable_sops: boolean = false;
+  host_audio: boolean = false;
+  enable_pip: boolean = false;
+  language_list: boolean = false;
+  small_icon_mode: boolean = false;
+  unlock_fps: boolean = false;
+  refresh_rate: boolean = false;
+  disable_warnings: boolean = false;
+  video_format: string = "h264";
+  enable_hdr: boolean = false;
+  full_range: boolean = false;
+  enable_perf_overlay: boolean = false;
+  enable_post_stream_toast: boolean = false;
+}
+
+export async function loadSettings(context: Context): Promise<StreamSettings>{
+  const preferences = await dataPreferences.getPreferences(context, "StreamSettings")
+  const all = await preferences.getAll()
+  const settings: StreamSettings = Object.assign(new StreamSettings(), all)
+  return settings;
+}
+
 
 @Entry
 @Component
 struct SettingsPage {
   scroller: Scroller = new Scroller();
-  @State reference: Map<string, string> = new Map()
-  onUpdateValue(key: string, value: any) {
-    this.reference
+  preferences: dataPreferences.Preferences = null
+  @Provide settings: StreamSettings = null
+  onUpdateValue = (key: string, value: any)=>{
+    this.preferences.put(key, value)
+    this.preferences.flush()
   }
+  aboutToAppear(){
+    this.loadPreferences(getContext(this))
+  }
+  async loadPreferences(context: Context){
+    this.preferences = await dataPreferences.getPreferences(context, "StreamSettings")
+    this.settings = await loadSettings(context)
+  }
+
   build() {
     Column() {
       NavTitle({ title: "设置" })
@@ -323,27 +383,31 @@ struct SettingsPage {
 
 
 @Builder
-function BaseReference(title: Resource, summary: Resource, hasCheck: Boolean = false, onClick: () => void) {
+function BaseReference(hasCheck: Boolean = false, onClick: () => void) {
   Row() {
     Column({ space: 2 }) {
-      Text(title).fontSize(20).fontColor(0xFFFFFF)
-      Text(summary).fontSize(16).fontColor(0xC3C3C3)
+      Text(this.title).fontSize(20).fontColor(0xFFFFFF)
+      Text(this.summary).fontSize(16).fontColor(0xC3C3C3)
     }.layoutWeight(1).alignItems(HorizontalAlign.Start)
-
     if (hasCheck) {
       Toggle({ type: ToggleType.Checkbox, isOn: this.value == true })
     }
-  }.width('100%').onClick(onClick)
+  }.padding({ right: 20}).width('100%').onClick(onClick)
 }
 
 
 @CustomDialog
 struct SeekBarDialog{
   @Link inputValue : number
+  title: string| Resource = ""
+  summary: Resource
   dialogController: CustomDialogController
   onConfirm: () => void
   build(){
     Column() {
+      Text(this.title)
+      Text(this.summary)
+      Blank().height(50)
       Slider({
         value: this.inputValue,
         min: 0,
@@ -351,7 +415,7 @@ struct SeekBarDialog{
         style: SliderStyle.InSet
       })
         .blockColor('#191970')
-        .trackColor('#ADD8E6')
+        .trackColor('#ffe0eaec')
         .selectedColor('#c3c3c3')
         .showTips(true)
         .onChange((value: number, mode: SliderChangeMode) => {
@@ -369,17 +433,26 @@ struct SeekBarDialog{
 
 @Component
 struct SeekBarPreference {
+  @Consume  @Watch('onSettingsUpdated')
+  settings: StreamSettings
+
   pKey: string
-  title: Resource
-  summary: Resource
+  title: Resource = null
+  summary: Resource = null
   @State value: string = ""
   onChange: (key, value) => void
-
+  onSettingsUpdated(){
+    if(this.settings[this.pKey] == null){
+      this.value = this.settings[this.pKey]
+    }
+  }
   dialogController: CustomDialogController = new CustomDialogController({
     builder: SeekBarDialog({
       inputValue: $value,
+      title: this.title,
+      summary: this.summary,
       onConfirm: ()=>{
-
+        this.onChange(this.pKey, this.value)
       }
     }),
     autoCancel: true,
@@ -387,19 +460,19 @@ struct SeekBarPreference {
     customStyle: false
   })
   build() {
-    BaseReference(this.title, this.summary, false, () => {
+    BaseReference(false, () => {
       this.dialogController.open()
       this.onChange(this.pKey, this.value)
     })
   }
 }
 
-import dialogRequest from '@ohos.app.ability.dialogRequest';
-import Want from '@ohos.app.ability.Want';
 import { getResString } from '../uitls/ResString';
 
 @Component
 struct ListPreference {
+  @Consume  @Watch('onSettingsUpdated')
+  settings: StreamSettings
   pKey: string
   title: Resource
   summary: Resource
@@ -413,16 +486,22 @@ struct ListPreference {
   aboutToAppear() {
     this.getLabels()
   }
-
+  onSettingsUpdated(){
+    if(!this.settings || this.settings[this.pKey] == null){
+      this.select == this.entries.indexOf(this.value)
+    } else {
+      this.value = this.settings[this.pKey]
+      this.select = this.entries.indexOf(this.value)
+    }
+  }
   async getLabels() {
-    this.select == this.entries.indexOf(this.value)
+    this.onSettingsUpdated()
     for (let r of this.names) {
       this.labels.push(await getResString(this, r))
     }
   }
-
   build() {
-    BaseReference(this.title, this.summary, false, () => {
+    BaseReference(false, () => {
       TextPickerDialog.show({
         range: this.labels,
         selected: this.select,
@@ -438,14 +517,20 @@ struct ListPreference {
 
 @Component
 struct CheckBoxPreference {
+  @Consume  @Watch('onSettingsUpdated')
+  settings: StreamSettings
   pKey: string
   title: Resource
   summary: Resource
   @State value: boolean = false
   onChange: (key, value) => void
-
+  onSettingsUpdated(){
+    if(this.settings[this.pKey] == null){
+      this.value = this.settings[this.pKey]
+    }
+  }
   build() {
-    BaseReference(this.title, this.summary, true, () => {
+    BaseReference(true, () => {
       this.value = !this.value
       this.onChange(this.pKey, this.value)
     })
