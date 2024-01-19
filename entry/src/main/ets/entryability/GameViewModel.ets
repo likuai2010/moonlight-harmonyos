@@ -11,6 +11,7 @@ import emitter from '@ohos.events.emitter'
 import { SpinnerEventId } from '../uitls/CommonEvents';
 import LimeLog from './LimeLog';
 import promptAction from '@ohos.promptAction';
+import { StreamSettings } from '../uitls/StreamSetttings';
 class GameViewModel implements NvConnectionListener {
   conn: NvConnection
   context: Context
@@ -18,7 +19,8 @@ class GameViewModel implements NvConnectionListener {
 
   async init(
     computer: ComputerDetails,
-    app: NvApp
+    app: NvApp,
+    settings: StreamSettings
   ): Promise<Boolean>{
     let host = computer.activeAddress.address
     let port = computer.activeAddress.port
@@ -27,16 +29,12 @@ class GameViewModel implements NvConnectionListener {
       port = NvHttp.DEFAULT_HTTP_PORT
     }
     const config = new StreamConfiguration()
+
     config.app = app
+    config.build(settings)
     config.supportedVideoFormats = 257
-    config.colorRange = 0
-    config.colorSpace = 1
-    config.encryptionFlags = 1
     config.clientRefreshRateX100 = 12000
-    config.playLocalAudio = false
-    config.remote = 2
-    config.sops = true
-    config.enableAdaptiveResolution = false
+
     this.conn = new NvConnection(new AddressTuple(host, port), httpsPort, "58908e6f06d0b57c", config)
     this.conn.initKey()
     return true

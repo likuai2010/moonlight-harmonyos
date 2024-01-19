@@ -1,5 +1,7 @@
 import { NvApp } from '../http/NvApp';
 import { MoonBridge } from './MoonBridge';
+import { StreamSettings } from '../../uitls/StreamSetttings';
+
 export class StreamConfiguration {
   public static INVALID_APP_ID = 0;
 
@@ -26,8 +28,7 @@ export class StreamConfiguration {
   public colorSpace: number;
   public persistGamepadsAfterDisconnect: boolean;
 
-  public constructor(){
-    // Set default attributes
+  public constructor() {
     this.width = 1280;
     this.height = 720;
     this.refreshRate = 60;
@@ -40,5 +41,54 @@ export class StreamConfiguration {
     this.audioConfiguration = MoonBridge.AUDIO_CONFIGURATION_STEREO.toInt();
     this.supportedVideoFormats = MoonBridge.VIDEO_FORMAT_H264;
     this.attachedGamepadMask = 0;
+  }
+
+  getWH(wh: string): number[] {
+    return wh.split("x").map((s) => parseInt(s))
+  }
+
+  public build(settings: StreamSettings): StreamConfiguration {
+    const wh = this.getWH(settings.resolution_list)
+    this.width = wh[0]
+    this.height = wh[1]
+    const supportedVideoFormats = MoonBridge.VIDEO_FORMAT_H264;
+    // TODO HDR
+    // if (decoderRenderer.isHevcSupported()) {
+    //     supportedVideoFormats |= MoonBridge.VIDEO_FORMAT_H265;
+    //     if (willStreamHdr && decoderRenderer.isHevcMain10Hdr10Supported()) {
+    //         supportedVideoFormats |= MoonBridge.VIDEO_FORMAT_H265_MAIN10;
+    //     }
+    // }
+    // if (decoderRenderer.isAv1Supported()) {
+    //     supportedVideoFormats |= MoonBridge.VIDEO_FORMAT_AV1_MAIN8;
+    //     if (willStreamHdr && decoderRenderer.isAv1Main10Supported()) {
+    //         supportedVideoFormats |= MoonBridge.VIDEO_FORMAT_AV1_MAIN10;
+    //     }
+    // }
+    this.launchRefreshRate = parseInt(settings.fps_list)
+    this.refreshRate = parseInt(settings.fps_list)
+
+    this.bitrate = parseInt(settings.seekbar_bitrate) * 1000
+
+    this.sops = settings.enable_sops
+    this.playLocalAudio = settings.host_audio
+    this.maxPacketSize = 1392;
+    // NvConnection will perform LAN and VPN detection
+    this.remote = StreamConfiguration.STREAM_CFG_AUTO;
+
+    this.supportedVideoFormats = supportedVideoFormats;
+    // TODO
+    //this.attachedGamepadMask = gamepadMask
+    // TODO
+    this.clientRefreshRateX100 = 12000
+    this.audioConfiguration = parseInt(settings.audio_config_list);
+
+    this.encryptionFlags = MoonBridge.ENCFLG_AUDIO
+    // TODO
+    this.colorSpace = 1
+    this.colorRange = 0
+    this.persistGamepadsAfterDisconnect = settings.;
+
+    return this
   }
 }

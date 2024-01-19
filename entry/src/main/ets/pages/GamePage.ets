@@ -2,6 +2,8 @@ import gameViewModel from 'ets/entryability/GameViewModel'
 import { VideoStatus } from 'libentry.so';
 import router from '@ohos.router';
 import { Spinner } from './compoments/Loading'
+import { StreamSettings, loadSettings } from '../uitls/StreamSetttings';
+
 @Entry
 @Component
 struct GamePage {
@@ -22,9 +24,10 @@ struct GamePage {
   }
   aboutToAppear(){
     this.dialogController.open()
-
-    gameViewModel.init(router.getParams()["computer"], router.getParams()["app"])
-    gameViewModel.start(this.dialogController, getContext(this))
+    loadSettings(getContext(this)).then((s)=>{
+      gameViewModel.init(router.getParams()["computer"], router.getParams()["app"], s)
+      gameViewModel.start(this.dialogController, getContext(this))
+    })
     gameViewModel.conn.onVideoStatus((s)=>{
       this.videoStatus = s;
     })
