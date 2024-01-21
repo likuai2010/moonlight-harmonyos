@@ -48,6 +48,13 @@ export declare class MoonBridgeNapi {
   ): number;
 
   stopConnection(): void;
+  sendMultiControllerInput(
+    controllerNumber: number,
+    activeGamepadMask: number, buttonFlags: number,
+    leftTrigger: number, rightTrigger: number,
+    leftStickX: number, leftStickY: number,
+    rightStickX: number, rightStickY: number
+  ): void;
 
   static interruptConnection(): void;
 
@@ -58,14 +65,6 @@ export declare class MoonBridgeNapi {
   static sendMouseMoveAsMousePosition(deltaX: number, deltaY: number, referenceWidth: number, referenceHeight: number): void;
 
   static sendMouseButton(buttonEvent: number, mouseButton: number): void;
-
-  static sendMultiControllerInput(
-    controllerNumber: number,
-    activeGamepadMask: number, buttonFlags: number,
-    leftTrigger: number, rightTrigger: number,
-    leftStickX: number, leftStickY: number,
-    rightStickX: number, rightStickY: number
-  ): void;
 
   static sendTouchEvent(
     eventType: number, pointerId: number, x: number, y: number, pressure: number,
@@ -78,7 +77,7 @@ export declare class MoonBridgeNapi {
     rotation: number, tilt: number
   ): number;
 
-  static sendControllerArrivalEvent(
+  sendControllerArrivalEvent(
     controllerNumber: number, activeGamepadMask: number, type: number, supportedButtonFlags: number, capabilities: number
   ): number;
 

@@ -10,7 +10,6 @@ import { VirtualController, VirtualControllerBox } from '../virtual_controller/V
 struct GamePage {
   @State videoStatus: VideoStatus = null
   xComponentContext: any | undefined = undefined;
-  virtualController: VirtualController = new VirtualController()
   dialogController: CustomDialogController =  new CustomDialogController({
     builder: Spinner({ title: $r('app.string.conn_establishing_title'), text: "" }),
     autoCancel: false,
@@ -27,7 +26,7 @@ struct GamePage {
     this.dialogController.open()
     loadSettings(getContext(this)).then((s)=>{
       gameViewModel.init(router.getParams()["computer"], router.getParams()["app"], s)
-      gameViewModel.start(this.dialogController, getContext(this))
+      //gameViewModel.start(this.dialogController, getContext(this))
       gameViewModel.conn.onVideoStatus((s)=>{
         this.videoStatus = s;
       })
@@ -42,17 +41,21 @@ struct GamePage {
         .onDestroy(() => {
           console.log("onDestroy");
         }).borderWidth(0).height("100%").width('100%')
-      Column(){
-        Text(`视频流:  ${this.videoStatus?.totalFps?.toFixed(2) || 0 } FPS`).fontColor(Color.White)
-        Text("解码器: ").fontColor(Color.White)
-        Text(`网络接收帧数: ${this.videoStatus?.receivedFps?.toFixed(2) || 0 } FPS`) .fontColor(Color.White)
-        Text(`渲染帧数: ${this.videoStatus?.renderedFps?.toFixed(2) || 0 } FPS`).fontColor(Color.White)
-        Text(`网络丢失帧:  ${this.videoStatus?.networkDroppedFrames?.toFixed(2) || 0 } %`).fontColor(Color.White)
-        Text(`平均网络延迟: ${this.videoStatus?.receivedTime?.toFixed(2) || 0 } `).fontColor(Color.White)
-        //Text("主机处理延迟: ")
-        Text(`平均解码时间:  ${this.videoStatus?.decodeTime?.toFixed(2) || 0 }  ms`).fontColor(Color.White)
-      }.backgroundColor(Color.Black).opacity(0.5)
-      VirtualControllerBox({virtualController: this.virtualController,inputContext:this.virtualController.inputContext })
+      if(this.videoStatus){
+        Column(){
+          Text(`视频流:  ${this.videoStatus?.totalFps?.toFixed(2) || 0 } FPS`).fontColor(Color.White)
+          Text("解码器: ").fontColor(Color.White)
+          Text(`网络接收帧数: ${this.videoStatus?.receivedFps?.toFixed(2) || 0 } FPS`) .fontColor(Color.White)
+          Text(`渲染帧数: ${this.videoStatus?.renderedFps?.toFixed(2) || 0 } FPS`).fontColor(Color.White)
+          Text(`网络丢失帧:  ${this.videoStatus?.networkDroppedFrames?.toFixed(2) || 0 } %`).fontColor(Color.White)
+          Text(`平均网络延迟: ${this.videoStatus?.receivedTime?.toFixed(2) || 0 } `).fontColor(Color.White)
+          //Text("主机处理延迟: ")
+          Text(`平均解码时间:  ${this.videoStatus?.decodeTime?.toFixed(2) || 0 }  ms`).fontColor(Color.White)
+        }.backgroundColor(Color.Black).opacity(0.5)
+      }
+      if (gameViewModel.virtualController != null){
+        VirtualControllerBox({virtualController: gameViewModel.virtualController, inputContext:gameViewModel.virtualController.inputContext })
+      }
     }.backgroundColor(Color.Black)
     .width('100%')
     .height('100%')

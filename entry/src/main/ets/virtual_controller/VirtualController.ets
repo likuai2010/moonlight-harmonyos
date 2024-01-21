@@ -7,6 +7,7 @@ import List from '@ohos.util.List';
 import { DigitalPad } from './DigitalPad';
 import { createLeftStick, VirtualControllerConfigurationLoader } from './VirtualControllerConfigurationLoader';
 import Prompt from '@system.prompt';
+import { ControllerHandle } from './ControllerHandle';
 
 export enum ControllerMode {
   Active,
@@ -25,10 +26,14 @@ export class ControllerInputContext {
 }
 
 export class VirtualController {
+  controllerHandle: ControllerHandle
   currentMode: ControllerMode = ControllerMode.Active
   inputContext: ControllerInputContext = new ControllerInputContext();
+
   elements: List<VirtualControllerElement> = new List()
 
+  constructor() {
+  }
   addElement(element: VirtualControllerElement, x: number, y: number, width: number, height: number) {
     element.setLayout(new ElementLayoutParam(x, y, width, height))
     this.elements.add(element)
@@ -50,8 +55,16 @@ export class VirtualController {
   }
   sendControllerInputContext(){
     //Prompt.showToast({message: JSON.stringify(this.inputContext)})
-
-
+    const inputContext = this.inputContext
+    if(!this.controllerHandle)
+      return null;
+    this.controllerHandle.reportOscState(inputContext.inputMap,
+      inputContext.leftStickX,
+      inputContext.leftStickY,
+      inputContext.rightStickX,
+      inputContext.rightStickY,
+      inputContext.leftTrigger,
+      inputContext.rightTrigger)
   }
   setOpacity(opactiy: number) {
 

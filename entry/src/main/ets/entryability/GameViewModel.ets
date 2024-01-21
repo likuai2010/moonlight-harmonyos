@@ -12,9 +12,13 @@ import { SpinnerEventId } from '../uitls/CommonEvents';
 import LimeLog from './LimeLog';
 import promptAction from '@ohos.promptAction';
 import { StreamSettings } from '../uitls/StreamSetttings';
+import { ControllerHandle } from '../virtual_controller/ControllerHandle';
+import { VirtualController } from '../virtual_controller/VirtualController';
 class GameViewModel implements NvConnectionListener {
   conn: NvConnection
   context: Context
+  controllerHandle: ControllerHandle
+  virtualController: VirtualController = new VirtualController()
   constructor() {}
 
   async init(
@@ -36,7 +40,9 @@ class GameViewModel implements NvConnectionListener {
     config.clientRefreshRateX100 = 12000
 
     this.conn = new NvConnection(new AddressTuple(host, port), httpsPort, "58908e6f06d0b57c", config)
-    this.conn.initKey()
+    await this.conn.initKey()
+    this.controllerHandle = new ControllerHandle(this.conn, settings)
+    this.virtualController.controllerHandle = this.controllerHandle
     return true
   }
 

@@ -1,18 +1,22 @@
+import { NvConnection } from '../entryability/nvstream/NvConnection';
+import { StreamSettings } from '../uitls/StreamSetttings';
 import { GenericControllerContext, InputDeviceContext } from './context/GenericControllerContext';
 
 export class ControllerHandle {
-  conn: any
-  prefConfig: any
+  conn: NvConnection
+  prefConfig: StreamSettings
   currentControllers: number
   initialControllers: number
-  defaultContext: InputDeviceContext
+  defaultContext: InputDeviceContext = new InputDeviceContext()
   stickDeadzone: number
   inputDeviceContexts: Map<number, InputDeviceContext> = new Map();
 
-  constructor(prefConfig) {
-    let deadzonePercentage = prefConfig.deadzonePercentage;
+  constructor(conn: NvConnection, prefConfig: StreamSettings) {
+    this.conn = conn
+    this.prefConfig = prefConfig
+    let deadzonePercentage = parseInt(prefConfig.seekbar_deadzone);
     // 1% is the lowest possible deadzone we support
-    if (deadzonePercentage <= 0) {
+    if (isNaN(deadzonePercentage) || deadzonePercentage <= 0) {
       deadzonePercentage = 1;
     }
 
@@ -30,6 +34,25 @@ export class ControllerHandle {
     this.defaultContext.controllerNumber = 0;
     this.defaultContext.assignedControllerNumber = true;
     this.defaultContext.external = false;
+  }
+
+  reportOscState(buttonFlags: number,
+                 leftStickX: number, leftStickY: number,
+                 rightStickX: number, rightStickY: number,
+                 leftTrigger, rightTrigger: number) {
+    const defaultContext = this.defaultContext
+    defaultContext.leftStickX = leftStickX;
+    defaultContext.leftStickY = leftStickY;
+
+    defaultContext.rightStickX = rightStickX;
+    defaultContext.rightStickY = rightStickY;
+
+    defaultContext.leftTrigger = leftTrigger;
+    defaultContext.rightTrigger = rightTrigger;
+
+    defaultContext.inputMap = buttonFlags;
+
+    this.sendControllerInputPacket(this.defaultContext);
   }
 
   private sendControllerInputPacket(originalContext: GenericControllerContext): void {
@@ -161,13 +184,14 @@ export class ControllerHandle {
   }
 
   getActiveControllerMask(): number {
-    if (this.prefConfig.multiController) {
-      return (this.currentControllers | this.initialControllers | (this.prefConfig.onscreenController ? 1 : 0));
-    }
-    else {
-      // Only Player 1 is active with multi-controller disabled
-      return 1;
-    }
+    return 1
+    // if (this.prefConfig.multiController) {
+    //   return (this.currentControllers | this.initialControllers | (this.prefConfig.show_onscreen_controls ? 1 : 0));
+    // }
+    // else {
+    //   // Only Player 1 is active with multi-controller disabled
+    //   return 1;
+    // }
   }
 
   maxByMagnitude(a: number, b: number): number {

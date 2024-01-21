@@ -17,13 +17,12 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 
-
 MoonBridgeApi *MoonBridgeApi::api = new MoonBridgeApi();
 
 MoonBridgeApi::MoonBridgeApi() {
-    #ifdef FFMPEG_ENABLED
-        m_decoder = new FFmpegVideoDecoder();
-    #endif
+#ifdef FFMPEG_ENABLED
+    m_decoder = new FFmpegVideoDecoder();
+#endif
     m_audioRender = new SDLAudioRenderer();
     m_videoRender = new EglVideoRenderer();
     BridgeVideoRendererCallbacks = {
@@ -204,7 +203,7 @@ napi_value MoonBridgeApi::MoonBridge_startConnection(napi_env env, napi_callback
         (void *)bridgeCallbackInfo, &bridgeCallbackInfo->asyncWork);
     // 将异步工作排队，等待 Node.js 事件循环处理
     napi_queue_async_work(env, bridgeCallbackInfo->asyncWork);
-    
+
     napi_value result;
     napi_create_int32(env, ret, &result);
     return result;
@@ -231,7 +230,7 @@ static void Napi_OnVideoStatus(napi_env env, napi_value js_callback, void *conte
     napi_set_named_property(env, stats, "networkDroppedFrames", ConvertFloatToNapiValue(env, status->networkDroppedFrames));
     napi_set_named_property(env, stats, "decodeTime", ConvertFloatToNapiValue(env, status->totalDecodeTime / status->decodedFrames));
     napi_set_named_property(env, stats, "receivedTime", ConvertFloatToNapiValue(env, status->totalReassemblyTime / status->receivedFrames));
-   params[0] = stats;
+    params[0] = stats;
     napi_call_function(env, nullptr, js_callback, 1, params, nullptr);
 }
 
@@ -342,8 +341,30 @@ static napi_value MoonBridge_sendMouseButton(napi_env env, napi_callback_info in
     // LiSendMouseButtonEvent(buttonEvent, mouseButton);
 }
 static napi_value MoonBridge_sendMultiControllerInput(napi_env env, napi_callback_info info) {
-    // LiSendMultiControllerEvent(controllerNumber, activeGamepadMask, buttonFlags,
-    //        leftTrigger, rightTrigger, leftStickX, leftStickY, rightStickX, rightStickY);
+    size_t argc = 9;
+    napi_value args[9] = {nullptr};
+    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    short controllerNumber;
+    short activeGamepadMask;
+    int buttonFlags;
+    unsigned char leftTrigger;
+    unsigned char rightTrigger;
+    short leftStickX;
+    short leftStickY;
+    short rightStickX;
+    short rightStickY;
+    napi_get_value_int32(env, args[0], (int *)&controllerNumber);
+    napi_get_value_int32(env, args[1], (int *)&activeGamepadMask);
+    napi_get_value_int32(env, args[2], &buttonFlags);
+    napi_get_value_int32(env, args[3], (int *)&leftTrigger);
+    napi_get_value_int32(env, args[4], (int *)&rightTrigger);
+    napi_get_value_int32(env, args[5], (int *)&leftStickX);
+    napi_get_value_int32(env, args[6], (int *)&leftStickY);
+    napi_get_value_int32(env, args[7], (int *)&rightStickX);
+    napi_get_value_int32(env, args[8], (int *)&rightStickY);
+    LiSendMultiControllerEvent(controllerNumber, activeGamepadMask, buttonFlags,
+                               leftTrigger, rightTrigger, leftStickX, leftStickY, rightStickX, rightStickY);
+    return nullptr;
 }
 static napi_value MoonBridge_sendTouchEvent(napi_env env, napi_callback_info info) {
     // LiSendTouchEvent(eventType, pointerId, x, y, pressureOrDistance,
@@ -435,10 +456,12 @@ void MoonBridgeApi::Export(napi_env env, napi_value exports) {
     api->env = env;
     napi_property_descriptor descriptors[] = {
         {"startConnection", nullptr, MoonBridge_startConnection, nullptr, nullptr, nullptr, napi_default, nullptr},
-       
+
         {"stopConnection", nullptr, MoonBridge_stopConnection, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"interruptConnection", nullptr, MoonBridge_interruptConnection, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"onVideoStatus", nullptr, MoonBridge_onVideoStatus, nullptr, nullptr, nullptr, napi_default, nullptr},
+        {"sendMultiControllerInput", nullptr, MoonBridge_sendMultiControllerInput, nullptr, nullptr, nullptr, napi_default, nullptr},
+
         {"onClStage", nullptr, On, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"onClStageFailed", nullptr, On, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"onClConnection", nullptr, On, nullptr, nullptr, nullptr, napi_default, nullptr},
@@ -495,10 +518,9 @@ int MoonBridgeApi::setFunByName(char *name, napi_threadsafe_function tsf) {
     m_funRefs[name] = tsf;
     return 0;
 }
-static void Napi_OnCallback(napi_env env, napi_value js_callback, void *context, void *data){
-    MoonBridgeCallBackInfo* info = static_cast<MoonBridgeCallBackInfo*>(data);
-    
-     
+static void Napi_OnCallback(napi_env env, napi_value js_callback, void *context, void *data) {
+    MoonBridgeCallBackInfo *info = static_cast<MoonBridgeCallBackInfo *>(data);
+
     napi_value params[1];
     napi_create_string_utf8(env, info->stage, NAPI_AUTO_LENGTH, &params[0]);
     napi_call_function(env, nullptr, js_callback, 1, params, nullptr);
@@ -506,10 +528,10 @@ static void Napi_OnCallback(napi_env env, napi_value js_callback, void *context,
 
 napi_value MoonBridgeApi::Emit(char *eventName, void *value) {
     napi_threadsafe_function tsfn = api->getFunByName(eventName);
-    if(tsfn != nullptr){
+    if (tsfn != nullptr) {
         napi_call_threadsafe_function(tsfn, value, napi_tsfn_nonblocking);
     }
-    return  nullptr;
+    return nullptr;
 }
 napi_value MoonBridgeApi::On(napi_env env, napi_callback_info info) {
     size_t argc = 2;

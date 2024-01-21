@@ -8,7 +8,7 @@ export class StreamSettings{
   stretch_video: boolean = false;
   audio_config_list: string = "2";
   enable_audiofx: boolean = false;
-  seekbar_deadzone: string = "";
+  seekbar_deadzone: string = "1";
   xb1_driver: boolean = false;
   usb_bind_all: boolean = false;
   mouse_emulation: boolean = false;

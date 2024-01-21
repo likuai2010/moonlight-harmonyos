@@ -14,6 +14,7 @@ export class NvConnection {
   api: MoonBridgeNapi = new MoonBridgeNapi()
   context: ConnectionContext
   uniqueId: string
+  isMonkey:Boolean
 
   constructor(host: AddressTuple, httpsPort: number, uniqueId: string, config: StreamConfiguration) {
     this.uniqueId = uniqueId
@@ -23,6 +24,8 @@ export class NvConnection {
     this.context.streamConfig = config;
 
     this.context.videoCapabilities = 16777221
+
+    this.isMonkey = false
   }
 
   public async initKey(){
@@ -257,5 +260,30 @@ export class NvConnection {
     }
     console.info("Launched new game session");
     return true;
+  }
+   sendControllerInput(
+    controllerNumber: number,
+    activeGamepadMask: number,
+    buttonFlags: number,
+    leftTrigger: number,
+    rightTrigger: number,
+    leftStickX: number,
+    leftStickY: number,
+    rightStickX: number,
+    rightStickY: number
+  ): void {
+    if (!this.isMonkey) {
+      this.api.sendMultiControllerInput(
+        controllerNumber,
+        activeGamepadMask,
+        buttonFlags,
+        leftTrigger,
+        rightTrigger,
+        leftStickX,
+        leftStickY,
+        rightStickX,
+        rightStickY
+      );
+    }
   }
 }
