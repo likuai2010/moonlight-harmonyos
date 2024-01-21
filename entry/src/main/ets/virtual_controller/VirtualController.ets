@@ -51,7 +51,7 @@ export class VirtualController {
   sendControllerInputContext(){
     //Prompt.showToast({message: JSON.stringify(this.inputContext)})
 
-    
+
   }
   setOpacity(opactiy: number) {
 
@@ -62,36 +62,28 @@ export class VirtualController {
 
 
 
-
 @Component
-export struct VirtualControllerTest {
-  @State message: string = '11111 World'
+export struct VirtualControllerBox{
   virtualController: VirtualController
   @ObjectLink inputContext: ControllerInputContext
-
   aboutToAppear() {
-    mediaquery.matchMediaSync('(screen: landscape)')
     const loader = new VirtualControllerConfigurationLoader()
-    this.virtualController.currentMode = ControllerMode.MoveButtons
     loader.createDefaultLayout(this.virtualController)
     VirtualControllerConfigurationLoader.loadFromPreferences(this.virtualController, getContext(this))
   }
   build() {
-    Row() {
-      Stack({ alignContent: Alignment.TopStart }) {
-        ForEach(this.virtualController.elements.convertToArray(), (d: VirtualControllerElement) => {
-          VirtualControllerButton({ element: d, layout: d.layout })
-        }, (d:VirtualControllerElement) =>JSON.stringify(d))
-        Button(){
-          Text("setting")
-        }.offset({y: 80}).onClick(()=>{
-          this.virtualController.onSettingsClick(getContext(this))
-        })
-        Text(JSON.stringify(this.inputContext)).alignSelf(ItemAlign.Center).offset({x: 50,y:0})
-      }.height('100%')
-      .width('100%')
-    }
-    .height('100%')
+    Stack({ alignContent: Alignment.TopStart }) {
+      ForEach(this.virtualController.elements.convertToArray(), (d: VirtualControllerElement) => {
+        VirtualControllerButton({ element: d, layout: d.layout })
+      }, (d:VirtualControllerElement) =>JSON.stringify(d))
+      Button(){
+        Text("setting")
+      }.offset({y: 80}).onClick(()=>{
+        this.virtualController.onSettingsClick(getContext(this))
+      })
+      Text(JSON.stringify(this.inputContext)).alignSelf(ItemAlign.Center).offset({x: 50,y:0})
+    }.height('100%')
+    .width('100%')
   }
 }
 

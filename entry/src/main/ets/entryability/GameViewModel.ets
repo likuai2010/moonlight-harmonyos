@@ -124,21 +124,21 @@ class GameViewModel implements NvConnectionListener {
     this.conn.api.onClStage("BridgeClStageStarting", (stage:string)=>{
       this.stageStarting(stage)
     })
-    // this.conn.api.onClStageFailed("BridgeClStageFailed",(stage:string, code: number)=>{
-    //   this.stageFailed(stage, 0,code)
-    // })
-    // this.conn.api.onClStage("BridgeClStageComplete",(stage:string)=>{
-    //   this.stageComplete(stage)
-    // })
-    // this.conn.api.onClConnection("BridgeClConnectionStarted", (code:number)=>{
-    //   this.connectionStarted()
-    // })
-    // this.conn.api.onClConnection("BridgeClConnectionStatusUpdate", (code:number)=>{
-    //   this.connectionStatusUpdate(code)
-    // })
-    // this.conn.api.onClConnection("BridgeClConnectionTerminated", (code:number)=>{
-    //   this.connectionTerminated(code)
-    // })
+    this.conn.api.onClStageFailed("BridgeClStageFailed",(stage:string, code: number)=>{
+      this.stageFailed(stage, 0,code)
+    })
+    this.conn.api.onClStage("BridgeClStageComplete",(stage:string)=>{
+      this.stageComplete(stage)
+    })
+    this.conn.api.onClConnection("BridgeClConnectionStarted", (code:number)=>{
+      this.connectionStarted()
+    })
+    this.conn.api.onClConnection("BridgeClConnectionStatusUpdate", (code:number)=>{
+      this.connectionStatusUpdate(code)
+    })
+    this.conn.api.onClConnection("BridgeClConnectionTerminated", (code:number)=>{
+      this.connectionTerminated(code)
+    })
   }
 }
 

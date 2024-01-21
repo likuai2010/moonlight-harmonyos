@@ -265,7 +265,7 @@ export struct VirtualControllerButton {
 
   build() {
     Canvas(this.context)
-      .height(this.layout.height).backgroundColor(Color.Yellow)
+      .height(this.layout.height)
       .width(this.layout.width)
       .translate({ x: this.layout.x, y: this.layout.y })
       .opacity(1)

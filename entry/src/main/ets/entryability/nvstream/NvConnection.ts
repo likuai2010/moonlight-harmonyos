@@ -1,6 +1,6 @@
 import { MoonBridgeNapi, VideoStatus } from 'libentry.so';
 import { ConnectionContext } from './ConnectionContext';
-import { AddressTuple, ComputerDetails } from '../computers/ComputerDetails';
+import { AddressTuple } from '../computers/ComputerDetails';
 import { NvHttp } from '../http/NvHttp';
 import { generateRiKey, generateRiKeyId } from '../crypto/CryptoManager';
 import {  MoonBridge } from './MoonBridge';
@@ -8,7 +8,6 @@ import { StreamConfiguration } from './StreamConfiguration'
 import { NvConnectionListener } from './ConnetionListener';
 import buffer from '@ohos.buffer';
 import { LimelightCertProvider } from '../crypto/LimelightCryptoProvider';
-import hilog from '@ohos.hilog';
 import LimeLog from '../LimeLog';
 
 export class NvConnection {
@@ -83,6 +82,7 @@ export class NvConnection {
         context.videoCapabilities,
         context.streamConfig.colorSpace, context.streamConfig.colorRange
       )
+
       // const ret = this.api.startConnection("192.168.3.5",
       //                       "7.1.431.-1", "3.23.0.74", "rtsp://192.168.3.5:48010",
       //                       197377,
@@ -97,8 +97,12 @@ export class NvConnection {
       //                       16777216,
       //                       1,
       //                       0);
+      if(ret != 0){
+        this.context.connListener.connectionTerminated(ret)
+      }
       LimeLog.info("ret=>"+ret)
     }catch (e){
+      this.context.connListener.connectionTerminated(-1)
       LimeLog.info("err=>"+e)
     }
 

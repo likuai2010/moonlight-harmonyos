@@ -337,7 +337,7 @@ export class NvHttp {
       return response
     } catch (e) {
       httpClient.close()
-      LimeLog.error(`${e}`)
+      LimeLog.error(`http: error${e}`)
     }
     return null;
   }
