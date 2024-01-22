@@ -69,11 +69,11 @@ export class DigitalButton extends VirtualControllerElement {
     this.context.ellipse(getPercent(this.context.width, 50), getPercent(this.context.height, 50), getPercent(this.context.width, 50) - strokeWidth, getPercent(this.context.height, 50) - strokeWidth, 0, 0, Math.PI * 2);
     this.context.stroke()
     if (this.text) {
-      const textSize = getPercent(this.context.width, 25)
       this.context.textAlign = "center"
       this.context.fillStyle = this.pressed ? pressedColor : getDefaultColor(this.virtualController)
-      this.context.font = textSize + 'px sans-serif';
-      this.context.fillText(this.text, getPercent(this.context.width, 50), getPercent(this.context.height, 60));
+      const textSize = getPercent(this.context.width, 25)
+      this.context.font = vp2px(textSize) + 'px sans-serif';
+      this.context.fillText(this.text, getPercent(this.context.width, 50), getPercent(this.context.height, 65));
     }
   }
 

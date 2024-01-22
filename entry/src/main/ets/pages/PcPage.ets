@@ -170,6 +170,10 @@ struct PcView {
     }).bindContextMenu(this.pcMenu, ResponseType.LongPress)
   }
 }
+import taskpool from '@ohos.taskpool';
+
+
+
 
 @Entry
 @Component
@@ -179,13 +183,15 @@ struct PcPage {
   heightValue: number
   gridRowTemplate: string
 
+
+
   aboutToAppear() {
     viewModel.getComputerList().then((list) => {
       for(let d of list){
         d.isLoading = true
       }
       this.pcList = list
-      viewModel.batchPollComputerList(this.pcList)
+      viewModel.batchPollComputerList(list)
     })
     viewModel.onDetailsUpdate((news: ComputerDetails) => {
       var indexes = this.pcList.findIndex((d) => d.uuid == news.uuid)
