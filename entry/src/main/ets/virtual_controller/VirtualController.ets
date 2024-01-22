@@ -74,14 +74,14 @@ export class VirtualController {
 
 
 @Builder
-export function ShowVirtualController(virtualController: VirtualController){
-  ForEach(virtualController.elements.convertToArray(), (d: VirtualControllerElement) => {
+export function ShowVirtualController(){
+  ForEach(this.virtualController.elements.convertToArray(), (d: VirtualControllerElement) => {
     VirtualControllerButton({ element: d, layout: d.layout })
-  }, (d:VirtualControllerElement) =>JSON.stringify(d))
+  }, (d:VirtualControllerElement) =>d.elementId.toString())
   Button(){
     Text("setting")
   }.offset({y: 80}).onClick(()=>{
-    virtualController.onSettingsClick(getContext(this))
+    this.virtualController.onSettingsClick(getContext(this))
   })
 }
 
@@ -92,11 +92,11 @@ export struct VirtualControllerBox{
   aboutToAppear() {
     const loader = new VirtualControllerConfigurationLoader()
     loader.createDefaultLayout(this.virtualController)
-    //VirtualControllerConfigurationLoader.loadFromPreferences(this.virtualController, getContext(this))
+    VirtualControllerConfigurationLoader.loadFromPreferences(this.virtualController, getContext(this))
   }
   build() {
     Stack({ alignContent: Alignment.TopStart }) {
-      ShowVirtualController(this.virtualController)
+      ShowVirtualController()
       Text(JSON.stringify(this.inputContext)).alignSelf(ItemAlign.Center).offset({x: 50,y:0})
     }.height('100%')
     .width('100%')

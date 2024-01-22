@@ -4,7 +4,6 @@ import { NvApp } from './http/NvApp';
 import { NvHttp } from './http/NvHttp';
 import { NvConnection } from './nvstream/NvConnection';
 import { StreamConfiguration } from './nvstream/StreamConfiguration';
-import { BuildDialog } from '../uitls/Dialog';
 import { Loading } from '../pages/compoments/Loading';
 import { getResStringByContext } from '../uitls/ResString';
 import emitter from '@ohos.events.emitter'
@@ -14,6 +13,8 @@ import promptAction from '@ohos.promptAction';
 import { StreamSettings } from '../uitls/StreamSetttings';
 import { ControllerHandle } from '../virtual_controller/ControllerHandle';
 import { VirtualController } from '../virtual_controller/VirtualController';
+
+
 class GameViewModel implements NvConnectionListener {
   conn: NvConnection
   context: Context
@@ -55,23 +56,23 @@ class GameViewModel implements NvConnectionListener {
   }
 
   setHdrMode(enabled: boolean, hdrMetadata: number[]): void {
-    console.error("setHdrMode")
+    LimeLog.warning("setHdrMode")
   }
 
   rumbleTriggers(controllerNumber: number, leftTrigger: number, rightTrigger: number): void {
-    console.error("rumbleTriggers")
+    LimeLog.warning("rumbleTriggers")
   }
 
   rumble(controllerNumber: number, lowFreqMotor: number, highFreqMotor: number): void {
-    console.debug("rumble")
+    LimeLog.warning("rumble")
   }
 
   displayTransientMessage(message: string): void {
-    console.debug("displayTransientMessage")
+    LimeLog.warning("displayTransientMessage")
   }
 
   displayMessage(message: string): void {
-    console.debug("displayMessage")
+    LimeLog.warning("displayMessage")
     promptAction.showToast({message: message})
   }
 

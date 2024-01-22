@@ -394,8 +394,10 @@ struct SeekBarPreference {
   summary: Resource = null
   @State value: string = ""
   onChange: (key, value) => void
+  aboutToAppear() {
+  }
   onSettingsUpdated(){
-    if(this.settings[this.pKey] == null){
+    if(this.settings[this.pKey] != null){
       this.value = this.settings[this.pKey]
     }
   }
@@ -477,10 +479,11 @@ struct CheckBoxPreference {
   @State value: boolean = false
   onChange: (key, value) => void
   onSettingsUpdated(){
-    if(this.settings[this.pKey] == null){
+    if(this.settings[this.pKey] != null){
       this.value = this.settings[this.pKey]
     }
   }
+
   build() {
     BaseReference(true, () => {
       this.value = !this.value

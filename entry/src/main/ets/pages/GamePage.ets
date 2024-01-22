@@ -2,14 +2,18 @@ import gameViewModel from 'ets/entryability/GameViewModel'
 import { VideoStatus } from 'libentry.so';
 import router from '@ohos.router';
 import { Spinner } from './compoments/Loading'
-import { StreamSettings, loadSettings } from '../uitls/StreamSetttings';
-import { ShowVirtualController, VirtualController, VirtualControllerBox } from '../virtual_controller/VirtualController';
+import { loadSettings } from '../uitls/StreamSetttings';
+import { VirtualController,  } from '../virtual_controller/VirtualController';
+import { VirtualControllerConfigurationLoader } from '../virtual_controller/VirtualControllerConfigurationLoader';
+import { VirtualControllerButton } from '../virtual_controller/common';
+import { Icon } from './compoments/Title';
 
 @Entry
 @Component
 struct GamePage {
   @State videoStatus: VideoStatus = null
   xComponentContext: any | undefined = undefined;
+  @State virtualController: VirtualController = null
   dialogController: CustomDialogController =  new CustomDialogController({
     builder: Spinner({ title: $r('app.string.conn_establishing_title'), text: "" }),
     autoCancel: false,
@@ -22,15 +26,25 @@ struct GamePage {
     delete this.dialogController, // 删除dialogController
     this.dialogController = undefined // 将dialogController置空
   }
-  aboutToAppear(){
+  async onInit(){
     this.dialogController.open()
-    loadSettings(getContext(this)).then((s)=>{
-      gameViewModel.init(router.getParams()["computer"], router.getParams()["app"], s)
-      //gameViewModel.start(this.dialogController, getContext(this))
-      gameViewModel.conn.onVideoStatus((s)=>{
-        this.videoStatus = s;
-      })
+    const settings = await loadSettings(getContext(this))
+    await gameViewModel.init(router.getParams()["computer"], router.getParams()["app"], settings)
+    await gameViewModel.start(this.dialogController, getContext(this))
+    if (settings.touchscreen_trackpad){
+      const loader = new VirtualControllerConfigurationLoader()
+      loader.createDefaultLayout(gameViewModel.virtualController, settings)
+      VirtualControllerConfigurationLoader.loadFromPreferences(gameViewModel.virtualController, getContext(this))
+      this.virtualController = gameViewModel.virtualController
+    }
+    gameViewModel.conn.onVideoStatus((s)=>{
+      this.videoStatus = s;
     })
+  }
+
+  aboutToAppear(){
+    this.onInit()
+
   }
   build() {
     Stack({ alignContent: Alignment.TopStart }){
@@ -53,9 +67,16 @@ struct GamePage {
           Text(`平均解码时间:  ${this.videoStatus?.decodeTime?.toFixed(2) || 0 }  ms`).fontColor(Color.White)
         }.backgroundColor(Color.Black).opacity(0.5)
       }
-      if (gameViewModel.virtualController != null){
-        ShowVirtualController(gameViewModel.virtualController)
-      }
+     if(this.virtualController){
+       ForEach(this.virtualController.elements.convertToArray(), (d) => {
+         VirtualControllerButton({ element: d, layout: d.layout })
+       }, (d) =>d.elementId.toString())
+       Button(){
+         Icon({icon:$r("app.media.settings")})
+       }.offset({y: 20}).onClick(()=>{
+         this.virtualController.onSettingsClick(getContext(this))
+       })
+     }
     }.backgroundColor(Color.Black)
     .width('100%')
     .height('100%')

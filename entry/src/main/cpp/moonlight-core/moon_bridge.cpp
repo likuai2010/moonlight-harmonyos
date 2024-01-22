@@ -344,25 +344,27 @@ static napi_value MoonBridge_sendMultiControllerInput(napi_env env, napi_callbac
     size_t argc = 9;
     napi_value args[9] = {nullptr};
     napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
-    short controllerNumber;
-    short activeGamepadMask;
+    int controllerNumber;
+    int activeGamepadMask;
     int buttonFlags;
-    unsigned char leftTrigger;
-    unsigned char rightTrigger;
-    short leftStickX;
-    short leftStickY;
-    short rightStickX;
-    short rightStickY;
-    napi_get_value_int32(env, args[0], (int *)&controllerNumber);
-    napi_get_value_int32(env, args[1], (int *)&activeGamepadMask);
+    int leftTriggerInt;
+    int rightTriggerInt;
+    int leftStickX ;
+    int leftStickY;
+    int rightStickX;
+    int rightStickY;
+    napi_get_value_int32(env, args[0], &controllerNumber);
+    napi_get_value_int32(env, args[1], &activeGamepadMask);
     napi_get_value_int32(env, args[2], &buttonFlags);
-    napi_get_value_int32(env, args[3], (int *)&leftTrigger);
-    napi_get_value_int32(env, args[4], (int *)&rightTrigger);
-    napi_get_value_int32(env, args[5], (int *)&leftStickX);
-    napi_get_value_int32(env, args[6], (int *)&leftStickY);
-    napi_get_value_int32(env, args[7], (int *)&rightStickX);
-    napi_get_value_int32(env, args[8], (int *)&rightStickY);
-    LiSendMultiControllerEvent(controllerNumber, activeGamepadMask, buttonFlags,
+    napi_get_value_int32(env, args[3], &leftTriggerInt);
+    napi_get_value_int32(env, args[4], &rightTriggerInt);
+    unsigned char leftTrigger = static_cast<unsigned char>(leftTriggerInt);
+    unsigned char rightTrigger = static_cast<unsigned char>(rightTriggerInt);
+    napi_get_value_int32(env, args[5], &leftStickX);
+    napi_get_value_int32(env, args[6], &leftStickY);
+    napi_get_value_int32(env, args[7], &rightStickX);
+    napi_get_value_int32(env, args[8], &rightStickY);
+   LiSendMultiControllerEvent(controllerNumber, activeGamepadMask, buttonFlags,
                                leftTrigger, rightTrigger, leftStickX, leftStickY, rightStickX, rightStickY);
     return nullptr;
 }
@@ -529,7 +531,7 @@ static void Napi_OnCallback(napi_env env, napi_value js_callback, void *context,
 napi_value MoonBridgeApi::Emit(char *eventName, void *value) {
     napi_threadsafe_function tsfn = api->getFunByName(eventName);
     if (tsfn != nullptr) {
-        napi_call_threadsafe_function(tsfn, value, napi_tsfn_nonblocking);
+        napi_call_threadsafe_function(tsfn, value, napi_tsfn_blocking);
     }
     return nullptr;
 }

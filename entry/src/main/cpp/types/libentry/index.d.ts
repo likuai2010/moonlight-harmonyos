@@ -50,10 +50,14 @@ export declare class MoonBridgeNapi {
   stopConnection(): void;
   sendMultiControllerInput(
     controllerNumber: number,
-    activeGamepadMask: number, buttonFlags: number,
-    leftTrigger: number, rightTrigger: number,
-    leftStickX: number, leftStickY: number,
-    rightStickX: number, rightStickY: number
+    activeGamepadMask: number,
+    buttonFlags: number,
+    leftTrigger: number,
+    rightTrigger: number,
+    leftStickX: number,
+    leftStickY: number,
+    rightStickX: number,
+    rightStickY: number
   ): void;
 
   static interruptConnection(): void;

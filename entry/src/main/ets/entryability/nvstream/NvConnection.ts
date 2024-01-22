@@ -39,14 +39,19 @@ export class NvConnection {
     const appName = this.context.streamConfig.app.appName;
     this.context.connListener.stageStarting(appName);
     try {
-
       if (!await this.startApp()) {
         this.context.connListener.stageFailed(appName, 0, 0);
         return;
       }
       this.context.connListener.stageComplete(appName);
     } catch (e) {
-      this.context.connListener.displayMessage(e.message);
+      if (e instanceof Error) {
+        // 访问堆栈信息
+        LimeLog.error("堆栈信息:" + e.stack);
+      } else {
+        LimeLog.error("捕获到一个非 Error 对象的异常:" + e);
+      }
+      this.context.connListener.displayMessage(e);
       this.context.connListener.stageFailed(appName, 0, -1);
       return;
     }
@@ -202,23 +207,30 @@ export class NvConnection {
           return this.quitAndLaunch(h, context);
         }
       } catch (e) {
-        if (e.getErrorCode() == 470) {
-          // This is the error you get when you try to resume a session that's not yours.
-          // Because this is fairly common, we'll display a more detailed message.
-          context.connListener.displayMessage("This session wasn't started by this device," +
-          " so it cannot be resumed. End streaming on the original " +
-          "device or the PC itself and try again. (Error code: " + e.getErrorCode() + ")");
-          return false;
+        LimeLog.error("error: " +e)
+        if (e instanceof Error){
+          LimeLog.error("error: "+ e.stack)
+          e.name
         }
-        else if (e.getErrorCode() == 525) {
-          context.connListener.displayMessage("The application is minimized. Resume it on the PC manually or " +
-          "quit the session and start streaming again.");
-          return false;
-        } else {
-          LimeLog.info("err")
-          return false;
-        }
-        LimeLog.info( e.toString())
+        // if (e.getErrorCode() == 470) {
+        //   // This is the error you get when you try to resume a session that's not yours.
+        //   // Because this is fairly common, we'll display a more detailed message.
+        //   context.connListener.displayMessage("This session wasn't started by this device," +
+        //   " so it cannot be resumed. End streaming on the original " +
+        //   "device or the PC itself and try again. (Error code: " + e.getErrorCode() + ")");
+        //   return false;
+        // }
+        // else if (e.getErrorCode() == 525) {
+        //   context.connListener.displayMessage("The application is minimized. Resume it on the PC manually or " +
+        //   "quit the session and start streaming again.");
+        //   return false;
+        // } else {
+        //   LimeLog.info("err")
+        //   return false;
+        // }
+
+        LimeLog.error(e.toString())
+        return false
       }
       LimeLog.info("Resumed existing game session ", )
       return true;

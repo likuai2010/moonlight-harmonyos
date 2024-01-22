@@ -106,31 +106,34 @@ class MoonBridgeApi {
         Emit("BridgeClStageStarting", static_cast<void*>(&info));
     }
     static void BridgeClStageComplete(int stage) {
-        napi_value params[1];
         const char *name = LiGetStageName(stage);
-        napi_create_string_utf8(api->env, name, NAPI_AUTO_LENGTH, &params[0]);
-        Emit("BridgeClStageComplete", params);
+        MoonBridgeCallBackInfo info = {
+            .stage = (char* )name
+        };
+        Emit("BridgeClStageComplete", static_cast<void*>(&info));
     }
     static void BridgeClStageFailed(int stage, int errorCode) {
         napi_value params[2];
         const char *name = LiGetStageName(stage);
-        napi_create_string_utf8(api->env, name, NAPI_AUTO_LENGTH, &params[0]);
-        napi_create_int32(api->env, errorCode, &params[1]);
-        Emit("BridgeClStageFailed", params);
+         MoonBridgeCallBackInfo info = {
+            .stage = (char* )name,
+            .error = errorCode
+        };
+        Emit("BridgeClStageFailed", static_cast<void*>(&info));
     }
     static void BridgeClConnectionStarted(void) {
         napi_value params[0];
-        Emit("BridgeClConnectionStarted", params);
+       // Emit("BridgeClConnectionStarted", params);
     }
     static void BridgeClConnectionTerminated(int errorCode) {
         napi_value params[1];
         napi_create_int32(api->env, errorCode, &params[0]);
-        Emit("BridgeClConnectionTerminated", params);
+       // Emit("BridgeClConnectionTerminated", params);
     }
     static void BridgeClConnectionStatusUpdate(int connectionStatus) {
         napi_value params[1];
         napi_create_int32(api->env, connectionStatus, &params[0]);
-        Emit("BridgeClConnectionTerminated", params);
+        //Emit("BridgeClConnectionTerminated", params);
     }
 
     static void BridgeClSetHdrMode(bool enabled) {
@@ -146,7 +149,7 @@ class MoonBridgeApi {
         // napi_create_int32(MoonBridge::env, controllerNumber, &params[0]);
         // napi_create_int32(MoonBridge::env, leftTrigger, &params[1]);
         // napi_create_int32(MoonBridge::env, rightTrigger, &params[2]);
-        Emit("BridgeClRumbleTriggers", params);
+       // Emit("BridgeClRumbleTriggers", params);
     }
     static void BridgeClSetMotionEventState(uint16_t controllerNumber, uint8_t motionType, uint16_t reportRateHz) {
         napi_value params[1];
