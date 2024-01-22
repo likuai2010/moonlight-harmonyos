@@ -3,7 +3,7 @@ import { VideoStatus } from 'libentry.so';
 import router from '@ohos.router';
 import { Spinner } from './compoments/Loading'
 import { StreamSettings, loadSettings } from '../uitls/StreamSetttings';
-import { VirtualController, VirtualControllerBox } from '../virtual_controller/VirtualController';
+import { ShowVirtualController, VirtualController, VirtualControllerBox } from '../virtual_controller/VirtualController';
 
 @Entry
 @Component
@@ -54,7 +54,7 @@ struct GamePage {
         }.backgroundColor(Color.Black).opacity(0.5)
       }
       if (gameViewModel.virtualController != null){
-        VirtualControllerBox({virtualController: gameViewModel.virtualController, inputContext:gameViewModel.virtualController.inputContext })
+        ShowVirtualController(gameViewModel.virtualController)
       }
     }.backgroundColor(Color.Black)
     .width('100%')

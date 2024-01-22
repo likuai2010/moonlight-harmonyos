@@ -5,6 +5,7 @@ import { DigitalButton } from './DigitalButton';
 import { DigitalPad, DIGITAL_PAD_DIRECTION_DOWN, DIGITAL_PAD_DIRECTION_LEFT, DIGITAL_PAD_DIRECTION_RIGHT, DIGITAL_PAD_DIRECTION_UP } from './DigitalPad';
 import { VirtualController } from './VirtualController';
 import dataPreferences from '@ohos.data.preferences';
+import display from '@ohos.display';
 
 
 const TRIGGER_L_BASE_X: number = 1;
@@ -219,7 +220,9 @@ function createDigitalPad(controller: VirtualController,): DigitalPad {
 
 export class VirtualControllerConfigurationLoader {
   createDefaultLayout(controller: VirtualController, config: any = {}) {
-    const screen = { widthPixels: 1080, heightPixels: 720 }
+    const defaultDisplay =  display.getDefaultDisplaySync()
+
+    const screen = { widthPixels: defaultDisplay.width / defaultDisplay.densityPixels, heightPixels: defaultDisplay.height / defaultDisplay.densityPixels }
     // Displace controls on the right by this amount of pixels to account for different aspect ratios
     const rightDisplacement = screen.widthPixels - screen.heightPixels * 16 / 9;
 

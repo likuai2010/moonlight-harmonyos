@@ -5,6 +5,7 @@
     "pages/AppPage",
     "pages/PcPage",
     "pages/AddPage",
-    "pages/SettingsPage"
+    "pages/SettingsPage",
+    "pages/VirtualControllerSettings"
   ]
 }

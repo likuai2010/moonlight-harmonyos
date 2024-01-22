@@ -62,7 +62,7 @@ export default class EntryAbility extends UIAbility {
 
 
     limelightCertProvider.initCertKeyPair(this.context.cacheDir)
-    windowStage.loadContent('pages/Index', (err, data) => {
+    windowStage.loadContent('pages/PcPage', (err, data) => {
       if (err.code) {
         return;
       }

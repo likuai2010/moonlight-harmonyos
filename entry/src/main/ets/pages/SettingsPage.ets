@@ -2,6 +2,7 @@ import { NavTitle } from './compoments/Title';
 import dataPreferences from '@ohos.data.preferences';
 import { getResString } from '../uitls/ResString';
 import { StreamSettings, loadSettings } from '../uitls/StreamSetttings';
+import router from '@ohos.router';
 @Entry
 @Component
 struct SettingsPage {
@@ -81,13 +82,13 @@ struct SettingsPage {
               value: "1280x720",
               onChange: this.onUpdateValue
             })
-            CheckBoxPreference({
-              pKey: "enable_audiofx",
-              title: $r("app.string.title_checkbox_enable_audiofx"),
-              summary: $r("app.string.summary_checkbox_enable_audiofx"),
-              value: false,
-              onChange: this.onUpdateValue
-            })
+            // CheckBoxPreference({
+            //   pKey: "enable_audiofx",
+            //   title: $r("app.string.title_checkbox_enable_audiofx"),
+            //   summary: $r("app.string.summary_checkbox_enable_audiofx"),
+            //   value: false,
+            //   onChange: this.onUpdateValue
+            // })
           }.alignItems(HorizontalAlign.Start)
 
           Column({ space: 10 }) {
@@ -99,62 +100,62 @@ struct SettingsPage {
               value: "",
               onChange: this.onUpdateValue
             })
-            CheckBoxPreference({
-              pKey: "xb1_driver",
-              title: $r("app.string.title_checkbox_xb1_driver"),
-              summary: $r("app.string.summary_checkbox_xb1_driver"),
-              value: false,
-              onChange: this.onUpdateValue
-            })
-            CheckBoxPreference({
-              pKey: "usb_bind_all",
-              title: $r("app.string.title_checkbox_usb_bind_all"),
-              summary: $r("app.string.summary_checkbox_usb_bind_all"),
-              value: false,
-              onChange: this.onUpdateValue
-            })
-            CheckBoxPreference({
-              pKey: "mouse_emulation",
-              title: $r("app.string.title_checkbox_mouse_emulation"),
-              summary: $r("app.string.summary_checkbox_mouse_emulation"),
-              value: false,
-              onChange: this.onUpdateValue
-            })
-            CheckBoxPreference({
-              pKey: "vibrate_fallback",
-              title: $r("app.string.title_checkbox_vibrate_fallback"),
-              summary: $r("app.string.summary_checkbox_vibrate_fallback"),
-              value: false,
-              onChange: this.onUpdateValue
-            })
-            CheckBoxPreference({
-              pKey: "flip_face_buttons",
-              title: $r("app.string.title_checkbox_flip_face_buttons"),
-              summary: $r("app.string.summary_checkbox_flip_face_buttons"),
-              value: false,
-              onChange: this.onUpdateValue
-            })
-            CheckBoxPreference({
-              pKey: "gamepad_touchpad_as_mouse",
-              title: $r("app.string.title_checkbox_gamepad_touchpad_as_mouse"),
-              summary: $r("app.string.summary_checkbox_gamepad_touchpad_as_mouse"),
-              value: false,
-              onChange: this.onUpdateValue
-            })
-            CheckBoxPreference({
-              pKey: "gamepad_motion_sensors",
-              title: $r("app.string.title_checkbox_gamepad_motion_sensors"),
-              summary: $r("app.string.summary_checkbox_gamepad_motion_sensors"),
-              value: false,
-              onChange: this.onUpdateValue
-            })
-            CheckBoxPreference({
-              pKey: "gamepad_motion_fallback",
-              title: $r("app.string.title_checkbox_gamepad_motion_fallback"),
-              summary: $r("app.string.summary_checkbox_gamepad_motion_fallback"),
-              value: false,
-              onChange: this.onUpdateValue
-            })
+            // CheckBoxPreference({
+            //   pKey: "xb1_driver",
+            //   title: $r("app.string.title_checkbox_xb1_driver"),
+            //   summary: $r("app.string.summary_checkbox_xb1_driver"),
+            //   value: false,
+            //   onChange: this.onUpdateValue
+            // })
+            // CheckBoxPreference({
+            //   pKey: "usb_bind_all",
+            //   title: $r("app.string.title_checkbox_usb_bind_all"),
+            //   summary: $r("app.string.summary_checkbox_usb_bind_all"),
+            //   value: false,
+            //   onChange: this.onUpdateValue
+            // })
+            // CheckBoxPreference({
+            //   pKey: "mouse_emulation",
+            //   title: $r("app.string.title_checkbox_mouse_emulation"),
+            //   summary: $r("app.string.summary_checkbox_mouse_emulation"),
+            //   value: false,
+            //   onChange: this.onUpdateValue
+            // })
+            // CheckBoxPreference({
+            //   pKey: "vibrate_fallback",
+            //   title: $r("app.string.title_checkbox_vibrate_fallback"),
+            //   summary: $r("app.string.summary_checkbox_vibrate_fallback"),
+            //   value: false,
+            //   onChange: this.onUpdateValue
+            // })
+            // CheckBoxPreference({
+            //   pKey: "flip_face_buttons",
+            //   title: $r("app.string.title_checkbox_flip_face_buttons"),
+            //   summary: $r("app.string.summary_checkbox_flip_face_buttons"),
+            //   value: false,
+            //   onChange: this.onUpdateValue
+            // })
+            // CheckBoxPreference({
+            //   pKey: "gamepad_touchpad_as_mouse",
+            //   title: $r("app.string.title_checkbox_gamepad_touchpad_as_mouse"),
+            //   summary: $r("app.string.summary_checkbox_gamepad_touchpad_as_mouse"),
+            //   value: false,
+            //   onChange: this.onUpdateValue
+            // })
+            // CheckBoxPreference({
+            //   pKey: "gamepad_motion_sensors",
+            //   title: $r("app.string.title_checkbox_gamepad_motion_sensors"),
+            //   summary: $r("app.string.summary_checkbox_gamepad_motion_sensors"),
+            //   value: false,
+            //   onChange: this.onUpdateValue
+            // })
+            // CheckBoxPreference({
+            //   pKey: "gamepad_motion_fallback",
+            //   title: $r("app.string.title_checkbox_gamepad_motion_fallback"),
+            //   summary: $r("app.string.summary_checkbox_gamepad_motion_fallback"),
+            //   value: false,
+            //   onChange: this.onUpdateValue
+            // })
           }.alignItems(HorizontalAlign.Start)
 
           Column({ space: 10 }) {
@@ -166,20 +167,20 @@ struct SettingsPage {
               value: false,
               onChange: this.onUpdateValue
             })
-            CheckBoxPreference({
-              pKey: "mouse_nav_buttons",
-              title: $r("app.string.title_checkbox_mouse_nav_buttons"),
-              summary: $r("app.string.summary_checkbox_mouse_nav_buttons"),
-              value: false,
-              onChange: this.onUpdateValue
-            })
-            CheckBoxPreference({
-              pKey: "absolute_mouse_mode",
-              title: $r("app.string.title_checkbox_absolute_mouse_mode"),
-              summary: $r("app.string.summary_checkbox_absolute_mouse_mode"),
-              value: false,
-              onChange: this.onUpdateValue
-            })
+            // CheckBoxPreference({
+            //   pKey: "mouse_nav_buttons",
+            //   title: $r("app.string.title_checkbox_mouse_nav_buttons"),
+            //   summary: $r("app.string.summary_checkbox_mouse_nav_buttons"),
+            //   value: false,
+            //   onChange: this.onUpdateValue
+            // })
+            // CheckBoxPreference({
+            //   pKey: "absolute_mouse_mode",
+            //   title: $r("app.string.title_checkbox_absolute_mouse_mode"),
+            //   summary: $r("app.string.summary_checkbox_absolute_mouse_mode"),
+            //   value: false,
+            //   onChange: this.onUpdateValue
+            // })
           }.alignItems(HorizontalAlign.Start)
 
           Column({ space: 10 }) {
@@ -217,8 +218,9 @@ struct SettingsPage {
               title: $r("app.string.title_reset_osc"),
               summary: $r("app.string.summary_reset_osc"),
               value: false,
-              onChange: this.onUpdateValue
-            })
+              onChange: ()=>{
+                router.pushUrl({url:"pages/VirtualControllerSettings"})
+              }})
           }.alignItems(HorizontalAlign.Start)
 
           Column({ space: 10 }) {
@@ -241,27 +243,27 @@ struct SettingsPage {
 
           Column({ space: 10 }) {
             Text($r("app.string.category_ui_settings"))
-            CheckBoxPreference({
-              pKey: "enable_pip",
-              title: $r("app.string.title_checkbox_enable_pip"),
-              summary: $r("app.string.summary_checkbox_enable_pip"),
-              value: false,
-              onChange: this.onUpdateValue
-            })
-            CheckBoxPreference({
-              pKey: "language_list",
-              title: $r("app.string.title_language_list"),
-              summary: $r("app.string.summary_language_list"),
-              value: false,
-              onChange: this.onUpdateValue
-            })
-            CheckBoxPreference({
-              pKey: "small_icon_mode",
-              title: $r("app.string.title_checkbox_small_icon_mode"),
-              summary: $r("app.string.summary_checkbox_small_icon_mode"),
-              value: false,
-              onChange: this.onUpdateValue
-            })
+            // CheckBoxPreference({
+            //   pKey: "enable_pip",
+            //   title: $r("app.string.title_checkbox_enable_pip"),
+            //   summary: $r("app.string.summary_checkbox_enable_pip"),
+            //   value: false,
+            //   onChange: this.onUpdateValue
+            // })
+            // CheckBoxPreference({
+            //   pKey: "language_list",
+            //   title: $r("app.string.title_language_list"),
+            //   summary: $r("app.string.summary_language_list"),
+            //   value: false,
+            //   onChange: this.onUpdateValue
+            // })
+            // CheckBoxPreference({
+            //   pKey: "small_icon_mode",
+            //   title: $r("app.string.title_checkbox_small_icon_mode"),
+            //   summary: $r("app.string.summary_checkbox_small_icon_mode"),
+            //   value: false,
+            //   onChange: this.onUpdateValue
+            // })
           }.alignItems(HorizontalAlign.Start)
 
           Column({ space: 10 }) {
