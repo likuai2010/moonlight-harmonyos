@@ -23,8 +23,8 @@ export class NvHttp {
   private static readonly DEFAULT_HTTPS_PORT: number = 47984;
   public static readonly DEFAULT_HTTP_PORT: number = 47989;
 
-  public static readonly SHORT_CONNECTION_TIMEOUT: number = 3;
-  public static readonly LONG_CONNECTION_TIMEOUT: number = 5;
+  public static readonly SHORT_CONNECTION_TIMEOUT: number = 5;
+  public static readonly LONG_CONNECTION_TIMEOUT: number = 10;
   public static readonly NO_READ_TIMEOUT: number = 9999;
 
   // Print URL and content to logcat on debug builds
@@ -75,25 +75,30 @@ export class NvHttp {
     // Implement your logic to extract XML data based on the key
     // You may use a library for XML parsing in TypeScript
     // Return the XML value or null if not found (and isRequired is false)
-    let textEncoder = new util.TextEncoder();
-    let arrbuffer = textEncoder.encodeInto(serverInfo);
-    let that = new xml.XmlPullParser(arrbuffer.buffer, 'UTF-8');
     let v = '';
-    that.parse({ supportDoctype: true, ignoreNameSpace: true, tokenValueCallbackFunction: (key, value) => {
-      console.log(value.getText());
-      let name = value.getName();
-      let text = value.getText();
-      if (search === v) {
-        v = text
-        return false;
-      }
-      if (name === search) {
-        v = search
-      }
-      return true
-    } })
-    if (v == '')
-      return null
+    try {
+      let textEncoder = new util.TextEncoder();
+      let arrbuffer = textEncoder.encodeInto(serverInfo);
+      let that = new xml.XmlPullParser(arrbuffer.buffer, 'UTF-8');
+
+      that.parse({ supportDoctype: true, ignoreNameSpace: true, tokenValueCallbackFunction: (key, value) => {
+        console.log(value.getText());
+        let name = value.getName();
+        let text = value.getText();
+        if (search === v) {
+          v = text
+          return false;
+        }
+        if (name === search) {
+          v = search
+        }
+        return true
+      } })
+      if (v == '')
+        return null
+    }catch (e){
+      return null;
+    }
     return v
   }
 
@@ -322,7 +327,7 @@ export class NvHttp {
     return true;
   }
 
-  async openHttpConnectionToUint8Array(baseUrl: Url.URL, path: string, query: string = null, timeout: number = 0): Promise<Uint8Array> {
+  async openHttpConnectionToUint8Array(baseUrl: Url.URL, path: string, query: string = null, timeout: number = NvHttp.LONG_CONNECTION_TIMEOUT): Promise<Uint8Array> {
     var httpClient = new CurlClient()
     try {
       let url = this.getCompleteUrl(baseUrl, path, query)
@@ -332,7 +337,7 @@ export class NvHttp {
         clientPath = this.clientCert.certPath
         keyPath = this.clientCert.keyPath
       }
-      const response = await httpClient.get(url, timeout == 0 ? 9999 : 30, clientPath, keyPath)
+      const response = await httpClient.get(url, timeout, clientPath, keyPath)
       httpClient.close()
       return response
     } catch (e) {
@@ -341,7 +346,7 @@ export class NvHttp {
     }
     return null;
   }
-  async openHttpConnectionToString(baseUrl: Url.URL, path: string, query: string = null, timeout: number = 0): Promise<string> {
+  async openHttpConnectionToString(baseUrl: Url.URL, path: string, query: string = null, timeout: number = NvHttp.SHORT_CONNECTION_TIMEOUT): Promise<string> {
 
     try {
       let url = this.getCompleteUrl(baseUrl, path, query)
@@ -351,7 +356,7 @@ export class NvHttp {
         clientPath = this.clientCert.certPath
         keyPath = this.clientCert.keyPath
       }
-      const response = await this.httpClient.get(url, timeout == 0 ? 120 : timeout, clientPath, keyPath)
+      const response = await this.httpClient.get(url, timeout, clientPath, keyPath)
       const td = util.TextDecoder.create('utf-8', { ignoreBOM : true })
       return td.decodeWithStream(response)
     } catch (e) {
@@ -401,8 +406,8 @@ export class NvHttp {
       verb,
       query, NvHttp.LONG_CONNECTION_TIMEOUT
     );
-    if ((verb === "launch" && NvHttp.getXmlString(xmlStr, "gamesession", true) !== "0" ||
-    (verb === "resume" && NvHttp.getXmlString(xmlStr, "resume", true) !== "0"))) {
+    if ((verb === "launch" && NvHttp.getXmlString(xmlStr, "gamesession", true) != "0" ||
+    (verb === "resume" && NvHttp.getXmlString(xmlStr, "resume", true) != "0"))) {
       // sessionUrl0 will be missing for older GFE versions
       context.rtspSessionUrl = NvHttp.getXmlString(xmlStr, "sessionUrl0", false);
       return true;

@@ -14,7 +14,7 @@ struct GamePage {
   @State videoStatus: VideoStatus = null
   xComponentContext: any | undefined = undefined;
   @State virtualController: VirtualController = null
-  settings: StreamSettings = null
+  @State settings: StreamSettings = null
 
   dialogController: CustomDialogController =  new CustomDialogController({
     builder: Spinner({ title: $r('app.string.conn_establishing_title'), text: "" }),
@@ -31,7 +31,7 @@ struct GamePage {
   async onInit(){
     this.dialogController.open()
     const settings = await loadSettings(getContext(this))
-    this.settings = this.settings
+    this.settings = settings
     await gameViewModel.init(router.getParams()["computer"], router.getParams()["app"], settings)
     await gameViewModel.start(this.dialogController, getContext(this))
     if (settings.touchscreen_trackpad){

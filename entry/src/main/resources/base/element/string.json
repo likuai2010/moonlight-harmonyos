@@ -10,11 +10,11 @@
     },
     {
       "name": "EntryAbility_label",
-      "value": "label"
+      "value": "moonlight"
     },
     {
       "name": "reason",
-      "value": "ssss"
+      "value": "moonlight 需要访问网络"
     },
     {"name": "scut_deleted_pc", "value": "电脑已删除"},
     {"name": "scut_not_paired", "value": "电脑未配对"},
