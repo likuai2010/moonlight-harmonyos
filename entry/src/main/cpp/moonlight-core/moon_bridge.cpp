@@ -6,6 +6,8 @@
 
 #include "moon_bridge.h"
 #include <audio/SDLAudioRenderer.h>
+#include <multimedia/player_framework/native_avcodec_base.h>
+#include <multimedia/player_framework/native_avcodec_videodecoder.h>
 #include <native_window/external_window.h>
 #include <video/FFmpegVideoDecoder.h>
 #define NDEBUG
@@ -442,7 +444,10 @@ static napi_value MoonBridgeJavascriptClassConstructor(napi_env env, napi_callba
     void *data = nullptr;
     int vale = 1;
     napi_get_cb_info(env, info, nullptr, nullptr, &thisArg, &data);
-
+    const char* avc = OH_AVCODEC_MIMETYPE_VIDEO_AVC;
+   
+    OH_AVCodec* m_decoder = OH_VideoDecoder_CreateByMime("video/hevc");
+    //OH_AVCodec* m_decoder2 = OH_VideoDecoder_CreateByMime(OH_AVCODEC_MIMETYPE_VIDEO_AVC);
     napi_value global = nullptr;
     napi_get_global(env, &global);
 

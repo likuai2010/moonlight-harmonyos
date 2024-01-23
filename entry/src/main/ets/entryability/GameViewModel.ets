@@ -87,6 +87,7 @@ class GameViewModel implements NvConnectionListener {
 
   connectionStarted(): void {
     console.debug("connectionStarted")
+    this.spinnerDialog.close()
   }
 
   stageFailed(stage: string, portFlags: number, errorCode: number): void {

@@ -54,7 +54,7 @@ class NativeVideoDecoder : IVideoDecoder {
     ~NativeVideoDecoder();
     void start() override;
     void stop() override;
-    int setup(DECODER_PARAMETERS *params) override;
+    int setup(DECODER_PARAMETERS params) override;
     void cleanup() override;
     int submitDecodeUnit(PDECODE_UNIT decode_unit) override;
     VIDEO_STATS *video_decode_stats() override;

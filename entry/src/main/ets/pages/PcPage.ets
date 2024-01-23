@@ -222,7 +222,11 @@ struct PcPage {
               }})
             }
           }, (item) => JSON.stringify(item))
-        }
+        }.onKeyEvent((e)=>{
+          console.log(e.keyCode+"");
+        }).onMouse((e)=>{
+          console.log(e.button+"");
+        })
         .rowsTemplate(this.gridRowTemplate)
         .columnsTemplate('1fr 1fr 1fr')
         .height(this.heightValue)

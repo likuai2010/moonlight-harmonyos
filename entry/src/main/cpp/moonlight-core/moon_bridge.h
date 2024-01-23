@@ -123,17 +123,29 @@ class MoonBridgeApi {
     }
     static void BridgeClConnectionStarted(void) {
         napi_value params[0];
-       // Emit("BridgeClConnectionStarted", params);
+        MoonBridgeCallBackInfo info = {
+            .stage = "",
+            .error = 1
+        };
+        Emit("BridgeClConnectionStarted", static_cast<void*>(&info));
     }
     static void BridgeClConnectionTerminated(int errorCode) {
         napi_value params[1];
         napi_create_int32(api->env, errorCode, &params[0]);
-       // Emit("BridgeClConnectionTerminated", params);
+         MoonBridgeCallBackInfo info = {
+            .stage = "xxxx",
+            .error = -1
+        };
+        Emit("BridgeClConnectionTerminated", static_cast<void*>(&info));
     }
     static void BridgeClConnectionStatusUpdate(int connectionStatus) {
         napi_value params[1];
         napi_create_int32(api->env, connectionStatus, &params[0]);
-        //Emit("BridgeClConnectionTerminated", params);
+         MoonBridgeCallBackInfo info = {
+            .stage = "xxx",
+            .error = 1
+        };
+        Emit("BridgeClConnectionTerminated", static_cast<void*>(&info));
     }
 
     static void BridgeClSetHdrMode(bool enabled) {

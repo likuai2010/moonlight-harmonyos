@@ -2,7 +2,7 @@ import gameViewModel from 'ets/entryability/GameViewModel'
 import { VideoStatus } from 'libentry.so';
 import router from '@ohos.router';
 import { Spinner } from './compoments/Loading'
-import { loadSettings } from '../uitls/StreamSetttings';
+import { loadSettings, StreamSettings } from '../uitls/StreamSetttings';
 import { VirtualController,  } from '../virtual_controller/VirtualController';
 import { VirtualControllerConfigurationLoader } from '../virtual_controller/VirtualControllerConfigurationLoader';
 import { VirtualControllerButton } from '../virtual_controller/common';
@@ -14,6 +14,8 @@ struct GamePage {
   @State videoStatus: VideoStatus = null
   xComponentContext: any | undefined = undefined;
   @State virtualController: VirtualController = null
+  settings: StreamSettings = null
+
   dialogController: CustomDialogController =  new CustomDialogController({
     builder: Spinner({ title: $r('app.string.conn_establishing_title'), text: "" }),
     autoCancel: false,
@@ -29,6 +31,7 @@ struct GamePage {
   async onInit(){
     this.dialogController.open()
     const settings = await loadSettings(getContext(this))
+    this.settings = this.settings
     await gameViewModel.init(router.getParams()["computer"], router.getParams()["app"], settings)
     await gameViewModel.start(this.dialogController, getContext(this))
     if (settings.touchscreen_trackpad){
@@ -57,11 +60,11 @@ struct GamePage {
         }).borderWidth(0).height("100%").width('100%')
       if(this.videoStatus){
         Column(){
-          Text(`视频流:  ${this.videoStatus?.totalFps?.toFixed(2) || 0 } FPS`).fontColor(Color.White)
+          Text(`视频流:  ${this.settings.resolution_list} ${this.videoStatus?.totalFps?.toFixed(2) || 0 } FPS`).fontColor(Color.White)
           Text("解码器: ").fontColor(Color.White)
           Text(`网络接收帧数: ${this.videoStatus?.receivedFps?.toFixed(2) || 0 } FPS`) .fontColor(Color.White)
           Text(`渲染帧数: ${this.videoStatus?.renderedFps?.toFixed(2) || 0 } FPS`).fontColor(Color.White)
-          Text(`网络丢失帧:  ${this.videoStatus?.networkDroppedFrames?.toFixed(2) || 0 } %`).fontColor(Color.White)
+          Text(`网络丢失帧:  ${this.videoStatus?.networkDroppedRate?.toFixed(2) || 0 } %`).fontColor(Color.White)
           Text(`平均网络延迟: ${this.videoStatus?.receivedTime?.toFixed(2) || 0 } `).fontColor(Color.White)
           //Text("主机处理延迟: ")
           Text(`平均解码时间:  ${this.videoStatus?.decodeTime?.toFixed(2) || 0 }  ms`).fontColor(Color.White)
