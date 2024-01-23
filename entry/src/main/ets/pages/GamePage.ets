@@ -60,7 +60,7 @@ struct GamePage {
         }).borderWidth(0).height("100%").width('100%')
       if(this.videoStatus){
         Column(){
-          Text(`视频流:  ${this.settings.resolution_list} ${this.videoStatus?.totalFps?.toFixed(2) || 0 } FPS`).fontColor(Color.White)
+          Text(`视频流:  ${this.settings?.resolution_list} ${this.videoStatus?.totalFps?.toFixed(2) || 0 } FPS`).fontColor(Color.White)
           Text("解码器: ").fontColor(Color.White)
           Text(`网络接收帧数: ${this.videoStatus?.receivedFps?.toFixed(2) || 0 } FPS`) .fontColor(Color.White)
           Text(`渲染帧数: ${this.videoStatus?.renderedFps?.toFixed(2) || 0 } FPS`).fontColor(Color.White)
