@@ -180,7 +180,7 @@ export abstract class VirtualControllerElement {
   }
   loadConfiguration(configuration: string){
     const target =  JSON.parse(configuration) as ElementLayoutParam
-    //this.layout = Object.assign(new ElementLayoutParam(0,0,0,0), target)
+    this.layout = Object.assign(new ElementLayoutParam(0,0,0,0), target)
   }
 
   onSizeChanged(canvas: CanvasRenderingContext2D) {
@@ -256,7 +256,7 @@ export struct VirtualControllerButton {
   private settings: RenderingContextSettings = new RenderingContextSettings(true)
   //用来创建CanvasRenderingContext2D对象，通过在canvas中调用CanvasRenderingContext2D对象来绘制。
   private context: CanvasRenderingContext2D = new CanvasRenderingContext2D(this.settings)
-  element: VirtualControllerElement
+  element!: VirtualControllerElement
   @ObjectLink layout: ElementLayoutParam
 
   onLayout() {

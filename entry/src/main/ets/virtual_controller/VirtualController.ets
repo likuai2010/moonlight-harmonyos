@@ -24,7 +24,7 @@ export class ControllerInputContext {
 }
 
 export class VirtualController {
-  controllerHandle: ControllerHandle
+  controllerHandle!: ControllerHandle
   currentMode: ControllerMode = ControllerMode.Active
   inputContext: ControllerInputContext = new ControllerInputContext();
 
@@ -51,11 +51,11 @@ export class VirtualController {
     }
     Prompt.showToast({message})
   }
-  sendControllerInputContext(){
+  sendControllerInputContext(): void{
     //Prompt.showToast({message: JSON.stringify(this.inputContext)})
     const inputContext = this.inputContext
     if(!this.controllerHandle)
-      return null;
+      return;
     this.controllerHandle.reportOscState(inputContext.inputMap,
       inputContext.leftStickX,
       inputContext.leftStickY,
@@ -84,7 +84,7 @@ export function showVirtualController(virtualController: VirtualController, cont
 
 @Component
 export struct VirtualControllerBox{
-  virtualController: VirtualController
+  virtualController!: VirtualController
   @ObjectLink inputContext: ControllerInputContext
   aboutToAppear() {
     const loader = new VirtualControllerConfigurationLoader()

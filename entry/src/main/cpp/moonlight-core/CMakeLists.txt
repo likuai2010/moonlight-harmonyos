@@ -6,7 +6,7 @@ set(OPENSSL_INCLUDE_DIR ${OPENSSL_DIR}/include)
 
 set(CURL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/curl)
 set(CURL_INCLUDE_DIR ${CURL_DIR}/include)
-set(FFmpeg True)
+set(FFmpeg ON)
 
 include_directories(
 ${CMAKE_CURRENT_SOURCE_DIR}
@@ -42,7 +42,7 @@ set_target_properties(libcurl PROPERTIES INTERFACE_INCLUDE_DIRECTORIES ${CURL_IN
 #set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 
 add_subdirectory(opus)
-add_subdirectory(sdl)
+#add_subdirectory(sdl)
 add_subdirectory(moonlight-common-c)
 
 #set(OPENSSL_LIBRARIES libssl libcrypto)
@@ -74,7 +74,6 @@ target_link_libraries(entry PRIVATE
 libssl
 libcrypto
 opus
-sdl3
 moonlight-common-c
 libcurl
 )
@@ -97,8 +96,9 @@ libhilog_ndk.z.so
 libnative_media_codecbase.so
 libnative_media_core.so
 libnative_media_vdec.so
-EGL.so
+libEGL.so
 GLESv3.so
+libOpenSLES.so
 libuv.so
 libz.so
 libc++.a
