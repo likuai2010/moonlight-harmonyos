@@ -9,43 +9,39 @@ let sub_windowClass = null;
 
 export function  showSubWindow() {
   // 1.创建应用子窗口。
-  windowStage_.createSubWindow("mySubWindow", (err, data) => {
-    if (err.code) {
-      return;
-    }
-    sub_windowClass = data;
-    // 2.子窗口创建成功后，设置子窗口的位置、大小及相关属性等。
-    sub_windowClass.moveWindowTo(300, 300);
-    sub_windowClass.resize(500, 500, (err) => {
-      if (err.code) {
-        console.error('Failed to change the window size. Cause:' + JSON.stringify(err));
-        return;
-      }
-      console.info('Succeeded in changing the window size.');
-    });
-
-    // 3.为子窗口加载对应的目标页面。
-    sub_windowClass.setUIContent("pages/Loading", (err) => {
-      if (err.code) {
-        console.error('Failed to load the content. Cause:' + JSON.stringify(err));
-        return;
-      }
-      // 3.显示子窗口。
-      sub_windowClass.showWindow((err) => {
-        if (err.code) {
-          return;
-        }
-      });
-    });
-  })
+  // windowStage_?.createSubWindow("mySubWindow", (err, data) => {
+  //   if (err.code) {
+  //     return;
+  //   }
+  //   sub_windowClass = data;
+  //   // 2.子窗口创建成功后，设置子窗口的位置、大小及相关属性等。
+  //   sub_windowClass.moveWindowTo(300, 300);
+  //   sub_windowClass.resize(500, 500, (err) => {
+  //     if (err.code) {
+  //       console.error('Failed to change the window size. Cause:' + JSON.stringify(err));
+  //       return;
+  //     }
+  //     console.info('Succeeded in changing the window size.');
+  //   });
+  //
+  //   // 3.为子窗口加载对应的目标页面。
+  //   sub_windowClass.setUIContent("pages/Loading", (err) => {
+  //     if (err.code) {
+  //       console.error('Failed to load the content. Cause:' + JSON.stringify(err));
+  //       return;
+  //     }
+  //     // 3.显示子窗口。
+  //     sub_windowClass.showWindow((err) => {
+  //       if (err.code) {
+  //         return;
+  //       }
+  //     });
+  //   });
+  // })
 }
 
 export default class EntryAbility extends UIAbility {
 
-
-  onCreate(want, launchParam) {
-    hilog.info(0x0000, 'testTag', '%{public}s', 'Ability onCreate');
-  }
   onDestroy() {
     hilog.info(0x0000, 'testTag', '%{public}s', 'Ability onDestroy');
   }
@@ -55,7 +51,7 @@ export default class EntryAbility extends UIAbility {
 
     let names = [];
     windowStage.getMainWindowSync().setWindowSystemBarEnable(names)
-    windowStage_ = windowStage;
+    //windowStage_ = windowStage;
     // 开发者可以在适当的时机，如主窗口上按钮点击事件等，创建子窗口。并不一定需要在onWindowStageCreate调用，这里仅作展示
 
     viewModel.initContext(this.context)

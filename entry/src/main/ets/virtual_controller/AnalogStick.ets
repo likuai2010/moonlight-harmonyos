@@ -11,11 +11,11 @@ import {
 } from './common';
 
 
-export function getMovementRadius(x, y): number {
+export function getMovementRadius(x:number, y:number): number {
   return Math.sqrt(x * x + y * y);
 }
 
-export function getAngle(way_x, way_y): number {
+export function getAngle(way_x:number, way_y:number): number {
   // prevent divisions by zero for corner cases
   if (way_x == 0) {
     return way_y < 0 ? Math.PI : 0;
@@ -56,30 +56,30 @@ enum CLICK_STATE {
   SINGLE,
   DOUBLE
 }
-interface AnalogStickListener {
+export interface AnalogStickListener {
   /**
    * onMovement event will be fired on real analog stick movement (outside of the deadzone).
    *
    * @param x horizontal position, value from -1.0 ... 0 .. 1.0
    * @param y vertical position, value from -1.0 ... 0 .. 1.0
    */
-  onMovement(x: number, y: number): void;
+  onMovement: (x: number, y: number)=> void;
 
   /**
    * onClick event will be fired on click on the analog stick
    */
-  onClick(): void;
+  onClick: ()=>void;
 
   /**
    * onDoubleClick event will be fired on a double click in a short time frame on the analog
    * stick.
    */
-  onDoubleClick(): void;
+  onDoubleClick:()=> void;
 
   /**
    * onRevoke event will be fired on unpress of the analog stick.
    */
-  onRevoke(): void;
+  onRevoke:()=> void;
 }
 
 
@@ -151,7 +151,7 @@ export class AnalogStick extends VirtualControllerElement {
       }
     }
   }
-  onElementTouchEvent(event: TouchEvent) {
+  onElementTouchEvent(event: TouchEvent): boolean {
     let lastClickState = this.click_state;
     let x = event.changedTouches[0].x
     let y = event.changedTouches[0].y
@@ -207,6 +207,7 @@ export class AnalogStick extends VirtualControllerElement {
       // not longer pressed reset analog stick
       this.notifyOnMovement(0, 0);
     }
+    return true
   }
 
   updatePosition(eventTime: number) {

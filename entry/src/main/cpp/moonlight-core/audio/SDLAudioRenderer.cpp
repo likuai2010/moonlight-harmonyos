@@ -42,7 +42,7 @@ int SDLAudioRenderer::init(int audio_configuration,
 void SDLAudioRenderer::cleanup() {
     if (decoder != NULL)
         opus_multistream_decoder_destroy(decoder);
-    SDL_QuitSubSystem(SDL_INIT_AUDIO);
+    //SDL_QuitSubSystem(SDL_INIT_AUDIO);
 }
 
 void SDLAudioRenderer::decode_and_play_sample(char *data, int length) {
@@ -60,7 +60,7 @@ void SDLAudioRenderer::decode_and_play_sample(char *data, int length) {
             dataQueue->putPcmData(pdata);
         //SDL_PutAudioStreamData(m_stream, data, length);
     } else {
-        SDL_Log("Opus error from decode: %d\n", length);
+        //SDL_Log("Opus error from decode: %d\n", length);
     }
 }
 int SDLAudioRenderer::capabilities() { return CAPABILITY_DIRECT_SUBMIT; }

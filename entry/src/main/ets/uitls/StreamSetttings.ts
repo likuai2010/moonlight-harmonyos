@@ -23,7 +23,7 @@ export class StreamSettings{
   show_onscreen_controls: boolean = false;
   vibrate_osc: boolean = false;
   only_l3r3: boolean = false;
-  osc_opacity: boolean = false;
+  osc_opacity: number = 0;
   reset_osc: boolean = false;
   enable_sops: boolean = false;
   host_audio: boolean = false;

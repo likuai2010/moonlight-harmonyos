@@ -1,8 +1,9 @@
 
 import router from '@ohos.router'
+
 @Component
 export struct NavTitle {
-  title: string | Resource
+  title!: string | Resource
   build() {
     Stack({alignContent:Alignment.Start}){
       Row(){
@@ -21,7 +22,7 @@ export struct NavTitle {
 
 @Component
 export struct Icon {
-  icon: Resource
+  icon!: Resource
   iconSize: number = 48
   build(){
     Image(this.icon)
@@ -31,7 +32,7 @@ export struct Icon {
 
 @Component
 export struct MainTitle {
-  title: string
+  title!: string
   build() {
     Row(){
       Icon({icon:$r("app.media.settings")}).onClick(()=>{
@@ -45,3 +46,5 @@ export struct MainTitle {
     .height(50)
   }
 }
+
+

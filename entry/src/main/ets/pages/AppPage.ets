@@ -11,31 +11,19 @@ import image from '@ohos.multimedia.image'
 
 @Component
 struct AppView {
-  computer: ComputerDetails
-  app: NvApp
-  @State image: PixelMap = undefined;
-
-  @Builder
-  pcMenu() {
-    Menu() {
-      MenuItem({ content: $r("app.string.applist_menu_resume") })
-      MenuItem({ content: $r("app.string.applist_menu_quit")  })
-      MenuItem({ content: $r("app.string.applist_menu_quit_and_start") })
-    }
-  }
-
+  computer!: ComputerDetails
+  app!: NvApp
+  @State image: PixelMap| undefined = undefined;
   aboutToAppear(){
-    viewModel.readImageByDisk(this.app).then((res)=>{
-      let options = {
-        alphaType: 0,                     // 透明度
+    viewModel.readImageByDisk(this.app).then((res: Uint8Array | null)=>{
+      let imageSource = image.createImageSource(res);
+      let options :image.DecodingOptions = {
         editable: false,                  // 是否可编辑
-        pixelFormat: 3,                   // 像素格式
-        scaleMode: 1,                     // 缩略值
-        size: { height: 100, width: 100}
+        desiredPixelFormat: 3,                   // 像素格式
+        desiredSize: { height: 100, width: 100}
       }
-      let imageSource = image.createImageSource(res.buffer);
       if(imageSource)
-        imageSource.createPixelMap(options).then((pixelMap) => {
+        imageSource.createPixelMap(options).then((pixelMap:PixelMap) => {
           this.image = pixelMap
         })
     })
@@ -66,11 +54,11 @@ struct AppView {
 @Entry
 @Component
 struct AppPage {
-  computer: ComputerDetails
-  @State appList: NvApp[] = []
+  computer!: ComputerDetails
+  @State appList: Array<NvApp> = []
   aboutToAppear(){
-    const params = router.getParams();
-    viewModel.getComputerByUUid(params["uuid"]).then((d)=>{
+    const params = router.getParams() as Record<string, string> ;
+    viewModel.getComputerByUUid(params["uuid"] as string).then((d: ComputerDetails)=>{
       this.computer = d
       const appList = d.appList
       this.appList = appList.filter((d) => d.appId != null);
@@ -78,13 +66,13 @@ struct AppPage {
   }
   build(){
     Column(){
-      NavTitle({ title: router.getParams()["computerName"] }).width("100%")
+      NavTitle({ title: (router.getParams() as Record<string, string>)["computerName"] as string }).width("100%")
       Grid() {
         ForEach(this.appList, (d:NvApp)=>{
           GridItem(){
             AppView({app: d, computer: this.computer})
           }
-        },(item) => JSON.stringify(item))
+        },(item: NvApp) => JSON.stringify(item))
       }
       .rowsTemplate('1fr 1fr 1fr')
       .columnsTemplate('1fr 1fr 1fr')

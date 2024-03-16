@@ -3,15 +3,17 @@ import dataPreferences from '@ohos.data.preferences';
 import { getResString } from '../uitls/ResString';
 import { StreamSettings, loadSettings } from '../uitls/StreamSetttings';
 import router from '@ohos.router';
+import { ValueType } from '@kit.ArkData';
+
 @Entry
 @Component
 struct SettingsPage {
   scroller: Scroller = new Scroller();
-  preferences: dataPreferences.Preferences = null
-  @Provide settings: StreamSettings = null
-  onUpdateValue = (key: string, value: any)=>{
-    this.preferences.put(key, value)
-    this.preferences.flush()
+  preferences?: dataPreferences.Preferences
+  @Provide settings: StreamSettings | null = null
+  onUpdateValue = (key: string, value: ValueType)=>{
+    this.preferences?.put(key, value )
+    this.preferences?.flush()
   }
   aboutToAppear(){
     this.loadPreferences(getContext(this))
@@ -65,7 +67,7 @@ struct SettingsPage {
             CheckBoxPreference({
               pKey: "stretch_video",
               title: $r("app.string.title_checkbox_stretch_video"),
-              summary: null,
+              summary: undefined,
               value: false,
               onChange: this.onUpdateValue
             })
@@ -242,7 +244,7 @@ struct SettingsPage {
           }.alignItems(HorizontalAlign.Start)
 
           Column({ space: 10 }) {
-            Text($r("app.string.category_ui_settings"))
+            //Text($r("app.string.category_ui_settings"))
             // CheckBoxPreference({
             //   pKey: "enable_pip",
             //   title: $r("app.string.title_checkbox_enable_pip"),
@@ -298,20 +300,20 @@ struct SettingsPage {
               value: "h264",
               onChange: this.onUpdateValue
             })
-            CheckBoxPreference({
-              pKey: "enable_hdr",
-              title: $r("app.string.title_enable_hdr"),
-              summary: $r("app.string.summary_enable_hdr"),
-              value: false,
-              onChange: this.onUpdateValue
-            })
-            CheckBoxPreference({
-              pKey: "full_range",
-              title: $r("app.string.title_full_range"),
-              summary: $r("app.string.summary_full_range"),
-              value: false,
-              onChange: this.onUpdateValue
-            })
+            // CheckBoxPreference({
+            //   pKey: "enable_hdr",
+            //   title: $r("app.string.title_enable_hdr"),
+            //   summary: $r("app.string.summary_enable_hdr"),
+            //   value: false,
+            //   onChange: this.onUpdateValue
+            // })
+            // CheckBoxPreference({
+            //   pKey: "full_range",
+            //   title: $r("app.string.title_full_range"),
+            //   summary: $r("app.string.summary_full_range"),
+            //   value: false,
+            //   onChange: this.onUpdateValue
+            // })
             CheckBoxPreference({
               pKey: "enable_perf_overlay",
               title: $r("app.string.title_enable_perf_overlay"),
@@ -336,14 +338,14 @@ struct SettingsPage {
 
 
 @Builder
-function BaseReference(hasCheck: Boolean = false, onClick: () => void) {
+function BaseReference(title: Resource | undefined, summary: Resource | undefined, hasCheck: boolean| undefined = false, onClick: () => void) {
   Row() {
     Column({ space: 2 }) {
-      Text(this.title).fontSize(20).fontColor(0xFFFFFF)
-      Text(this.summary).fontSize(16).fontColor(0xC3C3C3)
+      Text(title).fontSize(20).fontColor(0xFFFFFF)
+      Text(summary).fontSize(16).fontColor(0xC3C3C3)
     }.layoutWeight(1).alignItems(HorizontalAlign.Start)
     if (hasCheck) {
-      Toggle({ type: ToggleType.Checkbox, isOn: this.value == true })
+      Toggle({ type: ToggleType.Checkbox, isOn: hasCheck == true })
     }
   }.padding({ right: 20}).width('100%').onClick(onClick)
 }
@@ -352,10 +354,10 @@ function BaseReference(hasCheck: Boolean = false, onClick: () => void) {
 @CustomDialog
 struct SeekBarDialog{
   @Link inputValue : number
-  title: string| Resource = ""
-  summary: Resource
+  title: string | Resource = ""
+  summary?: Resource
   dialogController: CustomDialogController
-  onConfirm: () => void
+  onConfirm!: () => void
   build(){
     Column() {
       Text(this.title)
@@ -388,12 +390,11 @@ struct SeekBarDialog{
 struct SeekBarPreference {
   @Consume  @Watch('onSettingsUpdated')
   settings: StreamSettings
-
-  pKey: string
-  title: Resource = null
-  summary: Resource = null
+  pKey!: string
+  title: Resource | undefined = undefined
+  summary: Resource | undefined = undefined
   @State value: string = ""
-  onChange: (key, value) => void
+  onChange!: (key:string, value: string) => void
   aboutToAppear() {
   }
   onSettingsUpdated(){
@@ -415,7 +416,7 @@ struct SeekBarPreference {
     customStyle: false
   })
   build() {
-    BaseReference(false, () => {
+    BaseReference(this.title, this.summary , undefined, () => {
       this.dialogController.open()
       this.onChange(this.pKey, this.value)
     })
@@ -427,14 +428,14 @@ struct SeekBarPreference {
 struct ListPreference {
   @Consume  @Watch('onSettingsUpdated')
   settings: StreamSettings
-  pKey: string
-  title: Resource
-  summary: Resource
+  pKey!: string
+  title: Resource | undefined
+  summary: Resource  | undefined
   @State value: string = ""
-  onChange: (key, value) => void
+  onChange!: (key:string, value:ValueType) => void
   private select: number = 0
   entries: string[] = []
-  names: Resource[]
+  names!: Resource[]
   private labels: string[] = []
 
   aboutToAppear() {
@@ -455,13 +456,13 @@ struct ListPreference {
     }
   }
   build() {
-    BaseReference(false, () => {
+    BaseReference(this.title, this.summary, undefined, () => {
       TextPickerDialog.show({
         range: this.labels,
         selected: this.select,
         onAccept: (value: TextPickerResult) => {
-          this.select = value.index
-          this.value = this.entries[value.index]
+          this.select = value.index as number
+          this.value = this.entries[value.index as number]
           this.onChange(this.pKey, this.value)
         },
       })
@@ -473,11 +474,11 @@ struct ListPreference {
 struct CheckBoxPreference {
   @Consume  @Watch('onSettingsUpdated')
   settings: StreamSettings
-  pKey: string
-  title: Resource
-  summary: Resource
+  pKey!: string
+  title: Resource | undefined
+  summary: Resource | undefined
   @State value: boolean = false
-  onChange: (key, value) => void
+  onChange!: (key:string, value:boolean) => void
   onSettingsUpdated(){
     if(this.settings[this.pKey] != null){
       this.value = this.settings[this.pKey]
@@ -485,7 +486,7 @@ struct CheckBoxPreference {
   }
 
   build() {
-    BaseReference(true, () => {
+    BaseReference(this.title, this.summary, this.value, () => {
       this.value = !this.value
       this.onChange(this.pKey, this.value)
     })

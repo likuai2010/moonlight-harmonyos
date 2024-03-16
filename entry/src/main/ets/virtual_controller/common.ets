@@ -31,11 +31,11 @@ export function drawLine(context: CanvasRenderingContext2D, left: number, top: n
 }
 
 
-export function getWidth(context): number {
+export function getWidth(context: CanvasRenderingContext2D): number {
   return context.width
 }
 
-export function getHeight(context): number {
+export function getHeight(context: CanvasRenderingContext2D): number {
   return context.height
 }
 
@@ -96,18 +96,18 @@ export abstract class VirtualControllerElement {
 
   elementId: number
   virtualController: VirtualController
-  context: CanvasRenderingContext2D
+  context!: CanvasRenderingContext2D
   normalColor = "#F0888888";
   pressedColor = "#F00000FF";
   private configMoveColor = "#0xF0FF0000";
   private configResizeColor = "#0xF0FF00FF";
   private configSelectedColor = "#0xF000FF00";
-  protected startSize_x: number;
-  protected startSize_y: number;
+  protected startSize_x!: number;
+  protected startSize_y!: number;
   position_pressed_x: number = 0;
   position_pressed_y: number = 0;
   private currentMode = Mode.Normal;
-  layout: ElementLayoutParam
+  layout!: ElementLayoutParam
 
   constructor(controller: VirtualController, elementId: number) {
     this.virtualController = controller;
@@ -130,14 +130,14 @@ export abstract class VirtualControllerElement {
     return 2
   }
 
-  resizeElement: (pressed_x, pressed_y, width, height) => void = (pressed_x, pressed_y, width, height) => {
+  resizeElement = (pressed_x:number, pressed_y:number, width:number, height:number) => {
     const layoutParams = this.layout
     let newHeight = height + (this.startSize_y - pressed_y);
     let newWidth = width + (this.startSize_x - pressed_x);
     layoutParams.height = newHeight > 20 ? newHeight : 20;
     layoutParams.width = newWidth > 20 ? newWidth : 20;
   }
-  moveElement: (pressed_x, pressed_y, x, y) => void = (pressed_x, pressed_y, x, y) => {
+  moveElement = (pressed_x:number, pressed_y:number, x:number, y:number) => {
     const layoutParams = this.layout
     const dx = x - pressed_x;
     const dy = y - pressed_y;
@@ -179,17 +179,18 @@ export abstract class VirtualControllerElement {
     return JSON.stringify(this.layout)
   }
   loadConfiguration(configuration: string){
-    Object.assign(this.layout, JSON.parse(configuration))
+    const target =  JSON.parse(configuration) as ElementLayoutParam
+    //Object.assign(this.layout, target)
   }
 
   onSizeChanged(canvas: CanvasRenderingContext2D) {
   }
   touchId: number = -1
-  onTouchEvent(event: TouchEvent) {
+  onTouchEvent(event: TouchEvent):boolean | undefined {
     if (this.virtualController.currentMode == ControllerMode.Active) {
       return this.onElementTouchEvent(event);
     }
-    let touch = null
+    let touch: TouchObject | undefined
     if(this.touchId > -1){
       touch = event.changedTouches.find((t)=>t.id == this.touchId)
       if (touch == null)
@@ -201,8 +202,8 @@ export abstract class VirtualControllerElement {
           touch = event.changedTouches[0]
           this.touchId = touch.id
         }
-        this.position_pressed_x = touch.x;
-        this.position_pressed_y = touch.y;
+        this.position_pressed_x = touch?.x ?? 0;
+        this.position_pressed_y = touch?.y ?? 0;
         this.startSize_x = this.getWidth();
         this.startSize_y = this.getHeight();
         if (this.virtualController.currentMode == ControllerMode.MoveButtons)
@@ -217,16 +218,16 @@ export abstract class VirtualControllerElement {
             this.moveElement(
               this.position_pressed_x,
               this.position_pressed_y,
-              touch.x,
-              touch.y);
+              touch?.x ?? 0,
+              touch?.y ?? 0);
             break;
           }
           case Mode.Resize: {
             this.resizeElement(
               this.position_pressed_x,
               this.position_pressed_y,
-              touch.x,
-              touch.y);
+              touch?.x ?? 0,
+              touch?.y ?? 0);
             break;
           }
           case Mode.Normal: {
@@ -256,7 +257,7 @@ export struct VirtualControllerButton {
   private settings: RenderingContextSettings = new RenderingContextSettings(true)
   //用来创建CanvasRenderingContext2D对象，通过在canvas中调用CanvasRenderingContext2D对象来绘制。
   private context: CanvasRenderingContext2D = new CanvasRenderingContext2D(this.settings)
-  element: VirtualControllerElement
+  element!: VirtualControllerElement
   @ObjectLink layout: ElementLayoutParam
 
   onLayout() {
@@ -279,3 +280,4 @@ export struct VirtualControllerButton {
       })
   }
 }
+

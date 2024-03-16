@@ -23,7 +23,7 @@ export class ResultInfo{
 
 
 class ComputerManagerViewModel {
-  private context: common.UIAbilityContext
+  private context!: common.UIAbilityContext
   initContext(context: common.UIAbilityContext){
     this.context = context
     dbManger.init(this.context)
@@ -31,7 +31,7 @@ class ComputerManagerViewModel {
   async getComputerList(): Promise<ComputerDetails[]> {
     return await dbManger.getAllComputers()
   }
-  async getComputerByUUid(uuid): Promise<ComputerDetails>{
+  async getComputerByUUid(uuid: string): Promise<ComputerDetails>{
     const detail = await dbManger.getComputerByUUID(uuid)
     try {
       await this.runPoll(detail, false);
@@ -52,9 +52,8 @@ class ComputerManagerViewModel {
      }
   }
 
-  onDetailsLinster: (news: ComputerDetails) => void
-
-  onDetailsUpdate(callBack: (ComputerDetails) => void) {
+  onDetailsLinster!: (news: ComputerDetails) => void
+  onDetailsUpdate(callBack: (ComputerDetails:ComputerDetails) => void) {
     this.onDetailsLinster = callBack
   }
 
@@ -73,7 +72,7 @@ class ComputerManagerViewModel {
     return false
   }
 
-  async runPoll(details: ComputerDetails, newPc: boolean) {
+  async runPoll(details: ComputerDetails, newPc: boolean): Promise<boolean> {
     if (details.state != ComputerState.ONLINE) {
       // PC未在线, 获取PC状态
       const d = await this.pollComputer(details)
@@ -106,6 +105,7 @@ class ComputerManagerViewModel {
         await dbManger.addOrUpdateComputer(details)
       }
     }
+    return true
   }
 
 
@@ -125,14 +125,14 @@ class ComputerManagerViewModel {
       }
     }
   }
-  async readImageByDisk(app: NvApp): Promise<Uint8Array>{
+  async readImageByDisk(app: NvApp): Promise<Uint8Array | null>{
     if (this.context){
       return readFile(this.context.filesDir + "/" + app.appId + ".png")
     }
     return null;
   }
 
-  async tryPollIp(details: ComputerDetails, address: AddressTuple): Promise<ComputerDetails> {
+  async tryPollIp(details: ComputerDetails, address: AddressTuple): Promise<ComputerDetails | null> {
     // If the current address's port number matches the active address's port number, we can also assume
     // the HTTPS port will also match. This assumption is currently safe because Sunshine sets all ports
     // as offsets from the base HTTP port and doesn't allow custom HttpsPort responses for WAN vs LAN.
@@ -165,7 +165,7 @@ class ComputerManagerViewModel {
     return null;
   }
 
-  async pollComputer(detail: ComputerDetails): Promise<ComputerDetails> {
+  async pollComputer(detail: ComputerDetails): Promise<ComputerDetails | null> {
     if (detail.manualAddress) {
       const info = await this.tryPollIp(detail, detail.manualAddress)
       if (info) {
@@ -201,7 +201,7 @@ class ComputerManagerViewModel {
     const url = this.parseRawUserInputToUri(ip);
     let wrongSiteLocal = false;
     let invalidInput = false;
-    let success;
+    let success: boolean;
     if (url) {
       const host = url.host;
       let port = parseInt(url.port);
@@ -211,7 +211,7 @@ class ComputerManagerViewModel {
       }
       details.manualAddress = new AddressTuple(host, port);
       success = await this.addComputerBlocking(details);
-      if (success && this.onDetailsUpdate) {
+      if (success && this.onDetailsLinster) {
         this.onDetailsLinster(details)
       }
     } else {
@@ -219,7 +219,7 @@ class ComputerManagerViewModel {
       invalidInput = true;
     }
 
-    let portTestResult
+    let portTestResult: number = 0
     // Keep the SpinnerDialog open while testing connectivity
     if (!success && !wrongSiteLocal && !invalidInput) {
       // Run the test before dismissing the spinner because it can take a few seconds.
@@ -246,7 +246,7 @@ class ComputerManagerViewModel {
     return new ResultInfo(success, title, message)
   }
 
-  parseRawUserInputToUri(rawUserInput) {
+  parseRawUserInputToUri(rawUserInput: string) {
     try {
       const url = new uri.URI("moonlight://" + rawUserInput);
       if (url.host && url.host != '')

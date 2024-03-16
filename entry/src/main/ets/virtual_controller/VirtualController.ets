@@ -8,6 +8,7 @@ import { DigitalPad } from './DigitalPad';
 import { createLeftStick, VirtualControllerConfigurationLoader } from './VirtualControllerConfigurationLoader';
 import Prompt from '@system.prompt';
 import { ControllerHandle } from './ControllerHandle';
+import { ArrayList } from '@kit.ArkTS';
 
 export enum ControllerMode {
   Active,
@@ -26,11 +27,11 @@ export class ControllerInputContext {
 }
 
 export class VirtualController {
-  controllerHandle: ControllerHandle
+  controllerHandle!: ControllerHandle
   currentMode: ControllerMode = ControllerMode.Active
   inputContext: ControllerInputContext = new ControllerInputContext();
 
-  elements: List<VirtualControllerElement> = new List()
+  elements: ArrayList<VirtualControllerElement> = new ArrayList()
 
   constructor() {
   }
@@ -53,11 +54,11 @@ export class VirtualController {
     }
     Prompt.showToast({message})
   }
-  sendControllerInputContext(){
+  sendControllerInputContext(): void{
     //Prompt.showToast({message: JSON.stringify(this.inputContext)})
     const inputContext = this.inputContext
     if(!this.controllerHandle)
-      return null;
+      return;
     this.controllerHandle.reportOscState(inputContext.inputMap,
       inputContext.leftStickX,
       inputContext.leftStickY,
@@ -74,20 +75,20 @@ export class VirtualController {
 
 
 @Builder
-export function ShowVirtualController(){
-  ForEach(this.virtualController.elements.convertToArray(), (d: VirtualControllerElement) => {
+export function ShowVirtualController(virtualController: VirtualController, context: Context){
+  ForEach(virtualController.elements.convertToArray(), (d: VirtualControllerElement) => {
     VirtualControllerButton({ element: d, layout: d.layout })
   }, (d:VirtualControllerElement) =>d.elementId.toString())
   Button(){
     Text("setting")
   }.offset({y: 80}).onClick(()=>{
-    this.virtualController.onSettingsClick(getContext(this))
+    virtualController.onSettingsClick(context)
   })
 }
 
 @Component
 export struct VirtualControllerBox{
-  virtualController: VirtualController
+  virtualController!: VirtualController
   @ObjectLink inputContext: ControllerInputContext
   aboutToAppear() {
     const loader = new VirtualControllerConfigurationLoader()
@@ -96,7 +97,7 @@ export struct VirtualControllerBox{
   }
   build() {
     Stack({ alignContent: Alignment.TopStart }) {
-      ShowVirtualController()
+      ShowVirtualController(this.virtualController, getContext(this))
       Text(JSON.stringify(this.inputContext)).alignSelf(ItemAlign.Center).offset({x: 50,y:0})
     }.height('100%')
     .width('100%')
