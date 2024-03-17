@@ -98,16 +98,9 @@ int NativeVideoDecoder::setup(DECODER_PARAMETERS params) {
     // 配置送显窗口参数
     // 从 XComponent 获取 window
     if (params.context != nullptr) {
-        OHNativeWindow *window = static_cast<OHNativeWindow *>(params.context);
-        //设置显示窗口
-        OH_VideoDecoder_SetSurface(m_decoder, window);
-//         OH_AVFormat *format = OH_AVFormat_Create();
-//         // 配置显示旋转角度
-//         OH_AVFormat_SetIntValue(format, OH_MD_KEY_ROTATION, 90);
-//         // 配置视频与显示屏匹配模式(缩放与显示窗口适配, 裁剪与显示窗口适配)
-//         OH_AVFormat_SetIntValue(format, OH_MD_KEY_SCALING_MODE, SCALING_MODE_SCALE_CROP);
-//         int32_t ret = OH_VideoDecoder_SetParameter(m_decoder, format);
-//         OH_AVFormat_Destroy(format);
+        //OHNativeWindow *window = static_cast<OHNativeWindow *>(params.context);
+        // 设置显示窗口
+        //OH_VideoDecoder_SetSurface(m_decoder, window);
     } else {
         decodeLog(" Couldn't find set surface");
     }
@@ -305,7 +298,7 @@ int NativeVideoDecoder::submitDecodeUnit(PDECODE_UNIT du) {
             decodeLog("FFmpeg: Big buffer to decode...");
         }
 
-        DataPacket pkt = DataPacket{
+        DataPacket pkt =  DataPacket{
         };
         pkt.data = (uint8_t *)m_ffmpeg_buffer;
         pkt.size = length;
@@ -314,7 +307,7 @@ int NativeVideoDecoder::submitDecodeUnit(PDECODE_UNIT du) {
         } else {
             pkt.flags = 0;
         }
-        m_signal->dataPacketQueue_.push(pkt);
+        m_signal->dataPacketQueue_.push(&pkt);
         m_frames_out++;
         m_video_decode_stats.totalDecodeTime +=
             LiGetMillis() - before_decode;
