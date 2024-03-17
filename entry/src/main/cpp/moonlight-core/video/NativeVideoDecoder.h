@@ -7,12 +7,10 @@
 #ifndef moonlight_NativeVideoDecoder_H
 #define moonlight_NativeVideoDecoder_H
 #include "decode.h"
-
 #include <queue>
 #include <string>
 #include <thread>
 #include <atomic>
-
 #include <multimedia/player_framework/native_avcodec_videodecoder.h>
 #include <multimedia/player_framework/native_avcodec_base.h>
 #include <multimedia/player_framework/native_avformat.h>
@@ -48,7 +46,7 @@ public:
 
 
 
-class NativeVideoDecoder : IVideoDecoder {
+class NativeVideoDecoder : public IVideoDecoder {
   public:
     explicit NativeVideoDecoder();
     ~NativeVideoDecoder();
@@ -58,8 +56,10 @@ class NativeVideoDecoder : IVideoDecoder {
     void cleanup() override;
     int submitDecodeUnit(PDECODE_UNIT decode_unit) override;
     VIDEO_STATS *video_decode_stats() override;
+    static bool supportedHW();
+    DECODER_PARAMETERS *getParams() override;
 
-  private:
+private:
     void inputFunc();
     void outputFunc();
     int ExtractPacket();

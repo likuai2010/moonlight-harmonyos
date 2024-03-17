@@ -4,7 +4,7 @@
 // Node APIs are not fully supported. To solve the compilation error of the interface cannot be found,
 // please include "napi/native_api.h".
 
-
+#pragma once
 #include <Limelight.h>
 
 #define SDL_CODE_FRAME_READY 0
@@ -53,7 +53,8 @@ public:
     virtual void start(){};
     virtual void stop(){};
     virtual void cleanup() = 0;
-  
+   
+
     virtual int submitDecodeUnit(PDECODE_UNIT du) = 0;
     virtual VIDEO_STATS* video_decode_stats() = 0;
     virtual DECODER_PARAMETERS* getParams() = 0;

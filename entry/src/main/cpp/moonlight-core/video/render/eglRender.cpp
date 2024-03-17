@@ -142,11 +142,11 @@ bool EglVideoRenderer::initialize(DECODER_PARAMETERS *params) {
        EGL_NONE};
     const EGLint maxConfigSize = 1;
     if (!eglChooseConfig(m_eglDisplay, configSpec, &eglConfig, maxConfigSize, &numConfigs)) {
-        OH_LOG_Print(LOG_APP, LOG_ERROR, LOG_PRINT_DOMAIN, "EGLCore", "eglChooseConfig: unable to choose configs");
+        eglLog(LOG_ERROR, "eglChooseConfig: unable to choose configs");
         return false;
     }
 //     if (EGL_TRUE != eglChooseConfig(m_eglDisplay, configSpec, &eglConfig, 1, &configNum)) {
-//         eglLog(LOG_ERROR, "eglChooseConfig failed");
+//         eglLog(LOG_ERROR, "eglChooseConfig: unable to choose configs");
 //         return false;
 //     }
     m_eglSurface = eglCreateWindowSurface(m_eglDisplay, eglConfig, m_eglWindow, nullptr);
