@@ -2,7 +2,7 @@ import { AnalogStick, } from './AnalogStick';
 import { DigitalButton } from './DigitalButton';
 import mediaquery from '@ohos.mediaquery';
 
-import { ElementLayoutParam, VirtualControllerButton, VirtualControllerElement } from './common';
+import { ElementLayoutParam, VirtualControllerElement } from './common';
 import List from '@ohos.util.List';
 import { DigitalPad } from './DigitalPad';
 import { createLeftStick, VirtualControllerConfigurationLoader } from './VirtualControllerConfigurationLoader';
@@ -76,6 +76,9 @@ export class VirtualController {
 
 @Builder
 export function ShowVirtualController(virtualController: VirtualController, context: Context){
+/*  ForEach(virtualController.elements.convertToArray(), (d: VirtualControllerElement) => {
+    VirtualControllerButton({ element: d, layout: d.layout })
+  }, (d:VirtualControllerElement) =>d.elementId.toString())*/
   ForEach(virtualController.elements.convertToArray(), (d: VirtualControllerElement) => {
     VirtualControllerButton({ element: d, layout: d.layout })
   }, (d:VirtualControllerElement) =>d.elementId.toString())
@@ -84,6 +87,34 @@ export function ShowVirtualController(virtualController: VirtualController, cont
   }.offset({y: 80}).onClick(()=>{
     virtualController.onSettingsClick(context)
   })
+}
+
+
+@Component
+export struct VirtualControllerButton {
+
+  //用来配置CanvasRenderingContext2D对象的参数，包括是否开启抗锯齿，true表明开启抗锯齿。
+  private settings: RenderingContextSettings = new RenderingContextSettings(true)
+  //用来创建CanvasRenderingContext2D对象，通过在canvas中调用CanvasRenderingContext2D对象来绘制。
+  private context: CanvasRenderingContext2D = new CanvasRenderingContext2D(this.settings)
+  element?: VirtualControllerElement
+  layout?: ElementLayoutParam
+
+  build() {
+    Canvas(this.context)
+      .height(this.layout?.height)
+      .width(this.layout?.width)
+      .translate({ x: this.layout?.x, y: this.layout?.y })
+      .opacity(1)
+      .onReady(() => {
+        this.element?.onDraw(this.context)
+      })
+      .onTouch((e) => {
+        // 单点
+        this.element?.onTouchEvent(e)
+        this.element?.onDraw(this.context)
+      })
+  }
 }
 
 @Component

@@ -241,7 +241,7 @@ export class VirtualControllerConfigurationLoader {
     // NOTE: Some of these getPercent() expressions seem like they can be combined
     // into a single call. Due to floating point rounding, this isn't actually possible.
 
-    if (!config?.only_l3r3) {
+    if (true) {
       controller.addElement(createDigitalPad(controller),
         screenScale(DPAD_BASE_X, height),
         screenScale(DPAD_BASE_Y, height),

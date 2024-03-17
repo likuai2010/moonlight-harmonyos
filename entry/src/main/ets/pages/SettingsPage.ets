@@ -338,13 +338,13 @@ struct SettingsPage {
 
 
 @Builder
-function BaseReference(title: Resource | undefined, summary: Resource | undefined, hasCheck: boolean| undefined = false, onClick: () => void) {
+function BaseReference(title: Resource | undefined, summary: Resource | undefined, hasCheck: boolean | undefined = false, onClick: () => void) {
   Row() {
     Column({ space: 2 }) {
       Text(title).fontSize(20).fontColor(0xFFFFFF)
       Text(summary).fontSize(16).fontColor(0xC3C3C3)
     }.layoutWeight(1).alignItems(HorizontalAlign.Start)
-    if (hasCheck) {
+    if (hasCheck != undefined) {
       Toggle({ type: ToggleType.Checkbox, isOn: hasCheck == true })
     }
   }.padding({ right: 20}).width('100%').onClick(onClick)

@@ -6,7 +6,7 @@ import { loadSettings, StreamSettings } from '../uitls/StreamSetttings';
 import { VirtualController  } from '../virtual_controller/VirtualController';
 import {  VirtualControllerElement } from '../virtual_controller/common';
 import { VirtualControllerConfigurationLoader } from '../virtual_controller/VirtualControllerConfigurationLoader';
-import { VirtualControllerButton } from '../virtual_controller/common';
+import { VirtualControllerButton } from '../virtual_controller/VirtualController';
 import { Icon } from './compoments/Title';
 import { ComputerDetails } from '../entryability/computers/ComputerDetails';
 import { NvApp } from '../entryability/http/NvApp';
@@ -75,7 +75,7 @@ struct GamePage {
       }
      if (this.virtualController != null){
        ForEach(this.virtualController?.elements.convertToArray(), (d: VirtualControllerElement) => {
-         VirtualControllerButton({ element: d, layout: d.layout })
+         VirtualControllerButton({ element: d, layout: d.layout })//
        }, (d: VirtualControllerElement) => d.elementId.toString())
        Button(){
          Icon({icon:$r("app.media.settings")})

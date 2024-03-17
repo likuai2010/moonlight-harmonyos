@@ -5,19 +5,16 @@
 // please include "napi/native_api.h".
 
 #include "NativeVideoDecoder.h"
+#include <bits/alltypes.h>
+#include <multimedia/player_framework/native_averrors.h>
 #include <stdarg.h>
 #include <hilog/log.h>
 #include <multimedia/player_framework/native_avcodec_videodecoder.h>
 #include <unistd.h>
 
 #define DECODER_BUFFER_SIZE 92 * 1024 * 2
+#define decodeLog(...) OH_LOG_Print(LOG_APP, LOG_INFO, LOG_DOMAIN, "NativeVideoDecoder",  __VA_ARGS__)
 
-void decodeLog(const char *format, ...) {
-    va_list va;
-    va_start(va, format);
-    OH_LOG_Print(LOG_APP, LOG_INFO, LOG_DOMAIN, "NativeVideoDecoder", format, va);
-    va_end(va);
-}
 bool NativeVideoDecoder::supportedHW(){
    return OH_VideoDecoder_CreateByMime(OH_AVCODEC_MIMETYPE_VIDEO_AVC) != NULL;
 }
@@ -79,7 +76,7 @@ int NativeVideoDecoder::setup(DECODER_PARAMETERS params) {
         break;
     case VIDEO_FORMAT_H265:
         decodeLog(" find decoder HEVC");
-        m_decoder = OH_VideoDecoder_CreateByMime(OH_AVCODEC_MIMETYPE_VIDEO_AVC);
+        m_decoder = OH_VideoDecoder_CreateByMime(OH_AVCODEC_MIMETYPE_VIDEO_HEVC);
         break;
     }
     if (m_decoder == NULL) {
@@ -93,7 +90,7 @@ int NativeVideoDecoder::setup(DECODER_PARAMETERS params) {
     OH_AVFormat_SetIntValue(format, OH_MD_KEY_HEIGHT, params.height);
     OH_AVFormat_SetIntValue(format, OH_MD_KEY_PIXEL_FORMAT, AV_PIXEL_FORMAT_NV21);
     // 配置解码器
-    int err = OH_VideoDecoder_Configure(m_decoder, format);
+    int ret = OH_VideoDecoder_Configure(m_decoder, format);
     OH_AVFormat_Destroy(format);
     OH_AVCodecAsyncCallback callback = {&OnError, &OnOutputFormatChanged, &OnInputBufferAvailable, &OnOutputBufferAvailable};
     OH_VideoDecoder_SetCallback(m_decoder, callback, m_signal);
@@ -101,9 +98,16 @@ int NativeVideoDecoder::setup(DECODER_PARAMETERS params) {
     // 配置送显窗口参数
     // 从 XComponent 获取 window
     if (params.context != nullptr) {
-        //OHNativeWindow *window = static_cast<OHNativeWindow *>(params.context);
-        // 设置显示窗口
-        //OH_VideoDecoder_SetSurface(m_decoder, window);
+        OHNativeWindow *window = static_cast<OHNativeWindow *>(params.context);
+        //设置显示窗口
+        OH_VideoDecoder_SetSurface(m_decoder, window);
+//         OH_AVFormat *format = OH_AVFormat_Create();
+//         // 配置显示旋转角度
+//         OH_AVFormat_SetIntValue(format, OH_MD_KEY_ROTATION, 90);
+//         // 配置视频与显示屏匹配模式(缩放与显示窗口适配, 裁剪与显示窗口适配)
+//         OH_AVFormat_SetIntValue(format, OH_MD_KEY_SCALING_MODE, SCALING_MODE_SCALE_CROP);
+//         int32_t ret = OH_VideoDecoder_SetParameter(m_decoder, format);
+//         OH_AVFormat_Destroy(format);
     } else {
         decodeLog(" Couldn't find set surface");
     }
@@ -151,7 +155,7 @@ void NativeVideoDecoder::cleanup() {
     OH_VideoDecoder_Destroy(m_decoder);
 }
 VIDEO_STATS *NativeVideoDecoder::video_decode_stats() {
-    return nullptr;
+    return &m_video_decode_stats;
 }
 
 int NativeVideoDecoder::ExtractPacket() {
@@ -174,7 +178,8 @@ void NativeVideoDecoder::inputFunc() {
         if (!m_is_running.load()) {
             break;
         }
-
+        if (m_signal->inBufferQueue_.empty())
+            continue;
         uint32_t index = m_signal->inQueue_.front();
         auto buffer = m_signal->inBufferQueue_.front();
         lock.unlock();
@@ -182,18 +187,25 @@ void NativeVideoDecoder::inputFunc() {
             continue;
         }
         OH_AVCodecBufferAttr info;
-        info.size = m_pkt->size;
+        info.size = m_pkt.size;
         info.offset = 0;
-        info.pts = m_pkt->pts;
+        info.pts = m_pkt.pts;
 
         if (buffer == nullptr) {
             decodeLog("Fatal: GetInputBuffer fail");
         }
-        memcpy(OH_AVMemory_GetAddr(buffer), m_pkt->data, m_pkt->size);
-
+        uint8_t* dd = OH_AVMemory_GetAddr(buffer);
+        int size = OH_AVMemory_GetSize(buffer);
+        if (size >= m_pkt.size) { 
+            memcpy(dd, m_pkt.data, m_pkt.size);
+        }
+        else{
+            decodeLog("Fatal: big data %{public}d >= %{public}d", size, m_pkt.size);
+        }
+        
         int32_t ret = 0;
         if (m_isFirst_frame) {
-            info.flags = AVCODEC_BUFFER_FLAGS_SYNC_FRAME;
+            info.flags = AVCODEC_BUFFER_FLAGS_NONE;
             ret = OH_VideoDecoder_PushInputData(m_decoder, index, info);
             m_isFirst_frame = false;
         } else {
@@ -207,7 +219,6 @@ void NativeVideoDecoder::inputFunc() {
         }
 
         // timeStamp_ += FRAME_DURATION_US;
-        lock.lock();
         m_signal->inQueue_.pop();
         m_signal->inBufferQueue_.pop();
     }
@@ -227,11 +238,11 @@ void NativeVideoDecoder::outputFunc() {
             decodeLog("wait to stop, exit");
             break;
         }
-
+      
         uint32_t index = m_signal->outQueue_.front();
         OH_AVCodecBufferAttr attr = m_signal->attrQueue_.front();
         OH_AVMemory *data = m_signal->outBufferQueue_.front();
-        lock.unlock();
+        decodeLog("outputFunc rite frame: ${public}d");
 
         if (attr.flags == AVCODEC_BUFFER_FLAGS_EOS) {
             // outFrameCount
@@ -243,7 +254,6 @@ void NativeVideoDecoder::outputFunc() {
             decodeLog("Fatal: RenderOutputData fail");
             break;
         }
-        lock.lock();
         m_signal->outBufferQueue_.pop();
         m_signal->attrQueue_.pop();
         m_signal->outQueue_.pop();
@@ -295,7 +305,7 @@ int NativeVideoDecoder::submitDecodeUnit(PDECODE_UNIT du) {
             decodeLog("FFmpeg: Big buffer to decode...");
         }
 
-        DataPacket pkt =  DataPacket{
+        DataPacket pkt = DataPacket{
         };
         pkt.data = (uint8_t *)m_ffmpeg_buffer;
         pkt.size = length;
@@ -304,7 +314,7 @@ int NativeVideoDecoder::submitDecodeUnit(PDECODE_UNIT du) {
         } else {
             pkt.flags = 0;
         }
-        m_signal->dataPacketQueue_.push(&pkt);
+        m_signal->dataPacketQueue_.push(pkt);
         m_frames_out++;
         m_video_decode_stats.totalDecodeTime +=
             LiGetMillis() - before_decode;

@@ -225,6 +225,8 @@ napi_value MoonBridgeApi::MoonBridge_interruptConnection(napi_env env, napi_call
 
 static void Napi_OnVideoStatus(napi_env env, napi_value js_callback, void *context, void *data) {
     VIDEO_STATS *status = (VIDEO_STATS *)data;
+    if(status == nullptr)
+        return ;
     napi_value params[1];
     napi_value stats;
     napi_create_object(env, &stats);

@@ -133,7 +133,7 @@ class MoonBridgeApi {
         napi_value params[1];
         napi_create_int32(api->env, errorCode, &params[0]);
          MoonBridgeCallBackInfo info = {
-            .stage = "xxxx",
+            .stage = "xxxxxxx",
             .error = -1
         };
         Emit("BridgeClConnectionTerminated", static_cast<void*>(&info));

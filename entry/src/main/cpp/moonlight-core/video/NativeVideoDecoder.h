@@ -41,7 +41,7 @@ public:
     std::queue<OH_AVMemory *> inBufferQueue_;
     std::queue<OH_AVMemory *> outBufferQueue_;
     std::queue<OH_AVCodecBufferAttr> attrQueue_;
-    std::queue<DataPacket *> dataPacketQueue_;
+    std::queue<DataPacket> dataPacketQueue_;
 };
 
 
@@ -69,7 +69,7 @@ private:
     
     std::unique_ptr<std::thread> m_inputLoop = nullptr;
     std::unique_ptr<std::thread> m_outputLoop = nullptr;
-    DataPacket *m_pkt = nullptr;
+    DataPacket m_pkt ;
     
     int m_stream_fps = 0;
     int m_frames_in = 0;

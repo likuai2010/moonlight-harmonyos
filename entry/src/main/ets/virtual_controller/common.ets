@@ -250,34 +250,4 @@ export abstract class VirtualControllerElement {
 }
 
 
-@Component
-export struct VirtualControllerButton {
-
-  //用来配置CanvasRenderingContext2D对象的参数，包括是否开启抗锯齿，true表明开启抗锯齿。
-  private settings: RenderingContextSettings = new RenderingContextSettings(true)
-  //用来创建CanvasRenderingContext2D对象，通过在canvas中调用CanvasRenderingContext2D对象来绘制。
-  private context: CanvasRenderingContext2D = new CanvasRenderingContext2D(this.settings)
-  element!: VirtualControllerElement
-  @ObjectLink layout: ElementLayoutParam
-
-  onLayout() {
-    this.element.onSizeChanged(this.context)
-  }
-
-  build() {
-    Canvas(this.context)
-      .height(this.layout.height)
-      .width(this.layout.width)
-      .translate({ x: this.layout.x, y: this.layout.y })
-      .opacity(1)
-      .onReady(() => {
-        this.element.onDraw(this.context)
-      })
-      .onTouch((e) => {
-        // 单点
-        this.element.onTouchEvent(e)
-        this.element.onDraw(this.context)
-      })
-  }
-}
 
