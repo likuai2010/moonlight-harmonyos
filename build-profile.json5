@@ -6,9 +6,9 @@
         "type": "HarmonyOS",
         "material": {
           "certpath": "C:\\Users\\Administrator\\.ohos\\config\\auto_debug_moonlight_com.example.moonlight_2850086000506643987.cer",
-          "storePassword": "0000001B6F4922208C76022114DDC419404D56545BAB4892D3FCF66706EA873B67195C246CCAEE7675D2D9",
+          "storePassword": "0000001B4B05FB674C8A8AC0E473A1356D824E20B8D9A353B6027487BC3611AC2D2DD886EF712E99D91DCC",
           "keyAlias": "debugKey",
-          "keyPassword": "0000001BD1D23D90AD8873A0C377289BC09C8542CAEB2C7A87B4E094203BB13E364F75326AC3B6263B5219",
+          "keyPassword": "0000001B7233A24BAE1B06165097846685881E87E43CC4451CF22511A9A2F95BD81EC5F3C4F3494DBC3ACC",
           "profile": "C:\\Users\\Administrator\\.ohos\\config\\auto_debug_moonlight_com.example.moonlight_2850086000506643987.p7b",
           "signAlg": "SHA256withECDSA",
           "storeFile": "C:\\Users\\Administrator\\.ohos\\config\\auto_debug_moonlight_com.example.moonlight_2850086000506643987.p12"
