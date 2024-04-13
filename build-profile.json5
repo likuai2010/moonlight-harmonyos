@@ -5,13 +5,13 @@
         "name": "default",
         "type": "HarmonyOS",
         "material": {
-          "certpath": "C:\\Users\\Administrator\\.ohos\\config\\auto_debug_moonlight_com.example.moonlight_2850086000506643987.cer",
-          "storePassword": "0000001B4B05FB674C8A8AC0E473A1356D824E20B8D9A353B6027487BC3611AC2D2DD886EF712E99D91DCC",
+          "certpath": "C:\\Users\\Administrator\\.ohos\\config\\auto_debug_moonlight_com.xiaobai.moonlight_2850086000506643987.cer",
+          "storePassword": "0000001BAD4ED39F691B1ECE5723944F4E4744274EA1F2AA825168682FCC3D6475B3A4D17E991C4378C345",
           "keyAlias": "debugKey",
-          "keyPassword": "0000001B7233A24BAE1B06165097846685881E87E43CC4451CF22511A9A2F95BD81EC5F3C4F3494DBC3ACC",
-          "profile": "C:\\Users\\Administrator\\.ohos\\config\\auto_debug_moonlight_com.example.moonlight_2850086000506643987.p7b",
+          "keyPassword": "0000001B1DB30B67B0A70DDF999EA1BE3275F82D2E0944593AA452FDE35810B874BF316DD570A478F4CB5E",
+          "profile": "C:\\Users\\Administrator\\.ohos\\config\\auto_debug_moonlight_com.xiaobai.moonlight_2850086000506643987.p7b",
           "signAlg": "SHA256withECDSA",
-          "storeFile": "C:\\Users\\Administrator\\.ohos\\config\\auto_debug_moonlight_com.example.moonlight_2850086000506643987.p12"
+          "storeFile": "C:\\Users\\Administrator\\.ohos\\config\\auto_debug_moonlight_com.xiaobai.moonlight_2850086000506643987.p12"
         }
       }
     ],
