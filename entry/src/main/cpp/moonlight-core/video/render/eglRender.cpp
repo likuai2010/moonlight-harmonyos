@@ -128,21 +128,27 @@ bool EglVideoRenderer::initialize(DECODER_PARAMETERS *params) {
     // Init display.
     m_eglDisplay = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     if (EGL_TRUE != eglInitialize(m_eglDisplay, 0, 0)) {
-        eglLog(LOG_ERROR, "eglInitialize failed");
+        eglLog(LOG_ERROR, "m_eglWindow failed");
         return false;
     }
     EGLConfig eglConfig;
-    EGLint configNum;
+    EGLint numConfigs;
     EGLint configSpec[] = {
-        EGL_RED_SIZE, 8,
-        EGL_GREEN_SIZE, 8,
-        EGL_BLUE_SIZE, 8,
-        EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
-        EGL_NONE};
-    if (EGL_TRUE != eglChooseConfig(m_eglDisplay, configSpec, &eglConfig, 1, &configNum)) {
-        eglLog(LOG_ERROR, "eglChooseConfig failed");
+        // Key,value.
+       EGL_SURFACE_TYPE, EGL_WINDOW_BIT, EGL_RED_SIZE, EGL_RED_SIZE_DEFAULT, EGL_GREEN_SIZE,
+       EGL_GREEN_SIZE_DEFAULT, EGL_BLUE_SIZE, EGL_BLUE_SIZE_DEFAULT, EGL_ALPHA_SIZE,
+       EGL_ALPHA_SIZE_DEFAULT, EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+       // End.
+       EGL_NONE};
+    const EGLint maxConfigSize = 1;
+    if (!eglChooseConfig(m_eglDisplay, configSpec, &eglConfig, maxConfigSize, &numConfigs)) {
+        eglLog(LOG_ERROR, "eglChooseConfig: unable to choose configs");
         return false;
     }
+//     if (EGL_TRUE != eglChooseConfig(m_eglDisplay, configSpec, &eglConfig, 1, &configNum)) {
+//         eglLog(LOG_ERROR, "eglChooseConfig: unable to choose configs");
+//         return false;
+//     }
     m_eglSurface = eglCreateWindowSurface(m_eglDisplay, eglConfig, m_eglWindow, nullptr);
     if (m_eglSurface == EGL_NO_SURFACE) {
         eglLog(LOG_ERROR, "eglCreateWindowSurface failed");

@@ -7,12 +7,10 @@
 #ifndef moonlight_NativeVideoDecoder_H
 #define moonlight_NativeVideoDecoder_H
 #include "decode.h"
-
 #include <queue>
 #include <string>
 #include <thread>
 #include <atomic>
-
 #include <multimedia/player_framework/native_avcodec_videodecoder.h>
 #include <multimedia/player_framework/native_avcodec_base.h>
 #include <multimedia/player_framework/native_avformat.h>
@@ -43,12 +41,12 @@ public:
     std::queue<OH_AVMemory *> inBufferQueue_;
     std::queue<OH_AVMemory *> outBufferQueue_;
     std::queue<OH_AVCodecBufferAttr> attrQueue_;
-    std::queue<DataPacket *> dataPacketQueue_;
+    std::queue<DataPacket> dataPacketQueue_;
 };
 
 
 
-class NativeVideoDecoder : IVideoDecoder {
+class NativeVideoDecoder : public IVideoDecoder {
   public:
     explicit NativeVideoDecoder();
     ~NativeVideoDecoder();
@@ -58,8 +56,10 @@ class NativeVideoDecoder : IVideoDecoder {
     void cleanup() override;
     int submitDecodeUnit(PDECODE_UNIT decode_unit) override;
     VIDEO_STATS *video_decode_stats() override;
+    static bool supportedHW();
+    DECODER_PARAMETERS *getParams() override;
 
-  private:
+private:
     void inputFunc();
     void outputFunc();
     int ExtractPacket();
@@ -69,7 +69,7 @@ class NativeVideoDecoder : IVideoDecoder {
     
     std::unique_ptr<std::thread> m_inputLoop = nullptr;
     std::unique_ptr<std::thread> m_outputLoop = nullptr;
-    DataPacket *m_pkt = nullptr;
+    DataPacket m_pkt ;
     
     int m_stream_fps = 0;
     int m_frames_in = 0;

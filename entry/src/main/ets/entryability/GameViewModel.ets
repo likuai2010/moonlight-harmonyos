@@ -16,9 +16,9 @@ import { VirtualController } from '../virtual_controller/VirtualController';
 
 
 class GameViewModel implements NvConnectionListener {
-  conn: NvConnection
-  context: Context
-  controllerHandle: ControllerHandle
+  conn!: NvConnection
+  context!: Context
+  controllerHandle!: ControllerHandle
   virtualController: VirtualController = new VirtualController()
   constructor() {}
 
@@ -100,11 +100,11 @@ class GameViewModel implements NvConnectionListener {
   }
 
   stageStarting(stage: string): void {
-    getResStringByContext(this.context,$r("app.string.conn_starting") ).then((m)=>{
-      this.sendMessageToSpinner(m + " " + stage)
-    })
+    // getResStringByContext(this.context,$r("app.string.conn_starting") ).then((m)=>{
+    //   //this.sendMessageToSpinner(m + " " + stage)
+    // })
   }
-  private spinnerDialog: CustomDialogController
+  private spinnerDialog!: CustomDialogController
 
   private sendMessageToSpinner(message: string | Resource){
     if (typeof message === "string"){

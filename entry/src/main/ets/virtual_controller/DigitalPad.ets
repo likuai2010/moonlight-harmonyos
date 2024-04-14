@@ -15,7 +15,7 @@ export const DIGITAL_PAD_DIRECTION_UP: number = 2;
 export const DIGITAL_PAD_DIRECTION_RIGHT: number = 4;
 export const DIGITAL_PAD_DIRECTION_DOWN: number = 8;
 interface DigitalPadListener {
-  onDirectionChange(direction:number);
+  onDirectionChange: (direction:number) => void;
 }
 
 export class DigitalPad extends VirtualControllerElement {

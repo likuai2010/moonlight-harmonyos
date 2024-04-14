@@ -4,15 +4,15 @@ import { SpinnerEventId } from '../../uitls/CommonEvents'
 
 @CustomDialog
 export struct Spinner {
-  title: string | Resource
+  title?: string | Resource
   @State text: string = ""
   controller: CustomDialogController
   aboutToAppear(){
-    let innerEvent = {
+    emitter.on({
       eventId: SpinnerEventId,
-    };
-    emitter.on(innerEvent, (eventData)=>{
-      this.text = eventData.data["message"]
+    }, (eventData)=>{
+      if (eventData.data)
+        this.text = eventData.data["message"]
     })
   }
   build() {
@@ -35,7 +35,7 @@ export struct Spinner {
 
 @CustomDialog
 export struct Loading {
-  title: string | Resource
+  title?: string | Resource
   text: string | Resource = ""
   controller: CustomDialogController
 
@@ -56,7 +56,7 @@ export struct Loading {
 @CustomDialog
 export struct Alert {
   title: string | Resource = "建立连接中"
-  message: string | Resource
+  message?: string | Resource
   controller: CustomDialogController
   build() {
     Column(){

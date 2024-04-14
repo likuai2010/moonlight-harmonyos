@@ -25,7 +25,7 @@ struct AddPage {
     Column(){
       NavTitle({ title: $r("app.string.title_add_pc")})
       Row(){
-        TextInput({placeholder:'串流电脑的ip地址', text: "[2409:8a00:79a1:5ae1:27d5:8223:fcba:4b17]"}).fontColor(Color.White).onChange((value: string) => {
+        TextInput({placeholder:'串流电脑的ip地址', text: ""}).placeholderColor(Color.Gray).fontColor(Color.White).onChange((value: string) => {
           this.ip = value;
         }).layoutWeight(1).type(InputType.Normal)
         Button("确定").width(150).margin({left:5}).onClick(()=>{

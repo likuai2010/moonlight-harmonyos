@@ -1,11 +1,12 @@
-import { AnalogStick } from './AnalogStick';
+import { AnalogStick, AnalogStickListener } from './AnalogStick';
 import { VirtualControllerElement } from './common';
 import { ControllerPacket } from './ControllerPacket';
-import { DigitalButton } from './DigitalButton';
+import { DigitalButton, DigitalButtonListener } from './DigitalButton';
 import { DigitalPad, DIGITAL_PAD_DIRECTION_DOWN, DIGITAL_PAD_DIRECTION_LEFT, DIGITAL_PAD_DIRECTION_RIGHT, DIGITAL_PAD_DIRECTION_UP } from './DigitalPad';
 import { VirtualController } from './VirtualController';
 import dataPreferences from '@ohos.data.preferences';
 import display from '@ohos.display';
+import { StreamSettings } from '../uitls/StreamSetttings';
 
 
 const TRIGGER_L_BASE_X: number = 1;
@@ -56,7 +57,7 @@ function createDigitalButton(
 ): DigitalButton {
   const button = new DigitalButton(controller, elementId, layer);
   button.text = text
-  button.addDigitalButtonListener({
+  const listener: DigitalButtonListener = {
     onClick: () => {
       const inputContext = controller.inputContext;
       inputContext.inputMap |= keyShort;
@@ -73,7 +74,8 @@ function createDigitalButton(
       inputContext.inputMap &= ~keyLong;
       controller.sendControllerInputContext();
     },
-  });
+  }
+  button.addDigitalButtonListener(listener);
 
   return button;
 }
@@ -86,7 +88,7 @@ function createLeftTrigger(
 ): DigitalButton {
   const button = new DigitalButton(controller, VirtualControllerElement.EID_LT, layer);
   button.text = text;
-  button.addDigitalButtonListener({
+  let listener:DigitalButtonListener = {
     onClick: () => {
       const inputContext = controller.inputContext;
       inputContext.leftTrigger = 0xFF;
@@ -99,7 +101,8 @@ function createLeftTrigger(
       inputContext.leftTrigger = 0x00;
       controller.sendControllerInputContext();
     }
-  });
+  }
+  button.addDigitalButtonListener(listener);
   return button;
 }
 
@@ -111,7 +114,7 @@ function createRightTrigger(
 ): DigitalButton {
   const button = new DigitalButton(controller, VirtualControllerElement.EID_RT, layer);
   button.text = text
-  button.addDigitalButtonListener({
+  const listener :DigitalButtonListener = {
     onClick() {
       const inputContext = controller.inputContext;
       inputContext.rightTrigger = 0xFF;
@@ -124,13 +127,14 @@ function createRightTrigger(
       inputContext.rightTrigger = 0x00;
       controller.sendControllerInputContext();
     }
-  });
+  }
+  button.addDigitalButtonListener(listener);
   return button;
 }
 
 export function createLeftStick(controller: VirtualController): AnalogStick {
   const as = new AnalogStick(controller, VirtualControllerElement.EID_LS);
-  as.addAnalogStickListener({
+  const listener: AnalogStickListener = {
     onMovement: (x: number, y: number) => {
       const inputContext = controller.inputContext;
       inputContext.leftStickX = Math.round(x * 0x7FFE);
@@ -151,13 +155,14 @@ export function createLeftStick(controller: VirtualController): AnalogStick {
       inputContext.inputMap &= ~ControllerPacket.LS_CLK_FLAG;
       controller.sendControllerInputContext();
     },
-  });
+  }
+  as.addAnalogStickListener(listener);
   return as;
 }
 
 function createRightStick(controller: VirtualController): AnalogStick {
   const as = new AnalogStick(controller, VirtualControllerElement.EID_RS);
-  as.addAnalogStickListener({
+  const listener: AnalogStickListener = {
     onMovement: (x: number, y: number) => {
       const inputContext = controller.inputContext;
       inputContext.rightStickX = Math.round(x * 0x7FFE);
@@ -180,7 +185,8 @@ function createRightStick(controller: VirtualController): AnalogStick {
 
       controller.sendControllerInputContext();
     },
-  });
+  }
+  as.addAnalogStickListener(listener);
   return as;
 }
 
@@ -216,13 +222,16 @@ function createDigitalPad(controller: VirtualController,): DigitalPad {
 
   return digitalPad;
 }
-
+interface ScreenWH{
+  widthPixels:number
+  heightPixels:number
+}
 
 export class VirtualControllerConfigurationLoader {
-  createDefaultLayout(controller: VirtualController, config: any = {}) {
+  createDefaultLayout(controller: VirtualController, config: StreamSettings | undefined = undefined) {
     const defaultDisplay =  display.getDefaultDisplaySync()
 
-    const screen = { widthPixels: defaultDisplay.width / defaultDisplay.densityPixels, heightPixels: defaultDisplay.height / defaultDisplay.densityPixels }
+    const screen : ScreenWH = { widthPixels: defaultDisplay.width / defaultDisplay.densityPixels, heightPixels: defaultDisplay.height / defaultDisplay.densityPixels }
     // Displace controls on the right by this amount of pixels to account for different aspect ratios
     const rightDisplacement = screen.widthPixels - screen.heightPixels * 16 / 9;
 
@@ -231,7 +240,7 @@ export class VirtualControllerConfigurationLoader {
     // NOTE: Some of these getPercent() expressions seem like they can be combined
     // into a single call. Due to floating point rounding, this isn't actually possible.
 
-    if (!config.onlyL3R3) {
+    if (config && !config.only_l3r3) {
       controller.addElement(createDigitalPad(controller),
         screenScale(DPAD_BASE_X, height),
         screenScale(DPAD_BASE_Y, height),
@@ -241,8 +250,8 @@ export class VirtualControllerConfigurationLoader {
 
       controller.addElement(createDigitalButton(
         VirtualControllerElement.EID_A,
-          !config.flipFaceButtons ? ControllerPacket.A_FLAG : ControllerPacket.B_FLAG, 0, 1,
-          !config.flipFaceButtons ? "A" : "B", -1, controller),
+          !config?.flip_face_buttons ? ControllerPacket.A_FLAG : ControllerPacket.B_FLAG, 0, 1,
+          !config?.flip_face_buttons ? "A" : "B", -1, controller),
         screenScale(BUTTON_BASE_X, height) + rightDisplacement,
         screenScale(BUTTON_BASE_Y + 2 * BUTTON_SIZE, height),
         screenScale(BUTTON_SIZE, height),
@@ -251,8 +260,8 @@ export class VirtualControllerConfigurationLoader {
 
       controller.addElement(createDigitalButton(
         VirtualControllerElement.EID_B,
-        config.flipFaceButtons ? ControllerPacket.A_FLAG : ControllerPacket.B_FLAG, 0, 1,
-        config.flipFaceButtons ? "A" : "B", -1, controller),
+        config?.flip_face_buttons ? ControllerPacket.A_FLAG : ControllerPacket.B_FLAG, 0, 1,
+        config?.flip_face_buttons ? "A" : "B", -1, controller),
         screenScale(BUTTON_BASE_X + BUTTON_SIZE, height) + rightDisplacement,
         screenScale(BUTTON_BASE_Y + BUTTON_SIZE, height),
         screenScale(BUTTON_SIZE, height),
@@ -261,8 +270,8 @@ export class VirtualControllerConfigurationLoader {
 
       controller.addElement(createDigitalButton(
         VirtualControllerElement.EID_X,
-          !config.flipFaceButtons ? ControllerPacket.X_FLAG : ControllerPacket.Y_FLAG, 0, 1,
-          !config.flipFaceButtons ? "X" : "Y", -1, controller),
+          !config?.flip_face_buttons ? ControllerPacket.X_FLAG : ControllerPacket.Y_FLAG, 0, 1,
+          !config?.flip_face_buttons ? "X" : "Y", -1, controller),
         screenScale(BUTTON_BASE_X - BUTTON_SIZE, height) + rightDisplacement,
         screenScale(BUTTON_BASE_Y + BUTTON_SIZE, height),
         screenScale(BUTTON_SIZE, height),
@@ -271,24 +280,22 @@ export class VirtualControllerConfigurationLoader {
 
       controller.addElement(createDigitalButton(
         VirtualControllerElement.EID_Y,
-        config.flipFaceButtons ? ControllerPacket.X_FLAG : ControllerPacket.Y_FLAG, 0, 1,
-        config.flipFaceButtons ? "X" : "Y", -1, controller),
+        config?.flip_face_buttons ? ControllerPacket.X_FLAG : ControllerPacket.Y_FLAG, 0, 1,
+        config?.flip_face_buttons ? "X" : "Y", -1, controller),
         screenScale(BUTTON_BASE_X, height) + rightDisplacement,
         screenScale(BUTTON_BASE_Y, height),
         screenScale(BUTTON_SIZE, height),
         screenScale(BUTTON_SIZE, height)
       );
 
-      controller.addElement(createLeftTrigger(
-        1, "LT", -1, controller),
+      controller.addElement(createLeftTrigger(1, "LT", -1, controller),
         screenScale(TRIGGER_L_BASE_X, height),
         screenScale(TRIGGER_BASE_Y, height),
         screenScale(TRIGGER_WIDTH, height),
         screenScale(TRIGGER_HEIGHT, height)
       );
 
-      controller.addElement(createRightTrigger(
-        1, "RT", -1, controller),
+      controller.addElement(createRightTrigger( 1, "RT", -1, controller),
         screenScale(TRIGGER_R_BASE_X + TRIGGER_DISTANCE, height) + rightDisplacement,
         screenScale(TRIGGER_BASE_Y, height),
         screenScale(TRIGGER_WIDTH, height),
@@ -365,12 +372,13 @@ export class VirtualControllerConfigurationLoader {
         screenScale(TRIGGER_HEIGHT, height)
       );
     }
-    controller.setOpacity(config.oscOpacity);
+    controller.setOpacity(config?.osc_opacity ?? 1);
   }
-  public static async saveProfile(controller: VirtualController, context: Context) {
+  public static async saveProfile(controller: VirtualController, context: Context): Promise<void> {
     const preferences = await dataPreferences.getPreferences(context, OSC_PREFERENCE)
     const prefEditor = preferences; // Use localStorage or other suitable storage mechanism
-    for (const element of controller.elements) {
+    for(let i=0; i< controller.elements.length; i++){
+      const element = controller.elements[i] as VirtualControllerElement;
       const prefKey = `${element.elementId}`;
       try {
         prefEditor.put(prefKey,  element.getConfiguration());
@@ -380,14 +388,15 @@ export class VirtualControllerConfigurationLoader {
     }
     prefEditor.flush()
   }
-  public static async loadFromPreferences(controller: VirtualController, context: Context) {
-    const pref = await dataPreferences.getPreferences(context, OSC_PREFERENCE)
-    for (const element of controller.elements) {
+  public static async loadFromPreferences(controller: VirtualController, context: Context): Promise<void> {
+    const pref: dataPreferences.Preferences = await dataPreferences.getPreferences(context, OSC_PREFERENCE)
+    for(let i=0; i< controller.elements.length; i++){
+      const element = controller.elements[i] as VirtualControllerElement;
       const prefKey = `${element.elementId}`;
-      const jsonConfig = await pref.get(prefKey, null);
+      const jsonConfig: string  = await pref.get(prefKey, null).toString() ;
       if (jsonConfig !== null) {
         try {
-          element.loadConfiguration(jsonConfig.toString());
+          element.loadConfiguration(jsonConfig);
         } catch (e) {
           console.error(e);
           pref.delete(prefKey);

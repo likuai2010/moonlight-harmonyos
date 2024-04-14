@@ -16,6 +16,7 @@
 #include <hilog/log.h>
 #include <ace/xcomponent/native_interface_xcomponent.h>
 #include "video/AVFrameHolder.h"
+#include "video/NativeVideoDecoder.h"
 #include <unistd.h>
 #include <arpa/inet.h>
 
@@ -25,6 +26,9 @@ MoonBridgeApi::MoonBridgeApi() {
 #ifdef FFMPEG_ENABLED
     m_decoder = new FFmpegVideoDecoder();
 #endif
+    if(NativeVideoDecoder::supportedHW()){
+        m_decoder = new NativeVideoDecoder();
+    }
     m_audioRender = new SDLAudioRenderer();
     m_videoRender = new EglVideoRenderer();
     BridgeVideoRendererCallbacks = {
@@ -189,12 +193,12 @@ napi_value MoonBridgeApi::MoonBridge_startConnection(napi_env env, napi_callback
         env, nullptr, resourceName,
         [](napi_env env, void *data) {
             BridgeCallbackInfo *info = (BridgeCallbackInfo *)data;
-            info->render->initialize(api->m_decoder->getParams());
-            while (true) {
-                AVFrameHolder::GetInstance()->get([info](AVFrame *frame) {
-                    info->render->renderFrame(frame);
-                });
-                usleep(100000 / 120);
+            if(api->m_decoder->getParams() != NULL){
+                info->render->initialize(api->m_decoder->getParams());
+                while (true) {
+                    AVFrameHolder::GetInstance()->get([info](AVFrame *frame) { info->render->renderFrame(frame); });
+                    usleep(100000 / 120);
+                }
             }
         },
         [](napi_env env, napi_status status, void *data) {
@@ -221,6 +225,8 @@ napi_value MoonBridgeApi::MoonBridge_interruptConnection(napi_env env, napi_call
 
 static void Napi_OnVideoStatus(napi_env env, napi_value js_callback, void *context, void *data) {
     VIDEO_STATS *status = (VIDEO_STATS *)data;
+    if(status == nullptr)
+        return ;
     napi_value params[1];
     napi_value stats;
     napi_create_object(env, &stats);

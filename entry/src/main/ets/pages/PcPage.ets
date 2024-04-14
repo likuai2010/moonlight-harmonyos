@@ -7,8 +7,8 @@ import limelightCertProvider from '../entryability/crypto/LimelightCryptoProvide
 import { NvHttp } from '../entryability/http/NvHttp'
 import router from '@ohos.router'
 import { Alert } from './compoments/Loading'
-
-async function getResString(com: any, r: Resource): Promise<string> {
+import taskpool from '@ohos.taskpool';
+async function getResString(com: object, r: Resource): Promise<string> {
   return await getContext(com).resourceManager.getStringValue(r)
 }
 // promptAction.showDialog({
@@ -32,7 +32,7 @@ async function getResString(com: any, r: Resource): Promise<string> {
 @Component
 struct PcView {
   @State detail: ComputerDetails = new ComputerDetails()
-  onDelete: (ComputerDetails) => void
+  onDelete!: (ComputerDetails:ComputerDetails) => void
   @Builder
   pcMenu() {
     Menu() {
@@ -76,7 +76,7 @@ struct PcView {
   }
 
   async doPair() {
-    let message;
+    let message: string | null;
     let success = false;
     const computer = this.detail
     const httpConn = new NvHttp(this.detail.activeAddress,
@@ -134,7 +134,6 @@ struct PcView {
         message = null;
       }
       alertDialog.close()
-      alertDialog = undefined
       if (message)
         promptAction.showToast({ message: message })
       if (success){
@@ -170,7 +169,6 @@ struct PcView {
     }).bindContextMenu(this.pcMenu, ResponseType.LongPress)
   }
 }
-import taskpool from '@ohos.taskpool';
 
 
 
@@ -180,8 +178,8 @@ import taskpool from '@ohos.taskpool';
 struct PcPage {
   scroller: Scroller = new Scroller();
   @State pcList: ComputerDetails[] = []
-  heightValue: number
-  gridRowTemplate: string
+  heightValue?: number
+  gridRowTemplate?: string
 
 
 
@@ -194,7 +192,7 @@ struct PcPage {
       viewModel.batchPollComputerList(list)
     })
     viewModel.onDetailsUpdate((news: ComputerDetails) => {
-      var indexes = this.pcList.findIndex((d) => d.uuid == news.uuid)
+      let indexes = this.pcList.findIndex((d) => d.uuid == news.uuid)
       if (indexes < 0) {
         this.pcList.push(news)
       } else {
@@ -206,7 +204,7 @@ struct PcPage {
   }
 
   updateGrid() {
-    var rows = Math.max(3, Math.round(this.pcList.length / 3))
+    let rows = Math.max(3, Math.round(this.pcList.length / 3))
     this.gridRowTemplate = '1fr '.repeat(rows);
     this.heightValue = rows * 192 - 8;
   }
@@ -216,12 +214,12 @@ struct PcPage {
       MainTitle()
       Scroll(this.scroller) {
         Grid() {
-          ForEach(this.pcList, (d) => {
+          ForEach(this.pcList, (d:ComputerDetails) => {
             GridItem() {
               PcView({ detail: d, onDelete:(d)=>{
               }})
             }
-          }, (item) => JSON.stringify(item))
+          }, (item: ComputerDetails) => JSON.stringify(item))
         }.onKeyEvent((e)=>{
           console.log(e.keyCode+"");
         }).onMouse((e)=>{

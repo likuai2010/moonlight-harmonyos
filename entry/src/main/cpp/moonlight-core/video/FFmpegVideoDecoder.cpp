@@ -16,7 +16,8 @@
 FFmpegVideoDecoder::FFmpegVideoDecoder() {}
 FFmpegVideoDecoder::~FFmpegVideoDecoder() {}
 
-DECODER_PARAMETERS* FFmpegVideoDecoder::getParams(){
+
+DECODER_PARAMETERS * FFmpegVideoDecoder::getParams() {
     return &m_params;
 }
 int FFmpegVideoDecoder::setup(DECODER_PARAMETERS dparams) {

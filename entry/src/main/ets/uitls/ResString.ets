@@ -1,5 +1,5 @@
 
-export async function getResString(com: any, r: Resource): Promise<string> {
+export async function getResString(com: Object, r: Resource): Promise<string> {
   return await getResStringByContext(getContext(com), r)
 }
 export async function getResStringByContext(context: Context, r: Resource): Promise<string> {

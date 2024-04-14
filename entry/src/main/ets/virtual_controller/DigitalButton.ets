@@ -10,21 +10,21 @@ import {
 } from './common';
 import { VirtualController } from './VirtualController';
 
-interface DigitalButtonListener {
+export interface DigitalButtonListener {
   /**
    * onClick event will be fired on button click.
    */
-  onClick(): void;
+  onClick:()=> void;
 
   /**
    * onLongClick event will be fired on button long click.
    */
-  onLongClick(): void;
+  onLongClick: ()=> void;
 
   /**
    * onRelease event will be fired on button unpress.
    */
-  onRelease(): void;
+  onRelease: ()=> void;
 }
 
 export class DigitalButton extends VirtualControllerElement {
