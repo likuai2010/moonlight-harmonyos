@@ -1,13 +1,11 @@
-import { AnalogStick, } from './AnalogStick';
-import { DigitalButton } from './DigitalButton';
 import mediaquery from '@ohos.mediaquery';
 
 import { ElementLayoutParam, VirtualControllerButton, VirtualControllerElement } from './common';
 import List from '@ohos.util.List';
-import { DigitalPad } from './DigitalPad';
 import { createLeftStick, VirtualControllerConfigurationLoader } from './VirtualControllerConfigurationLoader';
 import Prompt from '@system.prompt';
 import { ControllerHandle } from './ControllerHandle';
+import { Icon } from '../pages/compoments/Title';
 
 export enum ControllerMode {
   Active,
@@ -72,16 +70,15 @@ export class VirtualController {
 }
 
 
-
 @Builder
-export function ShowVirtualController(){
-  ForEach(this.virtualController.elements.convertToArray(), (d: VirtualControllerElement) => {
+export function showVirtualController(virtualController: VirtualController, context: Context){
+  ForEach(virtualController.elements.convertToArray(), (d: VirtualControllerElement) => {
     VirtualControllerButton({ element: d, layout: d.layout })
-  }, (d:VirtualControllerElement) =>d.elementId.toString())
+  }, (d: VirtualControllerElement ) =>d.elementId.toString())
   Button(){
-    Text("setting")
-  }.offset({y: 80}).onClick(()=>{
-    this.virtualController.onSettingsClick(getContext(this))
+    Icon({icon:$r("app.media.settings")})
+  }.offset({y: 20}).onClick(()=>{
+    virtualController.onSettingsClick(context)
   })
 }
 
@@ -96,7 +93,7 @@ export struct VirtualControllerBox{
   }
   build() {
     Stack({ alignContent: Alignment.TopStart }) {
-      ShowVirtualController()
+      showVirtualController(this.virtualController, getContext(this))
       Text(JSON.stringify(this.inputContext)).alignSelf(ItemAlign.Center).offset({x: 50,y:0})
     }.height('100%')
     .width('100%')

@@ -58,7 +58,7 @@ moon_bridge.cpp
 utils/x509Utils.cpp
 utils/http_curl.cpp
 video/AVFrameHolder.cpp
-#video/NativeVideoDecoder.cpp
+video/NativeVideoDecoder.cpp
 video/render/eglRender.cpp
 video/render/plugin_render.cpp
 audio/SDLAudioRenderer.cpp

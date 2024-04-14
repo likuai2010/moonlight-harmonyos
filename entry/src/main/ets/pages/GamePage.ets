@@ -3,11 +3,8 @@ import { VideoStatus } from 'libentry.so';
 import router from '@ohos.router';
 import { Spinner } from './compoments/Loading'
 import { loadSettings, StreamSettings } from '../uitls/StreamSetttings';
-import { VirtualController  } from '../virtual_controller/VirtualController';
-import {  VirtualControllerElement } from '../virtual_controller/common';
+import { VirtualController, showVirtualController  } from '../virtual_controller/VirtualController';
 import { VirtualControllerConfigurationLoader } from '../virtual_controller/VirtualControllerConfigurationLoader';
-import { VirtualControllerButton } from '../virtual_controller/VirtualController';
-import { Icon } from './compoments/Title';
 import { ComputerDetails } from '../entryability/computers/ComputerDetails';
 import { NvApp } from '../entryability/http/NvApp';
 
@@ -74,14 +71,7 @@ struct GamePage {
         }.backgroundColor(Color.Black).opacity(0.5)
       }
      if (this.virtualController != null){
-       ForEach(this.virtualController?.elements.convertToArray(), (d: VirtualControllerElement) => {
-         VirtualControllerButton({ element: d, layout: d.layout })//
-       }, (d: VirtualControllerElement) => d.elementId.toString())
-       Button(){
-         Icon({icon:$r("app.media.settings")})
-       }.offset({y: 20}).onClick(()=>{
-         this.virtualController?.onSettingsClick(getContext(this))
-       })
+       showVirtualController(this.virtualController, getContext(this))
      }
     }.backgroundColor(Color.Black)
     .width('100%')

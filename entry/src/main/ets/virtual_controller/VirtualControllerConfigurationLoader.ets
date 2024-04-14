@@ -236,11 +236,10 @@ export class VirtualControllerConfigurationLoader {
     const rightDisplacement = screen.widthPixels - screen.heightPixels * 16 / 9;
 
     const height = screen.heightPixels;
-
     // NOTE: Some of these getPercent() expressions seem like they can be combined
     // into a single call. Due to floating point rounding, this isn't actually possible.
 
-    if (config && !config.only_l3r3) {
+    if (!config ||  !config.only_l3r3) {
       controller.addElement(createDigitalPad(controller),
         screenScale(DPAD_BASE_X, height),
         screenScale(DPAD_BASE_Y, height),
