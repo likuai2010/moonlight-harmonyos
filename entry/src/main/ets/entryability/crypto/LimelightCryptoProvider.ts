@@ -23,10 +23,9 @@ export class LimelightCertProvider {
     if (!fs.accessSync(this.certPath) || !fs.accessSync(this.keyPath) ) {
       generate_x509_certificate(this.certPath, this.keyPath)
     }
-    const certBytes = readFile(this.certPath)
+    this.bytes = readFile(this.certPath)
     this.cert = await cryptoCert.createX509Cert(
-      { data: certBytes, encodingFormat: cryptoCert.EncodingFormat.FORMAT_PEM })
-    this.bytes = certBytes
+      { data: this.bytes, encodingFormat: cryptoCert.EncodingFormat.FORMAT_PEM })
     this.keyBytes = readFile(this.keyPath)
   }
 }

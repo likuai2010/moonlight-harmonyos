@@ -55,9 +55,10 @@ export default class EntryAbility extends UIAbility {
     // 开发者可以在适当的时机，如主窗口上按钮点击事件等，创建子窗口。并不一定需要在onWindowStageCreate调用，这里仅作展示
 
     viewModel.initContext(this.context)
-
-
+    this.context.resourceManager.getRawFileContent("key.pem")
+    this.context.resourceManager.getRawFileContent("client.pem")
     limelightCertProvider.initCertKeyPair(this.context.cacheDir)
+
     windowStage.loadContent('pages/PcPage', (err, data) => {
       if (err.code) {
         return;

@@ -6,9 +6,9 @@
         "type": "HarmonyOS",
         "material": {
           "certpath": "C:\\Users\\Administrator\\.ohos\\config\\auto_debug_moonlight_com.xiaobai.moonlight_2850086000506643987.cer",
-          "storePassword": "0000001BAD4ED39F691B1ECE5723944F4E4744274EA1F2AA825168682FCC3D6475B3A4D17E991C4378C345",
+          "storePassword": "0000001BE96A357954FD46253F86080D060CE8953CCCEB44ADDAFC8CBF3DFFDCDA8E7C18BD65CBF77C5C24",
           "keyAlias": "debugKey",
-          "keyPassword": "0000001B1DB30B67B0A70DDF999EA1BE3275F82D2E0944593AA452FDE35810B874BF316DD570A478F4CB5E",
+          "keyPassword": "0000001B811DED5EC46CC460CE86F2851CC69E441E26A29E00ABFF4A9D5CF198FD013738FC46B40D194C25",
           "profile": "C:\\Users\\Administrator\\.ohos\\config\\auto_debug_moonlight_com.xiaobai.moonlight_2850086000506643987.p7b",
           "signAlg": "SHA256withECDSA",
           "storeFile": "C:\\Users\\Administrator\\.ohos\\config\\auto_debug_moonlight_com.xiaobai.moonlight_2850086000506643987.p12"

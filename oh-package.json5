@@ -8,7 +8,5 @@
   "description": "Please describe the basic information.",
   "main": "",
   "version": "1.0.0",
-  "dependencies": {
-    "@ohos/axios": "^2.1.1"
-  }
+  "dependencies": {}
 }

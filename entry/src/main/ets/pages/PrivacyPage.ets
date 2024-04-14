@@ -10,7 +10,8 @@ struct PrivacyPage {
   build(){
     Column(){
       NavTitle({ title: "隐私政策"})
-      Web({ src: 'http://moonlight-xiaobai.cn/', controller: this.controller }).width("100%").layoutWeight(1);
+      Web({ src: 'http://moonlight-xiaobai.cn/privacy.html', controller: this.controller })
+        .width("100%").layoutWeight(1);
     }.padding(20).height("100%").width("100%").backgroundColor($r("app.color.page_background"))
   }
 }
