@@ -10,22 +10,7 @@ import { Alert, PrivacyConfirm } from './compoments/Loading'
 async function getResString(com: any, r: Resource): Promise<string> {
   return await getContext(com).resourceManager.getStringValue(r)
 }
-// promptAction.showDialog({
-//   title: '连接错误',
-//   message: 'Message InfoMessage InfoMessage InfoMessage InfoMessage InfoMessage Info',
-//   buttons: [
-//     {
-//       text: '确定',
-//       color: '#000000',
-//     }
-//   ]
-// }, (err, data) => {
-//   if (err) {
-//     console.info('showDialog err: ' + err);
-//     return;
-//   }
-//   console.info('showDialog success callback, click button: ' + data.index);
-// });
+
 
 
 @Component
@@ -169,7 +154,7 @@ struct PcView {
 
 
 
-
+import dataPreferences from '@ohos.data.preferences';
 @Entry
 @Component
 struct PcPage {
@@ -179,13 +164,22 @@ struct PcPage {
   gridRowTemplate?: string
 
   privacyDialogController: CustomDialogController =  new CustomDialogController({
-    builder: PrivacyConfirm({ }),
+    builder: PrivacyConfirm({ onConfirm:() => {
+      dataPreferences.getPreferences(getContext(this), "appSettings").then((pref: dataPreferences.Preferences)=>{
+        pref.put("privacyConfirm", true)
+        pref.flush()
+      })
+    }}),
     autoCancel: false,
     alignment: DialogAlignment.Center,
     customStyle: true
   })
   onPageShow(){
-    this.privacyDialogController.open()
+    dataPreferences.getPreferences(getContext(this), "appSettings").then((pref: dataPreferences.Preferences)=>{
+      if(!pref.get("privacyConfirm", false)){
+        this.privacyDialogController.open()
+      }
+    })
   }
 
   aboutToAppear() {

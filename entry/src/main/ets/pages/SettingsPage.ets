@@ -4,7 +4,8 @@ import { getResString } from '../uitls/ResString';
 import { StreamSettings, loadSettings } from '../uitls/StreamSetttings';
 import router from '@ohos.router';
 import Prompt from '@system.prompt';
-
+import common from '@ohos.app.ability.common';
+import featureAbility from '@ohos.ability.featureAbility';
 @Entry
 @Component
 struct SettingsPage {
@@ -18,6 +19,7 @@ struct SettingsPage {
   }
   aboutToAppear(){
     this.loadPreferences(getContext(this))
+    const context = getContext(this) as common.UIAbilityContext
   }
   async loadPreferences(context: Context){
     this.preferences = await dataPreferences.getPreferences(context, "StreamSettings")
@@ -29,8 +31,6 @@ struct SettingsPage {
       NavTitle({ title: "设置" })
       Scroll(this.scroller) {
         Column({ space: 10 }) {
-
-
           Column({ space: 10 }) {
             GroupTitle($r("app.string.category_basic_settings"))
             ListPreference({
@@ -337,7 +337,9 @@ struct SettingsPage {
               pKey: "privcy",
               title: "隐私政策",
               summary: "",
-              onChange: ()=>{}
+              onChange: ()=>{
+                router.pushUrl({url:"pages/PrivacyPage"})
+              }
             })
             CheckBoxPreference({
               pKey: "beian",
@@ -553,7 +555,8 @@ struct CheckBoxPreference {
   build() {
     Column(){
       baseReference({title: this.title, summary: this.summary, hasCheck: this.value, onClick:() => {
-        this.value = !this.value
+        if (this.value != undefined)
+          this.value = !this.value
         this.onChange(this.pKey, this.value)
       }})
     }

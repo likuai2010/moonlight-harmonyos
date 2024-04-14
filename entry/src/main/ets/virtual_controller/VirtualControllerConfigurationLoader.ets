@@ -392,7 +392,7 @@ export class VirtualControllerConfigurationLoader {
     for(let i=0; i< controller.elements.length; i++){
       const element = controller.elements[i] as VirtualControllerElement;
       const prefKey = `${element.elementId}`;
-      const jsonConfig: string  = await pref.get(prefKey, null).toString() ;
+      const jsonConfig: string  = pref.get(prefKey, null).toString() ;
       if (jsonConfig !== null) {
         try {
           element.loadConfiguration(jsonConfig);

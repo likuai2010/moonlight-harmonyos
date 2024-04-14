@@ -34,15 +34,19 @@ struct GamePage {
     let param = router.getParams() as Record<string, ComputerDetails | NvApp>;
     await gameViewModel.init(param["computer"] as ComputerDetails, param["app"] as NvApp, settings)
     await gameViewModel.start(this.dialogController!, getContext(this))
-    if (settings.touchscreen_trackpad){
+    if (settings.show_onscreen_controls){
       const loader = new VirtualControllerConfigurationLoader()
       loader.createDefaultLayout(gameViewModel.virtualController, settings)
       VirtualControllerConfigurationLoader.loadFromPreferences(gameViewModel.virtualController, getContext(this))
       this.virtualController = gameViewModel.virtualController
     }
-    gameViewModel.conn.onVideoStatus((s: VideoStatus)=>{
-      this.videoStatus = s;
-    })
+    if(settings.enable_perf_overlay){
+      gameViewModel.conn.onVideoStatus((s: VideoStatus)=>{
+        this.videoStatus = s;
+      })
+    } else {
+      this.videoStatus = null
+    }
   }
 
   aboutToAppear(){

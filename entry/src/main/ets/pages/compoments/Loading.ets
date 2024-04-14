@@ -76,6 +76,7 @@ export struct Alert {
 export struct PrivacyConfirm {
   title: string | Resource = "隐私政策"
   message: string | Resource
+  onConfirm: ()=> void
   controller: CustomDialogController
   build() {
     Column(){
@@ -99,6 +100,7 @@ export struct PrivacyConfirm {
           .onClick(() => {
             if (this.controller != undefined) {
               this.controller.close()
+              AppStorage.Set("privacyConfirm", true)
             }
           }).backgroundColor(0xffffff).fontColor(Color.Black)
       }.margin({ top: 10 })
