@@ -176,9 +176,11 @@ struct PcPage {
   })
   onPageShow(){
     dataPreferences.getPreferences(getContext(this), "appSettings").then((pref: dataPreferences.Preferences)=>{
-      if(!pref.get("privacyConfirm", false)){
-        this.privacyDialogController.open()
-      }
+      pref.get("privacyConfirm", false).then((r:boolean)=>{
+        if(!r){
+          this.privacyDialogController.open()
+        }
+      })
     })
   }
 

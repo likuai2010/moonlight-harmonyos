@@ -100,7 +100,7 @@ export struct PrivacyConfirm {
           .onClick(() => {
             if (this.controller != undefined) {
               this.controller.close()
-              AppStorage.Set("privacyConfirm", true)
+              this.onConfirm()
             }
           }).backgroundColor(0xffffff).fontColor(Color.Black)
       }.margin({ top: 10 })
