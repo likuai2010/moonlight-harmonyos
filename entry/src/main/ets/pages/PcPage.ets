@@ -1,4 +1,4 @@
-import { Icon, MainTitle, NavTitle } from './compoments/Title'
+import { Icon, MainTitle } from './compoments/Title'
 import viewModel from '../entryability/ComputerManagerViewModel'
 import { ComputerDetails, ComputerState } from '../entryability/computers/ComputerDetails'
 import promptAction from '@ohos.promptAction'
@@ -6,9 +6,8 @@ import { PairState } from '../entryability/http/PairingManager'
 import limelightCertProvider from '../entryability/crypto/LimelightCryptoProvider'
 import { NvHttp } from '../entryability/http/NvHttp'
 import router from '@ohos.router'
-import { Alert } from './compoments/Loading'
-import taskpool from '@ohos.taskpool';
-async function getResString(com: object, r: Resource): Promise<string> {
+import { Alert, PrivacyConfirm } from './compoments/Loading'
+async function getResString(com: any, r: Resource): Promise<string> {
   return await getContext(com).resourceManager.getStringValue(r)
 }
 // promptAction.showDialog({
@@ -45,7 +44,7 @@ struct PcView {
           this.doPair()
         })
       }
-      MenuItem({ content: "测试网络连接" })
+      // MenuItem({ content: "测试网络连接" })
       MenuItem({ content: "删除电脑" }).onClick(() => {
         this.onDelete(this.detail)
       })
@@ -63,8 +62,6 @@ struct PcView {
       })
     }
   }
-
-
   click() {
     if (this.detail.state == ComputerState.ONLINE && this.detail.pairState != PairState.PAIRED) {
       this.doPair()
@@ -88,7 +85,7 @@ struct PcView {
       message = null;
       success = true;
     } else {
-      const pinStr = "12345";
+      const pinStr = "1234";
       const dialogText =  await getResString(this, $r('app.string.pair_pairing_msg')) + " " + pinStr + "\n\n" + await getResString(this, $r('app.string.pair_pairing_help'))
       let alertDialog = new CustomDialogController({
         builder: Alert({
@@ -181,7 +178,15 @@ struct PcPage {
   heightValue?: number
   gridRowTemplate?: string
 
-
+  privacyDialogController: CustomDialogController =  new CustomDialogController({
+    builder: PrivacyConfirm({ }),
+    autoCancel: false,
+    alignment: DialogAlignment.Center,
+    customStyle: true
+  })
+  onPageShow(){
+    this.privacyDialogController.open()
+  }
 
   aboutToAppear() {
     viewModel.getComputerList().then((list) => {
