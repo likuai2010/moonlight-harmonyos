@@ -83,7 +83,7 @@ export class ComputerDetails {
       this.macAddress = details.macAddress;
     }
     if (details.serverCert != null) {
-      this.serverCert = details.serverCert;
+        this.serverCert = details.serverCert;
     }
     this.externalPort = details.externalPort;
     this.httpsPort = details.httpsPort;

@@ -182,9 +182,6 @@ struct PcPage {
         }
       })
     })
-  }
-
-  aboutToAppear() {
     viewModel.getComputerList().then((list) => {
       for(let d of list){
         d.isLoading = true
@@ -192,6 +189,10 @@ struct PcPage {
       this.pcList = list
       viewModel.batchPollComputerList(list)
     })
+  }
+
+  aboutToAppear() {
+
     viewModel.onDetailsUpdate((news: ComputerDetails) => {
       let indexes = this.pcList.findIndex((d) => d.uuid == news.uuid)
       if (indexes < 0) {
