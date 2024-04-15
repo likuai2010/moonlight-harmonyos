@@ -5,13 +5,13 @@
         "name": "default",
         "type": "HarmonyOS",
         "material": {
-          "certpath": "C:\\Users\\Administrator\\.ohos\\config\\auto_debug_moonlight_com.xiaobai.moonlight_2850086000506643987.cer",
-          "storePassword": "0000001BE96A357954FD46253F86080D060CE8953CCCEB44ADDAFC8CBF3DFFDCDA8E7C18BD65CBF77C5C24",
-          "keyAlias": "debugKey",
-          "keyPassword": "0000001B811DED5EC46CC460CE86F2851CC69E441E26A29E00ABFF4A9D5CF198FD013738FC46B40D194C25",
-          "profile": "C:\\Users\\Administrator\\.ohos\\config\\auto_debug_moonlight_com.xiaobai.moonlight_2850086000506643987.p7b",
+          "storePassword": "000000180C71E550AAE83708298C09C027B5EDEA42531E01C947A04869FF8701FD5119B2D2AEF49A",
+          "certpath": "C:/Users/Administrator/Documents/product.cer",
+          "keyAlias": "moonlight",
+          "keyPassword": "0000001885A87E85C0ADBB3DFD28A877E42FCD87E4ABF85B0A30252F572DAEBC4EE517A1016C70A1",
+          "profile": "C:/Users/Administrator/Documents/productRelease.p7b",
           "signAlg": "SHA256withECDSA",
-          "storeFile": "C:\\Users\\Administrator\\.ohos\\config\\auto_debug_moonlight_com.xiaobai.moonlight_2850086000506643987.p12"
+          "storeFile": "C:/Users/Administrator/Documents/product.p12"
         }
       }
     ],

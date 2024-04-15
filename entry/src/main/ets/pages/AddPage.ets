@@ -39,7 +39,7 @@ struct AddPage {
       NavTitle({ title: $r("app.string.title_add_pc")})
       Blank().height(10)
       Row(){
-        TextInput({placeholder:'请输入电脑的ip地址', text: "223.72.35.11"}).placeholderColor(Color.Gray).fontColor(Color.White).onChange((value: string) => {
+        TextInput({placeholder:'请输入电脑的ip地址', text: ""}).placeholderColor(Color.Gray).fontColor(Color.White).onChange((value: string) => {
           this.ip = value.trim()
         }).layoutWeight(1).type(InputType.Normal).onSubmit(()=>{
             this.addPc()
