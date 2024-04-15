@@ -111,7 +111,7 @@ export class NvConnection {
       LimeLog.info("ret=>"+ret)
     }catch (e){
       this.context.connListener.connectionTerminated(-1)
-      LimeLog.info("err=>"+e)
+      LimeLog.info("err=>" + e.stack)
     }
 
 
@@ -207,11 +207,6 @@ export class NvConnection {
           return this.quitAndLaunch(h, context);
         }
       } catch (e) {
-        LimeLog.error("error: " +e)
-        if (e instanceof Error){
-          LimeLog.error("error: "+ e.stack)
-          e.name
-        }
         // if (e.getErrorCode() == 470) {
         //   // This is the error you get when you try to resume a session that's not yours.
         //   // Because this is fairly common, we'll display a more detailed message.
@@ -229,7 +224,7 @@ export class NvConnection {
         //   return false;
         // }
 
-        LimeLog.error(e.toString())
+        LimeLog.error(e.stack)
         return false
       }
       LimeLog.info("Resumed existing game session ", )

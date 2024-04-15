@@ -20,20 +20,21 @@ struct PcView {
   @Builder
   pcMenu() {
     Menu() {
-      if (this.detail.pairState == PairState.PAIRED) {
-        MenuItem({ content: "浏览游戏列表" }).onClick(()=>{
-          this.doAppList(this.detail, false, false)
-        })
-      } else {
-        MenuItem({ content: "和电脑配对" }).onClick(()=>{
-          this.doPair()
-        })
-      }
+      // if (this.detail.pairState == PairState.PAIRED) {
+      //   // MenuItem({ content: "浏览游戏列表" }).onChange((e)=>{
+      //   //   this.doAppList(this.detail, false, false)
+      //   // })
+      // } else {
+      //   MenuItem({ content: "和电脑配对" }).onClick(()=>{
+      //     this.doPair()
+      //   })
+      // }
       // MenuItem({ content: "测试网络连接" })
       MenuItem({ content: "删除电脑" }).onClick(() => {
         this.onDelete(this.detail)
       })
       MenuItem({ content: "查看详情" }).onClick((e) => {
+
         let alertDialog = new CustomDialogController({
           builder: Alert({
             title: "查看详情",
@@ -182,13 +183,7 @@ struct PcPage {
         }
       })
     })
-    viewModel.getComputerList().then((list) => {
-      for(let d of list){
-        d.isLoading = true
-      }
-      this.pcList = list
-      viewModel.batchPollComputerList(list)
-    })
+    this.fetchDetails()
   }
 
   aboutToAppear() {
@@ -203,6 +198,15 @@ struct PcPage {
       this.updateGrid()
     })
     this.updateGrid()
+  }
+  fetchDetails(){
+    viewModel.getComputerList().then((list) => {
+      for(let d of list){
+        d.isLoading = true
+      }
+      this.pcList = list
+      viewModel.batchPollComputerList(list)
+    })
   }
 
   updateGrid() {
@@ -219,6 +223,8 @@ struct PcPage {
           ForEach(this.pcList, (d:ComputerDetails) => {
             GridItem() {
               PcView({ detail: d, onDelete:(d)=>{
+                viewModel.delComputer(d)
+                this.fetchDetails()
               }})
             }
           }, (item: ComputerDetails) => JSON.stringify(item))

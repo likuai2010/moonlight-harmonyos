@@ -8,6 +8,7 @@ import dbManger from './computers/ComputerDatabaseManager'
 import LimeLog from './LimeLog';
 import { NvApp } from './http/NvApp';
 import { getResStringByContext } from '../uitls/ResString';
+import FaultLogger from '@ohos.faultLogger';
 
 export class ResultInfo{
     success: boolean
@@ -37,7 +38,7 @@ class ComputerManagerViewModel {
       await this.runPoll(detail, false);
       await this.downloadImageToDisk(detail, detail.appList)
     }catch (e){
-      LimeLog.error(`{e}`)
+      LimeLog.error(`${e.stack}`)
     }
     return detail;
   }
@@ -143,24 +144,29 @@ class ComputerManagerViewModel {
     const isLikelyOnline = details.state == ComputerState.ONLINE && address === details.activeAddress;
     try {
       const newDetails = await http.getComputerDetails(isLikelyOnline);
+      if (!newDetails)
+        return null
       newDetails.rawAppList = await http.getAppListRaw()
       try {
         newDetails.appList = NvHttp.getAppListByReader(newDetails.rawAppList)
       }catch (e){
+        LimeLog.error("get appList " + e.stack)
       }
       // Check if this is the PC we expected
       if (newDetails.uuid == null) {
+        LimeLog.error("UUID is null ")
         return null;
       }
       // details.uuid can be null on initial PC add
       else if (details.uuid != null && details.uuid != '' && details.uuid != newDetails.uuid) {
+        LimeLog.error("UUID is '' ")
         // We got the wrong PC!
         return null;
       }
-
       return newDetails;
     } catch (e) {
-      LimeLog.error(e)
+      LimeLog.error(`fetch ${address}detail failure: ${e}`)
+      LimeLog.error(`${e.stack}`)
     }
     return null;
   }
@@ -245,7 +251,10 @@ class ComputerManagerViewModel {
     }
     return new ResultInfo(success, title, message)
   }
-
+  async delComputer(detail: ComputerDetails): Promise<boolean> {
+    dbManger.deleteComputer(detail)
+    return true
+  }
   parseRawUserInputToUri(rawUserInput: string) {
     try {
       const url = new uri.URI("moonlight://" + rawUserInput);

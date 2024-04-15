@@ -80,9 +80,8 @@ export class NvHttp {
       let textEncoder = new util.TextEncoder();
       let arrbuffer = textEncoder.encodeInto(serverInfo);
       let that = new xml.XmlPullParser(arrbuffer.buffer, 'UTF-8');
-
+      LimeLog.warning(serverInfo);
       that.parse({ supportDoctype: true, ignoreNameSpace: true, tokenValueCallbackFunction: (key, value) => {
-        console.log(value.getText());
         let name = value.getName();
         let text = value.getText();
         if (search === v) {
@@ -224,7 +223,8 @@ export class NvHttp {
     // GFE 2.8 started keeping currentgame set to the last game played. As a result, it no longer
     // has the semantics that its name would indicate. To contain the effects of this change as much
     // as possible, we'll force the current game to zero if the server isn't in a streaming session.
-    if (NvHttp.getXmlString(serverInfo, "state", true).endsWith("_SERVER_BUSY")) {
+    let state = NvHttp.getXmlString(serverInfo, "state", true)
+    if (state && state.endsWith("_SERVER_BUSY")) {
       return parseInt(NvHttp.getXmlString(serverInfo, "currentgame", true), 10);
     } else {
       return 0;
@@ -264,15 +264,17 @@ export class NvHttp {
     }
   }
 
-  async getComputerDetails(likelyOnline: boolean): Promise<ComputerDetails> {
+  async getComputerDetails(likelyOnline: boolean): Promise<ComputerDetails | undefined> {
     return this.getComputerDetailsByInfo(await this.getServerInfo(likelyOnline));
   }
 
-  getComputerDetailsByInfo(serverInfo: string): ComputerDetails {
+  getComputerDetailsByInfo(serverInfo: string): ComputerDetails | undefined {
+    if(serverInfo == null)
+      return ;
     const details = new ComputerDetails();
     details.name = NvHttp.getXmlString(serverInfo, "hostname", false) || "UNKNOWN";
     // UUID is mandatory to determine which machine is responding
-    details.uuid = NvHttp.getXmlString(serverInfo, "uniqueid", true);
+    details.uuid = NvHttp.getXmlString(serverInfo, "uniqueid", true) || "UNKNOWN_Id";
     details.httpsPort = this.getHttpsPort(serverInfo);
     details.macAddress = NvHttp.getXmlString(serverInfo, "mac", false);
     // FIXME: Do we want to use the current port?
@@ -284,8 +286,12 @@ export class NvHttp {
     details.pairState = this.getPairState(serverInfo);
     details.runningGameId = this.getCurrentGame(serverInfo);
     // The MJOLNIR codename was used by GFE but never by any third-party server
-    details.nvidiaServer = NvHttp.getXmlString(serverInfo, "state", true).includes("MJOLNIR");
-
+    let state = NvHttp.getXmlString(serverInfo, "state", true)
+    if(state != null)
+      details.nvidiaServer = state.includes("MJOLNIR");
+    else{
+      LimeLog.warning(`state is null => ${serverInfo}`)
+    }
     // We could reach it, so it's online
     details.state = ComputerState.ONLINE;
 
@@ -342,12 +348,11 @@ export class NvHttp {
       return response
     } catch (e) {
       httpClient.close()
-      LimeLog.error(`http: error${e}`)
+      LimeLog.error(`http: error${e.stack}`)
     }
     return null;
   }
   async openHttpConnectionToString(baseUrl: Url.URL, path: string, query: string = null, timeout: number = NvHttp.SHORT_CONNECTION_TIMEOUT): Promise<string> {
-
     try {
       let url = this.getCompleteUrl(baseUrl, path, query)
       let clientPath = null;
@@ -360,7 +365,7 @@ export class NvHttp {
       const td = util.TextDecoder.create('utf-8', { ignoreBOM : true })
       return td.decodeWithStream(response)
     } catch (e) {
-      LimeLog.error(`${e}`)
+      LimeLog.error(`httpclient ${e}, ${e.stack}`)
     }
     return null;
   }
@@ -454,10 +459,15 @@ export class NvHttp {
       if (!info){
         info = await this.openHttpConnectionToString(this.baseUrlHttp, "serverinfo", null, NvHttp.SHORT_CONNECTION_TIMEOUT)
       }
+      if(info == null)
+        LimeLog.error("cert serverinfo is => null")
       return info
     }
     else {
-      return await this.openHttpConnectionToString(this.baseUrlHttp, "serverinfo", null,  NvHttp.SHORT_CONNECTION_TIMEOUT)
+      const result = await this.openHttpConnectionToString(this.baseUrlHttp, "serverinfo", null,  NvHttp.SHORT_CONNECTION_TIMEOUT)
+      if(result == null)
+        LimeLog.error("no-cert serverinfo is => null")
+      return result;
     }
   }
 }

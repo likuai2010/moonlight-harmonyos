@@ -132,7 +132,7 @@ export class AddressTuple {
   }
   toAddress():string{
     let address = this.address
-    if (address.startsWith("[") && address.endsWith("]")) {
+    if (address && address.startsWith("[") && address.endsWith("]")) {
       address = address.substring(1, address.length - 1);
     }
     return address;
