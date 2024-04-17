@@ -30,7 +30,7 @@ int VideoRender::submitDecodeUnit(PDECODE_UNIT du){
 
 void VideoRender::startRenderFrame(){
     if(m_decode_params != NULL){
-        m_eglRender->initialize(m_decode_params);
+        m_eglRender->initialize(getParams());
         while (true) {
             AVFrameHolder::GetInstance()->get([this](AVFrame *frame) { m_eglRender->renderFrame(frame); });
             usleep(100000 / 120);

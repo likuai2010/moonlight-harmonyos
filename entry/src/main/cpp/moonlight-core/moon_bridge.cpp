@@ -167,17 +167,14 @@ napi_value MoonBridgeApi::MoonBridge_startConnection(napi_env env, napi_callback
     memcpy(streamConfig.remoteInputAesIv, riAesIv, sizeof(streamConfig.remoteInputAesIv));
 
     api->BridgeVideoRendererCallbacks.capabilities = videoCapabilities;
-   
-    EglVideoRenderer *render = new EglVideoRenderer();
-    
     napi_deferred deferred;
     napi_value promise;
     napi_create_promise(env, &deferred, &promise);
     BridgeCallbackInfo *bridgeCallbackInfo = new BridgeCallbackInfo{
         .serverInfo = serverInfo,
         .streamConfig = streamConfig,
-        .deferred = deferred,
-        .render = render};
+        .deferred = deferred
+    };
     napi_value resourceName;
     napi_create_string_latin1(env, "GetRequest", NAPI_AUTO_LENGTH, &resourceName);
     
@@ -197,16 +194,11 @@ napi_value MoonBridgeApi::MoonBridge_startConnection(napi_env env, napi_callback
             napi_value result;
             napi_create_int32(env,ret, &result);
             napi_reject_deferred(env, info->deferred, result);
-            if(api->m_render->getParams() != NULL){
-                    info->render->initialize(api->m_render->getParams());
-                    while (true) {
-                        AVFrameHolder::GetInstance()->get([info](AVFrame *frame) { info->render->renderFrame(frame); });
-                        usleep(100000 / 120);
-                    }
-                }
+            if (api->m_render->getParams() != NULL){
+                api->m_render->startRenderFrame();
+            }
         },
         [](napi_env env, napi_status status, void *data) {
-            
             BridgeCallbackInfo *info = (BridgeCallbackInfo *)data;
             napi_delete_async_work(env, info->asyncWork);
             delete info;
