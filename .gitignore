@@ -11,3 +11,4 @@
 **/.test
 entry/src/main/cpp/moonlight-core/ffmpeg/libohosffmpeg.z.so
 entry/src/main/cpp/moonlight-core/ffmpeg/arm64-v8a/libohosffmpeg.z.so
+entry/src/main/cpp/libs/ffmpeg/arm64-v8a/libohosffmpeg.z.so
