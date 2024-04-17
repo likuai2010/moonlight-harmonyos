@@ -5,9 +5,7 @@
 // please include "napi/native_api.h".
 
 #include "NativeVideoDecoder.h"
-#include <bits/alltypes.h>
 #include <multimedia/player_framework/native_averrors.h>
-#include <stdarg.h>
 #include <hilog/log.h>
 #include <multimedia/player_framework/native_avcodec_videodecoder.h>
 #include <unistd.h>

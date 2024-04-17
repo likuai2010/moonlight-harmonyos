@@ -57,7 +57,7 @@ class NativeVideoDecoder : public IVideoDecoder {
     int submitDecodeUnit(PDECODE_UNIT decode_unit) override;
     VIDEO_STATS *video_decode_stats() override;
     static bool supportedHW();
-    DECODER_PARAMETERS *getParams() override;
+    DECODER_PARAMETERS *getParams();
 
 private:
     void inputFunc();

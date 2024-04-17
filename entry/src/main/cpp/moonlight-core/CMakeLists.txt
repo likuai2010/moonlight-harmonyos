@@ -7,7 +7,7 @@ set(OPENSSL_INCLUDE_DIR ${OPENSSL_ROOT_DIR}/include)
 set(OPENSSL_CRYPTO_LIBRARY libcrypto)
 
 
-set(FFmpeg OFF)
+set(FFmpeg ON)
 
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}
@@ -24,9 +24,6 @@ if (FFmpeg)
 endif()
 
 
-
-#set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
-
 add_subdirectory(opus)
 add_subdirectory(moonlight-common-c)
 
@@ -37,8 +34,9 @@ add_library(entry SHARED
     audio/PcmData.cpp
     Shader.cpp
     moon_bridge.cpp
+    video/VideoRender.cpp
     video/AVFrameHolder.cpp
-    video/NativeVideoDecoder.cpp
+    video/decoder/NativeVideoDecoder.cpp
     video/render/eglRender.cpp
     video/render/plugin_render.cpp
     audio/SDLAudioRenderer.cpp
@@ -46,7 +44,7 @@ add_library(entry SHARED
 
 if (FFmpeg)
     target_compile_definitions(entry PRIVATE FFMPEG_ENABLED)
-    target_sources(entry PRIVATE video/FFmpegVideoDecoder.cpp)
+    target_sources(entry PRIVATE video/decoder/FFmpegVideoDecoder.cpp)
     target_link_libraries(entry PRIVATE ffmpeg)
 endif()
 
@@ -57,9 +55,8 @@ target_include_directories(entry SYSTEM PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/opus/include
     ${CMAKE_CURRENT_SOURCE_DIR}/moonlight-common-c/reedsolomon
     ${CMAKE_CURRENT_SOURCE_DIR}/moonlight-common-c/enet/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg/include
 )
-
-target_include_directories(entry PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg/include)
 
 target_link_libraries(entry PRIVATE
     opus

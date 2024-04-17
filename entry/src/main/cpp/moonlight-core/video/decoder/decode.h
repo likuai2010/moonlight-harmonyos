@@ -10,7 +10,6 @@
 #define SDL_CODE_FRAME_READY 0
 #define MAX_SLICES 4
 #include <utility>
-#include <stdlib.h>
 
 using Size = std::pair<int, int>;
 
@@ -57,7 +56,6 @@ public:
 
     virtual int submitDecodeUnit(PDECODE_UNIT du) = 0;
     virtual VIDEO_STATS* video_decode_stats() = 0;
-    virtual DECODER_PARAMETERS* getParams() = 0;
     // TODO hdr
     //virtual bool isHdrSupported() = 0;
     //virtual void setHdrMode(bool enabled) = 0;
