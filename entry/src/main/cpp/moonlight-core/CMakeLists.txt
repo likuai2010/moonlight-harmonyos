@@ -75,5 +75,5 @@ target_link_libraries(entry PRIVATE
     libc++.a
 )
 
-target_link_libraries(entry PRIVATE utils)
+target_link_libraries(entry PRIVATE cUtils)
 

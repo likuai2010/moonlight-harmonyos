@@ -20,17 +20,17 @@ set_target_properties(libcurl PROPERTIES IMPORTED_LOCATION ${CURL_DIR}/${CMAKE_O
 set_target_properties(libcurl PROPERTIES INTERFACE_INCLUDE_DIRECTORIES ${CURL_INCLUDE_DIR})
 
 
-add_library(utils SHARED
+add_library(cUtils SHARED
     utils.cpp
     x509Utils.cpp
     http_curl.cpp
 )
-target_include_directories(utils SYSTEM PRIVATE
+target_include_directories(cUtils SYSTEM PRIVATE
     ${CURL_INCLUDE_DIR}
     ${OPENSSL_INCLUDE_DIR}
 )
 
-target_link_libraries(utils PRIVATE
+target_link_libraries(cUtils PRIVATE
     libssl
     libcrypto
     libcurl

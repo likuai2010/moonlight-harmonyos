@@ -1,6 +1,6 @@
 import cryptoCert from '@ohos.security.cert';
 import fs from '@ohos.file.fs';
-import { generate_x509_certificate } from 'libutils.so';
+import { generate_x509_certificate } from 'libcUtils.so';
 
 export class LimelightCertProvider {
   static filesDir: string = ""

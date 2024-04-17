@@ -10,7 +10,7 @@ import { bytesToHex, generateRandomBytes } from '../crypto/CryptoManager';
 import { NvApp } from './NvApp';
 import List from '@ohos.util.List';
 import Stack from '@ohos.util.Stack';
-import { CurlClient } from 'libutils.so';
+import { CurlClient } from 'libcUtils.so';
 import LimeLog from '../LimeLog';
 
 
