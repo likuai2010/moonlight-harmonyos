@@ -6,13 +6,11 @@
 
 #ifndef moonlight_moon_bridge_H
 #define moonlight_moon_bridge_H
-#include "napi/native_api.h"
 #include "node_api.h"
 #include "video/render/plugin_render.h"
 #include "audio/Audio.h"
 #include "audio/SDLAudioRenderer.h"
 #include <ace/xcomponent/native_interface_xcomponent.h>
-#include <asm-generic/stat.h>
 #include <string>
 #include <unordered_map>
 
@@ -74,11 +72,16 @@ class MoonBridgeApi {
         api->m_decoder->stop();
     }
     static void BridgeDrCleanup(void) {
-        api->m_decoder->cleanup();
+        try {
+            //api->m_decoder->cleanup();
+        } catch (...) {
+             // 捕获所有其他类型的异常
+             OH_LOG_Print(LOG_APP, LOG_ERROR, LOG_DOMAIN, "testTag", "m_decoder.cleanup() failure");
+         }
     }
     static int BridgeDrSubmitDecodeUnit(PDECODE_UNIT decodeUnit) {
         int ret = api->m_decoder->submitDecodeUnit(decodeUnit);
-        Emit("OnVideoStatus", api->m_decoder->video_decode_stats());
+        //Emit("OnVideoStatus", api->m_decoder->video_decode_stats());
         return ret;
     }
 

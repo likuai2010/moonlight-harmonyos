@@ -12,7 +12,6 @@
 #include <openssl/x509.h>
 #include <openssl/x509v3.h>
 
-#include <moon_bridge.h>
 
 void THROW_BAD_ALLOC_IF_NULL(void *target) {
     if (target == nullptr) {
@@ -121,7 +120,13 @@ int generate_x509_certificate(char *cert_path, char *key_path) {
 
     return 0;
 }
-
+char *get_value_string(napi_env env, napi_value value) {
+    size_t length;
+    napi_get_value_string_utf8(env, value, nullptr, 0, &length);
+    char *buffer = (char *)malloc(length + 1);
+    napi_get_value_string_utf8(env, value, buffer, length + 1, &length);
+    return buffer;
+}
 napi_value generate_certificate(napi_env env, napi_callback_info info) {
     size_t argc = 2;
     napi_value args[2] = {nullptr};

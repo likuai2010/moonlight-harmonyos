@@ -71,21 +71,9 @@ static napi_value Init(napi_env env, napi_value exports) {
     if (dataQueue == NULL) {
         dataQueue = new DataQueue();
     }
-    napi_property_descriptor desc[] = {
-        {"add", nullptr, Add, nullptr, nullptr, nullptr, napi_default, nullptr},
-        {"generate_x509_certificate", nullptr, generate_certificate, nullptr, nullptr, nullptr, napi_default, nullptr},
-        {"verify_signature", nullptr, verifySignature, nullptr, nullptr, nullptr, napi_default, nullptr},
-        {"sign_message", nullptr, signMessage, nullptr, nullptr, nullptr, napi_default, nullptr},
-        {"decrypt", nullptr, decrypt, nullptr, nullptr, nullptr, napi_default, nullptr},
-        {"encrypt", nullptr, encrypt, nullptr, nullptr, nullptr, napi_default, nullptr},
-        {"openSlEsPlayer_sendPcmData", nullptr, OpenSlEsPlayer_sendPcmData, nullptr, nullptr, nullptr, napi_default, nullptr},
-        {"get_signature_from_pemCert", nullptr, getSignatureFromPemCert, nullptr, nullptr, nullptr, napi_default, nullptr},
-    };
-    status = napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc);
-    if (status != napi_ok)
-        return NULL;
+    OH_LOG_Print(LOG_APP, LOG_ERROR, LOG_DOMAIN, "testTag", "napi_define_properties %{public}s", "entry");
+
     MoonBridgeApi::api->Export(env, exports);
-    HttpCurlInit(env, exports);
 
     return exports;
 }

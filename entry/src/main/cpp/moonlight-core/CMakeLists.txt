@@ -63,6 +63,31 @@ video/render/eglRender.cpp
 video/render/plugin_render.cpp
 audio/SDLAudioRenderer.cpp
 )
+add_library(cUtils SHARED
+    cUtils.cpp
+    utils/x509Utils.cpp
+    utils/http_curl.cpp
+)
+target_link_libraries(cUtils PRIVATE
+    libssl
+    libcrypto
+    opus
+    moonlight-common-c
+    libcurl
+    entry
+    ace_ndk.z.so
+    libace_napi.z.so
+    libhilog_ndk.z.so
+    libnative_media_codecbase.so
+    libnative_media_core.so
+    libnative_media_vdec.so
+    libEGL.so
+    GLESv3.so
+    libOpenSLES.so
+    libuv.so
+    libz.so
+    libc++.a
+)
 
 if (FFmpeg)
     target_compile_definitions(entry PRIVATE FFMPEG_ENABLED)
@@ -79,28 +104,28 @@ libcurl
 )
 
 target_include_directories(entry SYSTEM PRIVATE
-${CMAKE_CURRENT_SOURCE_DIR}
-${OPENSSL_INCLUDE_DIR}
-${CURL_INCLUDE_DIR}
-${CMAKE_CURRENT_SOURCE_DIR}/opus/include
-${CMAKE_CURRENT_SOURCE_DIR}/moonlight-common-c/reedsolomon
-${CMAKE_CURRENT_SOURCE_DIR}/moonlight-common-c/enet/include
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${OPENSSL_INCLUDE_DIR}
+    ${CURL_INCLUDE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/opus/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/moonlight-common-c/reedsolomon
+    ${CMAKE_CURRENT_SOURCE_DIR}/moonlight-common-c/enet/include
 )
 
 target_include_directories(entry PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg/include)
 
 target_link_libraries(entry PRIVATE
-ace_ndk.z.so
-libace_napi.z.so
-libhilog_ndk.z.so
-libnative_media_codecbase.so
-libnative_media_core.so
-libnative_media_vdec.so
-libEGL.so
-GLESv3.so
-libOpenSLES.so
-libuv.so
-libz.so
-libc++.a
+    ace_ndk.z.so
+    libace_napi.z.so
+    libhilog_ndk.z.so
+    libnative_media_codecbase.so
+    libnative_media_core.so
+    libnative_media_vdec.so
+    libEGL.so
+    GLESv3.so
+    libOpenSLES.so
+    libuv.so
+    libz.so
+    libc++.a
 )
 

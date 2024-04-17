@@ -5,11 +5,13 @@
 // please include "napi/native_api.h".
 
 #include "moon_bridge.h"
+#include <Platform.h>
 #include <audio/SDLAudioRenderer.h>
 #include <multimedia/player_framework/native_avcodec_base.h>
 #include <multimedia/player_framework/native_avcodec_videodecoder.h>
 #include <native_window/external_window.h>
 #include <video/FFmpegVideoDecoder.h>
+#include "utils/napi_utils.h"
 #define NDEBUG
 #include <Limelight.h>
 #include "napi/native_api.h"
@@ -71,21 +73,17 @@ napi_value ConvertFloatToNapiValue(napi_env env, float intValue) {
     }
     return result;
 }
-char *get_value_string(napi_env env, napi_value value) {
-    size_t length;
-    napi_get_value_string_utf8(env, value, nullptr, 0, &length);
-    char *buffer = (char *)malloc(length + 1);
-    napi_get_value_string_utf8(env, value, buffer, length + 1, &length);
-    return buffer;
-}
+
 
 struct BridgeCallbackInfo {
     SERVER_INFORMATION serverInfo;
     STREAM_CONFIGURATION streamConfig;
     EglVideoRenderer *render;
     napi_async_work asyncWork;
+    napi_deferred deferred;
 };
 napi_value MoonBridgeApi::MoonBridge_startConnection(napi_env env, napi_callback_info info) {
+   
     size_t argc = 20;
     napi_value args[20] = {nullptr};
     napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
@@ -175,33 +173,45 @@ napi_value MoonBridgeApi::MoonBridge_startConnection(napi_env env, napi_callback
     memcpy(streamConfig.remoteInputAesIv, riAesIv, sizeof(streamConfig.remoteInputAesIv));
 
     api->BridgeVideoRendererCallbacks.capabilities = videoCapabilities;
-    int ret = LiStartConnection(&serverInfo,
-                                &streamConfig,
-                                &api->BridgeConnListenerCallbacks,
-                                &api->BridgeVideoRendererCallbacks,
-                                &api->BridgeAudioRendererCallbacks,
-                                api->nativewindow, 0,
-                                nullptr, 0);
+   
     EglVideoRenderer *render = new EglVideoRenderer();
+    
+    napi_deferred deferred;
+    napi_value promise;
+    napi_create_promise(env, &deferred, &promise);
     BridgeCallbackInfo *bridgeCallbackInfo = new BridgeCallbackInfo{
         .serverInfo = serverInfo,
         .streamConfig = streamConfig,
+        .deferred = deferred,
         .render = render};
     napi_value resourceName;
     napi_create_string_latin1(env, "GetRequest", NAPI_AUTO_LENGTH, &resourceName);
+    
     napi_create_async_work(
         env, nullptr, resourceName,
         [](napi_env env, void *data) {
             BridgeCallbackInfo *info = (BridgeCallbackInfo *)data;
+            int ret = LiStartConnection(&info->serverInfo,
+                                        &info->streamConfig,
+                                        &api->BridgeConnListenerCallbacks,
+                                        &api->BridgeVideoRendererCallbacks,
+                                        &api->BridgeAudioRendererCallbacks,
+                                        api->nativewindow, 0,
+                                        nullptr, 0);
+        
             if(api->m_decoder->getParams() != NULL){
-                info->render->initialize(api->m_decoder->getParams());
-                while (true) {
-                    AVFrameHolder::GetInstance()->get([info](AVFrame *frame) { info->render->renderFrame(frame); });
-                    usleep(100000 / 120);
-                }
+//                info->render->initialize(api->m_decoder->getParams());
+//                while (true) {
+//                    AVFrameHolder::GetInstance()->get([info](AVFrame *frame) { info->render->renderFrame(frame); });
+//                    usleep(100000 / 120);
+//                }
             }
+            napi_value result;
+            napi_create_int32(env,ret, &result);
+            napi_reject_deferred(env, info->deferred, result);
         },
         [](napi_env env, napi_status status, void *data) {
+            
             BridgeCallbackInfo *info = (BridgeCallbackInfo *)data;
             napi_delete_async_work(env, info->asyncWork);
             delete info;
@@ -210,9 +220,7 @@ napi_value MoonBridgeApi::MoonBridge_startConnection(napi_env env, napi_callback
     // 将异步工作排队，等待 Node.js 事件循环处理
     napi_queue_async_work(env, bridgeCallbackInfo->asyncWork);
 
-    napi_value result;
-    napi_create_int32(env, ret, &result);
-    return result;
+    return promise;
 }
 napi_value MoonBridgeApi::MoonBridge_stopConnection(napi_env env, napi_callback_info info) {
     LiStopConnection();
@@ -533,10 +541,10 @@ int MoonBridgeApi::setFunByName(char *name, napi_threadsafe_function tsf) {
 }
 static void Napi_OnCallback(napi_env env, napi_value js_callback, void *context, void *data) {
     MoonBridgeCallBackInfo *info = static_cast<MoonBridgeCallBackInfo *>(data);
-
     napi_value params[1];
-    napi_create_string_utf8(env, info->stage, NAPI_AUTO_LENGTH, &params[0]);
+    napi_create_string_utf8(env, "xxxxx", NAPI_AUTO_LENGTH, &params[0]);
     napi_call_function(env, nullptr, js_callback, 1, params, nullptr);
+    
 }
 
 napi_value MoonBridgeApi::Emit(char *eventName, void *value) {

@@ -164,12 +164,10 @@ PluginRender *PluginRender::GetInstance(std::string &id)
 
 void PluginRender::Export(napi_env env, napi_value exports)
 {
-    
     if ((nullptr == env) || (nullptr == exports)) {
         OH_LOG_Print(LOG_APP, LOG_ERROR, LOG_DOMAIN, "PluginRender", "Export: env or exports is null");
         return;
     }
-
     napi_property_descriptor desc[] = {
         { "drawRectangle", nullptr, PluginRender::NapiDrawRectangle, nullptr, nullptr, nullptr, napi_default, nullptr }
     };

@@ -106,7 +106,9 @@ int FFmpegVideoDecoder::setup(DECODER_PARAMETERS dparams) {
 
 void FFmpegVideoDecoder::cleanup() {
     ffDecodeLog("FFmpeg: Cleanup...");
-    av_packet_free(&m_packet);
+    if (m_packet){
+        av_packet_free(&m_packet);
+    }
 
     if (hw_device_ctx) {
         av_buffer_unref(&hw_device_ctx);
@@ -117,28 +119,21 @@ void FFmpegVideoDecoder::cleanup() {
         av_free(m_decoder_context);
         m_decoder_context = NULL;
     }
-
     if (m_frames) {
         for (int i = 0; i < m_frames_count; i++) {
             if (m_frames[i])
                 av_frame_free(&m_frames[i]);
         }
-
         free(m_frames);
         m_frames = nullptr;
     }
-
     if (tmp_frame) {
         av_frame_free(&tmp_frame);
     }
-
     if (m_ffmpeg_buffer) {
         free(m_ffmpeg_buffer);
         m_ffmpeg_buffer = nullptr;
     }
-
-    // AVFrameHolder::instance().cleanup();
-
     ffDecodeLog("FFmpeg: Cleanup done!");
 }
 
