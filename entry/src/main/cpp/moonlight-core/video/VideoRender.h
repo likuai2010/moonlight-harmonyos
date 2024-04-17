@@ -22,6 +22,7 @@ class VideoRender: public IVideoDecoder {
     DECODER_PARAMETERS *getParams() override;
     void startRenderFrame();
   private:
+    bool running;
     IVideoDecoder *m_decoder;
     EglVideoRenderer *m_eglRender;
     pthread_t render_thread_t;
