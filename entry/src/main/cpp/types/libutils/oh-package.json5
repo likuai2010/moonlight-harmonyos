@@ -1,5 +1,5 @@
 {
-  "name": "libcUtils.so",
+  "name": "libutils.so",
   "types": "./index.d.ts",
   "version": "",
   "description": "Please describe the basic information."

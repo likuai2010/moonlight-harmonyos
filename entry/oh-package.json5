@@ -2,7 +2,7 @@
   "license": "",
   "devDependencies": {
     "@types/libentry.so": "file:./src/main/cpp/types/libentry",
-    "@types/libcutils.so": "file:./src/main/cpp/types/libcUtils"
+    "@types/libutils.so": "file:./src/main/cpp/types/libutils"
   },
   "author": "",
   "name": "entry",
