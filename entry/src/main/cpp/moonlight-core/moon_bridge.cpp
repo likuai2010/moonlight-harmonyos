@@ -10,7 +10,7 @@
 #include <multimedia/player_framework/native_avcodec_base.h>
 #include <multimedia/player_framework/native_avcodec_videodecoder.h>
 #include <native_window/external_window.h>
-#include <video/FFmpegVideoDecoder.h>
+#include <video/decoder/FFmpegVideoDecoder.h>
 #include "utils/napi_utils.h"
 #define NDEBUG
 #include <Limelight.h>
@@ -18,7 +18,7 @@
 #include <hilog/log.h>
 #include <ace/xcomponent/native_interface_xcomponent.h>
 #include "video/AVFrameHolder.h"
-#include "video/NativeVideoDecoder.h"
+#include "video/decoder/NativeVideoDecoder.h"
 #include <unistd.h>
 #include <arpa/inet.h>
 
@@ -33,6 +33,7 @@ MoonBridgeApi::MoonBridgeApi() {
     }
     m_audioRender = new SDLAudioRenderer();
     m_videoRender = new EglVideoRenderer();
+    m_render = new VideoRender();
     BridgeVideoRendererCallbacks = {
         .setup = BridgeDrSetup,
         .start = BridgeDrStart,
@@ -199,16 +200,17 @@ napi_value MoonBridgeApi::MoonBridge_startConnection(napi_env env, napi_callback
                                         api->nativewindow, 0,
                                         nullptr, 0);
         
-            if(api->m_decoder->getParams() != NULL){
-//                info->render->initialize(api->m_decoder->getParams());
-//                while (true) {
-//                    AVFrameHolder::GetInstance()->get([info](AVFrame *frame) { info->render->renderFrame(frame); });
-//                    usleep(100000 / 120);
-//                }
-            }
+           
             napi_value result;
             napi_create_int32(env,ret, &result);
             napi_reject_deferred(env, info->deferred, result);
+            if(api->m_decoder->getParams() != NULL){
+                    info->render->initialize(api->m_decoder->getParams());
+                    while (true) {
+                        AVFrameHolder::GetInstance()->get([info](AVFrame *frame) { info->render->renderFrame(frame); });
+                        usleep(100000 / 120);
+                    }
+                }
         },
         [](napi_env env, napi_status status, void *data) {
             

@@ -13,6 +13,7 @@
 #include <ace/xcomponent/native_interface_xcomponent.h>
 #include <string>
 #include <unordered_map>
+#include <video/VideoRender.h>
 
 char *get_value_string(napi_env env, napi_value value);
 int MoonBridge_sendTouchEvent(OH_NativeXComponent_TouchEvent touchEvent, uint64_t width, uint64_t height);
@@ -32,6 +33,7 @@ class MoonBridgeApi {
     static MoonBridgeApi *api;
     
     IVideoDecoder *m_decoder;
+    VideoRender *m_render;
     EglVideoRenderer *m_videoRender;
     SDLAudioRenderer *m_audioRender;
     void *nativewindow;

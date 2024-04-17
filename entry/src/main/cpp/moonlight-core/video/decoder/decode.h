@@ -56,6 +56,7 @@ public:
 
     virtual int submitDecodeUnit(PDECODE_UNIT du) = 0;
     virtual VIDEO_STATS* video_decode_stats() = 0;
+    virtual DECODER_PARAMETERS *getParams() = 0;
     // TODO hdr
     //virtual bool isHdrSupported() = 0;
     //virtual void setHdrMode(bool enabled) = 0;

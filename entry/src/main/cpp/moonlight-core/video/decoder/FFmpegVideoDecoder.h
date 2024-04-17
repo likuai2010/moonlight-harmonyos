@@ -26,7 +26,7 @@ class FFmpegVideoDecoder : public IVideoDecoder {
     void cleanup() override;
     int submitDecodeUnit(PDECODE_UNIT decode_unit) override;
     VIDEO_STATS* video_decode_stats() override;
-    DECODER_PARAMETERS* getParams();
+    DECODER_PARAMETERS* getParams() override;
     AVFrame* m_frame = nullptr;
   private:
     DECODER_PARAMETERS m_params;
