@@ -1,4 +1,3 @@
-#include "utils/http_curl.h"
 #include "napi/native_api.h"
 #include "moon_bridge.h"
 #include "utils/x509Utils.h"
