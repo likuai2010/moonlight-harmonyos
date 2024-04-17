@@ -41,15 +41,18 @@ void *renderFrame(void *data) {
     VideoRender *audio = static_cast<VideoRender *>(data);
     audio->startRenderFrame();
 }
+DECODER_PARAMETERS* VideoRender::getParams(){
+    return m_decoder->getParams();
+}
 void VideoRender::start(){
     m_decoder->start();
-    pthread_create(&render_thread_t, nullptr, renderFrame, this);
+    //pthread_create(&render_thread_t, nullptr, renderFrame, this);
 }
 
 void VideoRender::stop(){
     m_decoder->stop();
     
-    pthread_exit(&render_thread_t);
+    //pthread_exit(&render_thread_t);
 }
 VIDEO_STATS* VideoRender::video_decode_stats(){
     return m_decoder->video_decode_stats();

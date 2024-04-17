@@ -32,9 +32,7 @@ class MoonBridgeApi {
 
     static MoonBridgeApi *api;
     
-    IVideoDecoder *m_decoder;
     VideoRender *m_render;
-    EglVideoRenderer *m_videoRender;
     SDLAudioRenderer *m_audioRender;
     void *nativewindow;
     void Export(napi_env env, napi_value exports);
@@ -62,27 +60,22 @@ class MoonBridgeApi {
         param.context = context;
         param.frame_rate = redrawRate;
         param.dr_flags = drFlags;
-        if (api->m_decoder != nullptr){
-            api->m_decoder->setup(param);
+        if (api->m_render != nullptr){
+            api->m_render->setup(param);
         }
         return DR_OK;
     }
     static void BridgeDrStart(void) {
-        api->m_decoder->start();
+        api->m_render->start();
     }
     static void BridgeDrStop(void) {
-        api->m_decoder->stop();
+        api->m_render->stop();
     }
     static void BridgeDrCleanup(void) {
-        try {
-            //api->m_decoder->cleanup();
-        } catch (...) {
-             // 捕获所有其他类型的异常
-             OH_LOG_Print(LOG_APP, LOG_ERROR, LOG_DOMAIN, "testTag", "m_decoder.cleanup() failure");
-         }
+        api->m_render->cleanup();
     }
     static int BridgeDrSubmitDecodeUnit(PDECODE_UNIT decodeUnit) {
-        int ret = api->m_decoder->submitDecodeUnit(decodeUnit);
+        int ret = api->m_render->submitDecodeUnit(decodeUnit);
         //Emit("OnVideoStatus", api->m_decoder->video_decode_stats());
         return ret;
     }

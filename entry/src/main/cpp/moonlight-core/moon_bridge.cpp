@@ -25,14 +25,7 @@
 MoonBridgeApi *MoonBridgeApi::api = new MoonBridgeApi();
 
 MoonBridgeApi::MoonBridgeApi() {
-#ifdef FFMPEG_ENABLED
-    m_decoder = new FFmpegVideoDecoder();
-#endif
-    if(NativeVideoDecoder::supportedHW()){
-        m_decoder = new NativeVideoDecoder();
-    }
     m_audioRender = new SDLAudioRenderer();
-    m_videoRender = new EglVideoRenderer();
     m_render = new VideoRender();
     BridgeVideoRendererCallbacks = {
         .setup = BridgeDrSetup,
@@ -204,8 +197,8 @@ napi_value MoonBridgeApi::MoonBridge_startConnection(napi_env env, napi_callback
             napi_value result;
             napi_create_int32(env,ret, &result);
             napi_reject_deferred(env, info->deferred, result);
-            if(api->m_decoder->getParams() != NULL){
-                    info->render->initialize(api->m_decoder->getParams());
+            if(api->m_render->getParams() != NULL){
+                    info->render->initialize(api->m_render->getParams());
                     while (true) {
                         AVFrameHolder::GetInstance()->get([info](AVFrame *frame) { info->render->renderFrame(frame); });
                         usleep(100000 / 120);
@@ -458,12 +451,8 @@ enum TestEnum {
 static napi_value MoonBridgeJavascriptClassConstructor(napi_env env, napi_callback_info info) {
     napi_value thisArg = nullptr;
     void *data = nullptr;
-    int vale = 1;
     napi_get_cb_info(env, info, nullptr, nullptr, &thisArg, &data);
-    const char* avc = OH_AVCODEC_MIMETYPE_VIDEO_AVC;
    
-    OH_AVCodec* m_decoder = OH_VideoDecoder_CreateByMime("video/hevc");
-    //OH_AVCodec* m_decoder2 = OH_VideoDecoder_CreateByMime(OH_AVCODEC_MIMETYPE_VIDEO_AVC);
     napi_value global = nullptr;
     napi_get_global(env, &global);
 
@@ -473,9 +462,6 @@ static napi_value MoonBridgeJavascriptClassConstructor(napi_env env, napi_callba
 static OH_NativeXComponent_Callback callback;
 
 void MoonBridgeApi::Export(napi_env env, napi_value exports) {
-    // 需要 api 9 没有真机测试
-    // m_decoder = (IVideoDecoder *)new NativeVideoDecoder();
-    // 软解码 ffmpeg cpu
     api->env = env;
     napi_property_descriptor descriptors[] = {
         {"startConnection", nullptr, MoonBridge_startConnection, nullptr, nullptr, nullptr, napi_default, nullptr},

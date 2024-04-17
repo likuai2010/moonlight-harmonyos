@@ -19,6 +19,7 @@ class VideoRender: public IVideoDecoder {
     void cleanup() override;
     int submitDecodeUnit(PDECODE_UNIT du) override;
     VIDEO_STATS* video_decode_stats() override;
+    DECODER_PARAMETERS *getParams() override;
     void startRenderFrame();
   private:
     IVideoDecoder *m_decoder;
