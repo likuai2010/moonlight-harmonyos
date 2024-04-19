@@ -24,6 +24,7 @@
 
 std::unordered_map<std::string, PluginRender *> PluginRender::m_instance;
 OH_NativeXComponent_Callback PluginRender::m_callback;
+OH_NativeXComponent_MouseEvent_Callback PluginRender::m_mouse_callback;
 
 void OnSurfaceCreatedCB(OH_NativeXComponent *component, void *window)
 {
@@ -122,7 +123,7 @@ void OnMouseEventCB(OH_NativeXComponent *component, void *window)
 {
     if ((nullptr == component) || (nullptr == window)) {
         OH_LOG_Print(LOG_APP, LOG_ERROR, LOG_DOMAIN, "Callback",
-            "DispatchTouchEventCB: component or window is null");
+            "OnMouseEventCB: component or window is null");
         return;
     }
     uint64_t width, height;
@@ -149,6 +150,9 @@ PluginRender::PluginRender(std::string &id)
     renderCallback->OnSurfaceChanged = OnSurfaceChangedCB;
     renderCallback->OnSurfaceDestroyed = OnSurfaceDestroyedCB;
     renderCallback->DispatchTouchEvent = DispatchTouchEventCB;
+    OH_NativeXComponent_MouseEvent_Callback *mouseCallback = &PluginRender::m_mouse_callback;
+    mouseCallback->DispatchHoverEvent = OnHoverEventCB;
+    mouseCallback->DispatchMouseEvent = OnMouseEventCB;
 }
 
 PluginRender *PluginRender::GetInstance(std::string &id)

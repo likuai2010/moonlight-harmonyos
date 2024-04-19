@@ -7,6 +7,7 @@ import viewModel from './ComputerManagerViewModel'
 import fileIo from '@ohos.file.fs';
 let windowStage_ = null;
 let sub_windowClass = null;
+import pointer from '@ohos.multimodalInput.pointer';
 
 export function  showSubWindow() {
   // 1.创建应用子窗口。
@@ -52,6 +53,20 @@ export default class EntryAbility extends UIAbility {
     await fileIo.copyFile(clientPath.fd, this.context.cacheDir + "/client.pem")
     await fileIo.copyFile(keyPath.fd, this.context.cacheDir + "/private.pem")
     limelightCertProvider.initCertKeyPair(this.context.cacheDir)
+
+    const window = await windos.getMainWindow()
+    const windowId = windos.getMainWindowSync().getWindowProperties().id
+    try {
+      pointer.setPointerStyle(windowId, pointer.PointerStyle.DEFAULT,(error) => {
+        if (error) {
+          console.error(`Set pointer visible failed, error: ${JSON.stringify(error, [`code`, `message`])}`);
+          return;
+        }
+        console.error(`Set pointer visible success.`);
+      });
+    } catch (error) {
+      console.error(`The mouse pointer hide attributes is failed. ${JSON.stringify(error, [`code`, `message`])}`);
+    }
     windos.loadContent('pages/PcPage', (err, data) => {
       if (err.code) {
         return;
@@ -65,6 +80,7 @@ export default class EntryAbility extends UIAbility {
     windowStage.getMainWindowSync().setWindowSystemBarEnable(names)
     //windowStage_ = windowStage;
     // 开发者可以在适当的时机，如主窗口上按钮点击事件等，创建子窗口。并不一定需要在onWindowStageCreate调用，这里仅作展示
+
 
     viewModel.initContext(this.context)
     this.initSSL(windowStage)

@@ -40,7 +40,7 @@ public:
 public:
     static std::unordered_map<std::string, PluginRender *> m_instance;
     static OH_NativeXComponent_Callback m_callback;
-
+    static OH_NativeXComponent_MouseEvent_Callback m_mouse_callback;
     EglVideoRenderer *m_eglCore;
     std::string m_id;
 };
