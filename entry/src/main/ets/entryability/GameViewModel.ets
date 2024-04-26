@@ -4,7 +4,6 @@ import { NvApp } from './http/NvApp';
 import { NvHttp } from './http/NvHttp';
 import { NvConnection } from './nvstream/NvConnection';
 import { StreamConfiguration } from './nvstream/StreamConfiguration';
-import { Loading } from '../pages/compoments/Loading';
 import { getResStringByContext } from '../uitls/ResString';
 import emitter from '@ohos.events.emitter'
 import { SpinnerEventId } from '../uitls/CommonEvents';

@@ -2,6 +2,7 @@ import relationalStore from '@ohos.data.relationalStore'; // 导入模块
 import common from '@ohos.app.ability.common'; // 导入模块
 import { ComputerDetails, ComputerState } from './ComputerDetails';
 import { NvHttp } from '../http/NvHttp';
+import LimeLog from '../LimeLog';
 
 export class ComputerDatabaseManager {
   store: relationalStore.RdbStore
@@ -29,10 +30,11 @@ export class ComputerDatabaseManager {
     }
   }
 
-  deleteComputer(details: ComputerDetails) {
+  async deleteComputer(details: ComputerDetails) {
     const predicates = new relationalStore.RdbPredicates('Computers')
     predicates.equalTo('UUID', details.uuid);
-    this.store.delete(predicates);
+    const count = await this.store.delete(predicates);
+    LimeLog.info("delete count " + count)
   }
 
   async addOrUpdateComputer(details: ComputerDetails) {

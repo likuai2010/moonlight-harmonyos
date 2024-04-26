@@ -34,7 +34,6 @@ struct PcView {
         this.onDelete(this.detail)
       })
       MenuItem({ content: "查看详情" }).onClick((e) => {
-
         let alertDialog = new CustomDialogController({
           builder: Alert({
             title: "查看详情",
@@ -187,12 +186,9 @@ struct PcPage {
   }
 
   aboutToAppear() {
-
     viewModel.onDetailsUpdate((news: ComputerDetails) => {
       let indexes = this.pcList.findIndex((d) => d.uuid == news.uuid)
-      if (indexes < 0) {
-        this.pcList.push(news)
-      } else {
+      if (indexes > -1) {
         this.pcList[indexes] = news
       }
       this.updateGrid()
@@ -220,11 +216,15 @@ struct PcPage {
       MainTitle()
       Scroll(this.scroller) {
         Grid() {
-          ForEach(this.pcList, (d:ComputerDetails) => {
+          ForEach(this.pcList, (d: ComputerDetails) => {
             GridItem() {
-              PcView({ detail: d, onDelete:(d)=>{
-                viewModel.delComputer(d)
-                this.fetchDetails()
+              PcView({ detail: d, onDelete:(dev)=>{
+                viewModel.delComputer(dev).then((result)=>{
+                  if (result)
+                    this.fetchDetails()
+                  else
+                    promptAction.showToast({message: "删除失败"})
+                })
               }})
             }
           }, (item: ComputerDetails) => JSON.stringify(item))
