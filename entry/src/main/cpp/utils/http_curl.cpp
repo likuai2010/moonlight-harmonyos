@@ -5,10 +5,10 @@
 // please include "napi/native_api.h".
 
 #include "http_curl.h"
-#include "moonlight-core/moon_bridge.h"
 #include <curl/easy.h>
 #include <stdlib.h>
 #include "string.h"
+#include "napi_utils.h"
 #include "napi/native_api.h"
 #include "x509Utils.h"
 struct AsyncCallbackInfo {

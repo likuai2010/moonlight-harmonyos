@@ -2,7 +2,7 @@ import cryptoCert from '@ohos.security.cert';
 import crypto from '@ohos.security.cryptoFramework';
 import { NvHttp } from '../http/NvHttp';
 import Buffer from '@ohos.buffer';
-import { decrypt, encrypt, sign_message, verify_signature } from 'libentry.so'
+import { decrypt, encrypt, sign_message, verify_signature } from 'libcUtils.so'
 
 export interface PairingHashAlgorithm {
   getHashLength(): number

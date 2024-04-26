@@ -6,7 +6,7 @@
 
 #ifndef moonlight_IFFmpegRender_H
 #define moonlight_IFFmpegRender_H
-#include "video/FFmpegVideoDecoder.h"
+#include "video/decoder/FFmpegVideoDecoder.h"
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 #include <GLES3/gl3.h>

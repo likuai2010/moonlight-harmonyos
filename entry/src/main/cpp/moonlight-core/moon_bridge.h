@@ -6,15 +6,14 @@
 
 #ifndef moonlight_moon_bridge_H
 #define moonlight_moon_bridge_H
-#include "napi/native_api.h"
 #include "node_api.h"
 #include "video/render/plugin_render.h"
 #include "audio/Audio.h"
 #include "audio/SDLAudioRenderer.h"
 #include <ace/xcomponent/native_interface_xcomponent.h>
-#include <asm-generic/stat.h>
 #include <string>
 #include <unordered_map>
+#include <video/VideoRender.h>
 
 char *get_value_string(napi_env env, napi_value value);
 int MoonBridge_sendTouchEvent(OH_NativeXComponent_TouchEvent touchEvent, uint64_t width, uint64_t height);
@@ -33,8 +32,7 @@ class MoonBridgeApi {
 
     static MoonBridgeApi *api;
     
-    IVideoDecoder *m_decoder;
-    EglVideoRenderer *m_videoRender;
+    VideoRender *m_render;
     SDLAudioRenderer *m_audioRender;
     void *nativewindow;
     void Export(napi_env env, napi_value exports);
@@ -62,23 +60,23 @@ class MoonBridgeApi {
         param.context = context;
         param.frame_rate = redrawRate;
         param.dr_flags = drFlags;
-        if (api->m_decoder != nullptr){
-            api->m_decoder->setup(param);
+        if (api->m_render != nullptr){
+            api->m_render->setup(param);
         }
         return DR_OK;
     }
     static void BridgeDrStart(void) {
-        api->m_decoder->start();
+        api->m_render->start();
     }
     static void BridgeDrStop(void) {
-        api->m_decoder->stop();
+        api->m_render->stop();
     }
     static void BridgeDrCleanup(void) {
-        api->m_decoder->cleanup();
+        api->m_render->cleanup();
     }
     static int BridgeDrSubmitDecodeUnit(PDECODE_UNIT decodeUnit) {
-        int ret = api->m_decoder->submitDecodeUnit(decodeUnit);
-        Emit("OnVideoStatus", api->m_decoder->video_decode_stats());
+        int ret = api->m_render->submitDecodeUnit(decodeUnit);
+        //Emit("OnVideoStatus", api->m_decoder->video_decode_stats());
         return ret;
     }
 
