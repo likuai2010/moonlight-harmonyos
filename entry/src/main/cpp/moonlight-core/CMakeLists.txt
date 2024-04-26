@@ -6,7 +6,7 @@ set(OPENSSL_INCLUDE_DIR ${OPENSSL_DIR}/include)
 
 set(CURL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/curl)
 set(CURL_INCLUDE_DIR ${CURL_DIR}/include)
-set(FFmpeg ON)
+set(FFmpeg OFF)
 
 include_directories(
 ${CMAKE_CURRENT_SOURCE_DIR}

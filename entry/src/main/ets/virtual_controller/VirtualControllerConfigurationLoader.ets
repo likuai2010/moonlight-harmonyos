@@ -163,7 +163,7 @@ export function createLeftStick(controller: VirtualController): AnalogStick {
 
 function createRightStick(controller: VirtualController): AnalogStick {
   const as = new AnalogStick(controller, VirtualControllerElement.EID_RS);
-  const linser: AnalogStickListener = {
+  const listener: AnalogStickListener = {
     onMovement: (x: number, y: number) => {
       const inputContext = controller.inputContext;
       inputContext.rightStickX = Math.round(x * 0x7FFE);
@@ -187,7 +187,7 @@ function createRightStick(controller: VirtualController): AnalogStick {
       controller.sendControllerInputContext();
     },
   }
-  as.addAnalogStickListener(linser);
+  as.addAnalogStickListener(listener);
   return as;
 }
 
@@ -237,11 +237,10 @@ export class VirtualControllerConfigurationLoader {
     const rightDisplacement = screen.widthPixels - screen.heightPixels * 16 / 9;
 
     const height = screen.heightPixels;
-
     // NOTE: Some of these getPercent() expressions seem like they can be combined
     // into a single call. Due to floating point rounding, this isn't actually possible.
 
-    if (true) {
+    if (!config || !config.only_l3r3) {
       controller.addElement(createDigitalPad(controller),
         screenScale(DPAD_BASE_X, height),
         screenScale(DPAD_BASE_Y, height),
@@ -289,16 +288,14 @@ export class VirtualControllerConfigurationLoader {
         screenScale(BUTTON_SIZE, height)
       );
 
-      controller.addElement(createLeftTrigger(
-        1, "LT", -1, controller),
+      controller.addElement(createLeftTrigger(1, "LT", -1, controller),
         screenScale(TRIGGER_L_BASE_X, height),
         screenScale(TRIGGER_BASE_Y, height),
         screenScale(TRIGGER_WIDTH, height),
         screenScale(TRIGGER_HEIGHT, height)
       );
 
-      controller.addElement(createRightTrigger(
-        1, "RT", -1, controller),
+      controller.addElement(createRightTrigger( 1, "RT", -1, controller),
         screenScale(TRIGGER_R_BASE_X + TRIGGER_DISTANCE, height) + rightDisplacement,
         screenScale(TRIGGER_BASE_Y, height),
         screenScale(TRIGGER_WIDTH, height),
@@ -396,7 +393,7 @@ export class VirtualControllerConfigurationLoader {
     for(let i=0; i< controller.elements.length; i++){
       const element = controller.elements[i] as VirtualControllerElement;
       const prefKey = `${element.elementId}`;
-      const jsonConfig: string  = await pref.get(prefKey, null).toString() ;
+      const jsonConfig: string  = (await pref.get(prefKey, null)).toString() ;
       if (jsonConfig !== null) {
         try {
           element.loadConfiguration(jsonConfig);

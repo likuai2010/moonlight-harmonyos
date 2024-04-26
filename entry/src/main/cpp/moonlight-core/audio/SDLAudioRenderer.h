@@ -12,8 +12,6 @@
 #include "IAudioRenderer.h"
 
 #include <malloc.h>
-#include <SDL3/SDL.h>
-#include <SDL3/SDL_audio.h>
 
 #define BUFFER_COUNT 5
 #define MAX_CHANNEL_COUNT 6
@@ -38,7 +36,6 @@ class SDLAudioRenderer : public IAudioRenderer {
     Audio *audio = NULL;
     OpusMSDecoder *decoder;
     short pcmBuffer[FRAME_SIZE * MAX_CHANNEL_COUNT];
-    SDL_AudioStream *m_stream;
     int channelCount;
 };
 

@@ -9,14 +9,12 @@ export struct NavTitle {
       Row(){
         Text(this.title).fontColor(Color.White)
           .fontSize(23).textAlign(TextAlign.Center)
-      }.
-      width("100%")
+      }.width("100%")
       .justifyContent(FlexAlign.Center)
-      .height(50)
       Icon({icon:$r('app.media.arrow_left')}).onClick(()=>{
         router.back()
       })
-    }.width("100%").padding(10)
+    }.height(50).width("100%").padding(10).margin({bottom:10})
   }
 }
 
@@ -26,7 +24,8 @@ export struct Icon {
   iconSize: number = 48
   build(){
     Image(this.icon)
-      .width(this.iconSize).height(this.iconSize)
+    .width(this.iconSize)
+    .height(this.iconSize)
   }
 }
 
@@ -42,8 +41,8 @@ export struct MainTitle {
         router.pushUrl({ url:"pages/AddPage" })
       })
     }.justifyContent(FlexAlign.SpaceBetween)
-    .width("100%").padding(10)
-    .height(50)
+    .width("100%")
+    .height(50).padding(10)
   }
 }
 

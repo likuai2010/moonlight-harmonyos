@@ -83,7 +83,7 @@ export class ComputerDetails {
       this.macAddress = details.macAddress;
     }
     if (details.serverCert != null) {
-      this.serverCert = details.serverCert;
+        this.serverCert = details.serverCert;
     }
     this.externalPort = details.externalPort;
     this.httpsPort = details.httpsPort;
@@ -132,7 +132,7 @@ export class AddressTuple {
   }
   toAddress():string{
     let address = this.address
-    if (address.startsWith("[") && address.endsWith("]")) {
+    if (address && address.startsWith("[") && address.endsWith("]")) {
       address = address.substring(1, address.length - 1);
     }
     return address;

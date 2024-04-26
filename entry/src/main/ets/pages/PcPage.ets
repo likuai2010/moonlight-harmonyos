@@ -1,4 +1,4 @@
-import { Icon, MainTitle, NavTitle } from './compoments/Title'
+import { Icon, MainTitle } from './compoments/Title'
 import viewModel from '../entryability/ComputerManagerViewModel'
 import { ComputerDetails, ComputerState } from '../entryability/computers/ComputerDetails'
 import promptAction from '@ohos.promptAction'
@@ -6,27 +6,13 @@ import { PairState } from '../entryability/http/PairingManager'
 import limelightCertProvider from '../entryability/crypto/LimelightCryptoProvider'
 import { NvHttp } from '../entryability/http/NvHttp'
 import router from '@ohos.router'
-import { Alert } from './compoments/Loading'
-import taskpool from '@ohos.taskpool';
+import { Alert, PrivacyConfirm } from './compoments/Loading'
+import dataPreferences from '@ohos.data.preferences';
+
 async function getResString(com: object, r: Resource): Promise<string> {
   return await getContext(com).resourceManager.getStringValue(r)
 }
-// promptAction.showDialog({
-//   title: '连接错误',
-//   message: 'Message InfoMessage InfoMessage InfoMessage InfoMessage InfoMessage Info',
-//   buttons: [
-//     {
-//       text: '确定',
-//       color: '#000000',
-//     }
-//   ]
-// }, (err, data) => {
-//   if (err) {
-//     console.info('showDialog err: ' + err);
-//     return;
-//   }
-//   console.info('showDialog success callback, click button: ' + data.index);
-// });
+
 
 
 @Component
@@ -36,20 +22,21 @@ struct PcView {
   @Builder
   pcMenu() {
     Menu() {
-      if (this.detail.pairState == PairState.PAIRED) {
-        MenuItem({ content: "浏览游戏列表" }).onClick(()=>{
-          this.doAppList(this.detail, false, false)
-        })
-      } else {
-        MenuItem({ content: "和电脑配对" }).onClick(()=>{
-          this.doPair()
-        })
-      }
-      MenuItem({ content: "测试网络连接" })
+      // if (this.detail.pairState == PairState.PAIRED) {
+      //   // MenuItem({ content: "浏览游戏列表" }).onChange((e)=>{
+      //   //   this.doAppList(this.detail, false, false)
+      //   // })
+      // } else {
+      //   MenuItem({ content: "和电脑配对" }).onClick(()=>{
+      //     this.doPair()
+      //   })
+      // }
+      // MenuItem({ content: "测试网络连接" })
       MenuItem({ content: "删除电脑" }).onClick(() => {
         this.onDelete(this.detail)
       })
       MenuItem({ content: "查看详情" }).onClick((e) => {
+
         let alertDialog = new CustomDialogController({
           builder: Alert({
             title: "查看详情",
@@ -63,8 +50,6 @@ struct PcView {
       })
     }
   }
-
-
   click() {
     if (this.detail.state == ComputerState.ONLINE && this.detail.pairState != PairState.PAIRED) {
       this.doPair()
@@ -88,7 +73,7 @@ struct PcView {
       message = null;
       success = true;
     } else {
-      const pinStr = "12345";
+      const pinStr = "1234";
       const dialogText =  await getResString(this, $r('app.string.pair_pairing_msg')) + " " + pinStr + "\n\n" + await getResString(this, $r('app.string.pair_pairing_help'))
       let alertDialog = new CustomDialogController({
         builder: Alert({
@@ -172,7 +157,6 @@ struct PcView {
 
 
 
-
 @Entry
 @Component
 struct PcPage {
@@ -181,16 +165,30 @@ struct PcPage {
   heightValue?: number
   gridRowTemplate?: string
 
-
+  privacyDialogController: CustomDialogController =  new CustomDialogController({
+    builder: PrivacyConfirm({ onConfirm:() => {
+      dataPreferences.getPreferences(getContext(this), "appSettings").then((pref: dataPreferences.Preferences)=>{
+        pref.put("privacyConfirm", true)
+        pref.flush()
+      })
+    }}),
+    autoCancel: false,
+    alignment: DialogAlignment.Center,
+    customStyle: true
+  })
+  onPageShow(){
+    dataPreferences.getPreferences(getContext(this), "appSettings").then((pref: dataPreferences.Preferences)=>{
+      pref.get("privacyConfirm", false).then((r:dataPreferences.ValueType)=>{
+        if(!r){
+          this.privacyDialogController.open()
+        }
+      })
+    })
+    this.fetchDetails()
+  }
 
   aboutToAppear() {
-    viewModel.getComputerList().then((list) => {
-      for(let d of list){
-        d.isLoading = true
-      }
-      this.pcList = list
-      viewModel.batchPollComputerList(list)
-    })
+
     viewModel.onDetailsUpdate((news: ComputerDetails) => {
       let indexes = this.pcList.findIndex((d) => d.uuid == news.uuid)
       if (indexes < 0) {
@@ -201,6 +199,15 @@ struct PcPage {
       this.updateGrid()
     })
     this.updateGrid()
+  }
+  fetchDetails(){
+    viewModel.getComputerList().then((list) => {
+      for(let d of list){
+        d.isLoading = true
+      }
+      this.pcList = list
+      viewModel.batchPollComputerList(list)
+    })
   }
 
   updateGrid() {
@@ -217,6 +224,8 @@ struct PcPage {
           ForEach(this.pcList, (d:ComputerDetails) => {
             GridItem() {
               PcView({ detail: d, onDelete:(d)=>{
+                viewModel.delComputer(d)
+                this.fetchDetails()
               }})
             }
           }, (item: ComputerDetails) => JSON.stringify(item))

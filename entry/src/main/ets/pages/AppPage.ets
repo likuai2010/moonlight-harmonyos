@@ -14,6 +14,15 @@ struct AppView {
   computer!: ComputerDetails
   app!: NvApp
   @State image: PixelMap| undefined = undefined;
+
+  @Builder
+  pcMenu() {
+    Menu() {
+      MenuItem({ content: $r("app.string.applist_menu_resume") })
+      MenuItem({ content: $r("app.string.applist_menu_quit")  })
+      MenuItem({ content: $r("app.string.applist_menu_quit_and_start") })
+    }
+  }
   aboutToAppear(){
     viewModel.readImageByDisk(this.app).then((res: Uint8Array | null)=>{
       let imageSource = image.createImageSource(res);

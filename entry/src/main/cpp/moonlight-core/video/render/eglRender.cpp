@@ -141,14 +141,12 @@ bool EglVideoRenderer::initialize(DECODER_PARAMETERS *params) {
        // End.
        EGL_NONE};
     const EGLint maxConfigSize = 1;
+    
     if (!eglChooseConfig(m_eglDisplay, configSpec, &eglConfig, maxConfigSize, &numConfigs)) {
         eglLog(LOG_ERROR, "eglChooseConfig: unable to choose configs");
         return false;
     }
-//     if (EGL_TRUE != eglChooseConfig(m_eglDisplay, configSpec, &eglConfig, 1, &configNum)) {
-//         eglLog(LOG_ERROR, "eglChooseConfig: unable to choose configs");
-//         return false;
-//     }
+
     m_eglSurface = eglCreateWindowSurface(m_eglDisplay, eglConfig, m_eglWindow, nullptr);
     if (m_eglSurface == EGL_NO_SURFACE) {
         eglLog(LOG_ERROR, "eglCreateWindowSurface failed");

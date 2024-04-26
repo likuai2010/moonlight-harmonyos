@@ -200,7 +200,6 @@ export class StreamConfiguration {
     return Math.round(resolutionFactor * frameRateFactor) * 1000;
   }
   getFramePacingValue(str: string){
-
     switch (str) {
       case "latency":
         return FRAME_PACING_MIN_LATENCY;
