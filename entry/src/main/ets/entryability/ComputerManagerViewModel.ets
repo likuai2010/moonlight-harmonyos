@@ -248,6 +248,7 @@ class ComputerManagerViewModel {
     }
     return new ResultInfo(success, title, message)
   }
+
   async delComputer(detail: ComputerDetails): Promise<boolean> {
     try {
       dbManger.deleteComputer(detail)

@@ -3,7 +3,6 @@ import emitter from '@ohos.events.emitter'
 import { SpinnerEventId } from '../../uitls/CommonEvents'
 import router from '@ohos.router'
 import common from '@ohos.app.ability.common';
-import UIAbility from '@ohos.app.ability.UIAbility';
 
 @CustomDialog
 export struct Spinner {
@@ -76,7 +75,7 @@ export struct Alert {
 export struct PrivacyConfirm {
   title: string | Resource = "隐私政策"
   message?: string | Resource
-  onConfirm?: ()=> void
+  onConfirm: ()=> void = ()=>{}
   controller: CustomDialogController
   build() {
     Column(){

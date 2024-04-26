@@ -120,7 +120,7 @@ class GameViewModel implements NvConnectionListener {
     this.context = context
     this.sendMessageToSpinner($r("app.string.conn_establishing_msg"))
     this.initMoonBridge()
-    await this.conn.start(this);
+    await this.conn?.start(this);
   }
   stop() {
     this.conn.api.stopConnection();

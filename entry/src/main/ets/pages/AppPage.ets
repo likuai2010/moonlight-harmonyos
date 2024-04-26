@@ -13,7 +13,8 @@ import image from '@ohos.multimedia.image'
 struct AppView {
   computer!: ComputerDetails
   app!: NvApp
-  @State image: PixelMap | undefined = undefined;
+  @State image: PixelMap| undefined = undefined;
+
   @Builder
   pcMenu() {
     Menu() {

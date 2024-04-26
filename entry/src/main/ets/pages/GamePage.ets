@@ -40,6 +40,7 @@ struct GamePage {
       VirtualControllerConfigurationLoader.loadFromPreferences(gameViewModel.virtualController, getContext(this))
       this.virtualController = gameViewModel.virtualController
     }
+
     if(settings.enable_perf_overlay){
       gameViewModel.conn.onVideoStatus((s: VideoStatus)=>{
         this.videoStatus = s;

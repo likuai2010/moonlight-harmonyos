@@ -1,4 +1,3 @@
-import mediaquery from '@ohos.mediaquery';
 
 import { ElementLayoutParam, VirtualControllerButton, VirtualControllerElement } from './common';
 import List from '@ohos.util.List';
@@ -69,7 +68,6 @@ export class VirtualController {
   }
 }
 
-
 @Builder
 export function showVirtualController(virtualController: VirtualController, context: Context){
   ForEach(virtualController.elements.convertToArray(), (d: VirtualControllerElement) => {
@@ -81,6 +79,7 @@ export function showVirtualController(virtualController: VirtualController, cont
     virtualController.onSettingsClick(context)
   })
 }
+
 
 @Component
 export struct VirtualControllerBox{

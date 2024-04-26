@@ -153,11 +153,6 @@ struct PcView {
     }).bindContextMenu(this.pcMenu, ResponseType.LongPress)
   }
 }
-
-
-
-
-
 @Entry
 @Component
 struct PcPage {
