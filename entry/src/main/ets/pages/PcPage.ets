@@ -206,7 +206,7 @@ struct PcPage {
   }
 
   updateGrid() {
-    let rows = Math.max(3, Math.round(this.pcList.length / 3))
+    let rows = Math.max(1, Math.round(this.pcList.length / 3))
     this.gridRowTemplate = '1fr '.repeat(rows);
     this.heightValue = rows * 192 - 8;
   }
@@ -230,8 +230,6 @@ struct PcPage {
           }, (item: ComputerDetails) => JSON.stringify(item))
         }.onKeyEvent((e)=>{
           console.log(e.keyCode+"");
-        }).onMouse((e)=>{
-          console.log(e.button+"");
         })
         .rowsTemplate(this.gridRowTemplate)
         .columnsTemplate('1fr 1fr 1fr')
