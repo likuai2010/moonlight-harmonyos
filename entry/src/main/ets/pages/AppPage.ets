@@ -24,7 +24,7 @@ struct AppView {
   }
   aboutToAppear(){
     viewModel.readImageByDisk(this.app).then((res: Uint8Array | null)=>{
-      let imageSource = image.createImageSource(res.buffer.slice(0));
+      let imageSource = image.createImageSource(res?.buffer.slice(0));
       let options :image.DecodingOptions = {
         editable: false,                  // 是否可编辑
         desiredPixelFormat: 3,                   // 像素格式

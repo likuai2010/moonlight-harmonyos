@@ -13,7 +13,7 @@ struct SettingsPage {
   preferences?: dataPreferences.Preferences
   @Provide settings: StreamSettings | null = null
 
-  onUpdateValue = (key: string, value: any)=>{
+  onUpdateValue = (key: string, value: dataPreferences.ValueType)=>{
     this.preferences?.put(key, value )
     this.preferences?.flush()
   }
@@ -475,7 +475,7 @@ struct ListPreference {
   title: Resource | string | undefined
   summary: Resource  | string |  undefined
   @State value: string = ""
-  onChange!: (key:string, value:any) => void
+  onChange!: (key:string, value: dataPreferences.ValueType) => void
   private select: number = 0
   entries: string[] = []
   names!: Resource[]
@@ -522,8 +522,13 @@ struct ListPreference {
     })
   }
 }
-
-@Builder function baseReference($$: { title: string | Resource, summary: string | Resource, hasCheck: boolean , onClick: () => void }) {
+class BaseReferenceParam  {
+  title?: string | Resource
+  summary?: string | Resource
+  hasCheck?: boolean
+  onClick: (() => void) = ()=>{}
+}
+@Builder function baseReference($$: BaseReferenceParam) {
   Row() {
     Row() {
       Column({ space: 2 }) {
@@ -541,11 +546,11 @@ struct ListPreference {
 struct CheckBoxPreference {
   @Consume  @Watch('onSettingsUpdated')
   settings: StreamSettings
-  pKey!: string
-  title: Resource | string|  undefined
-  summary: Resource | string | undefined
+  pKey: string = ""
+  title?: Resource | string
+  summary?: Resource | string
   @State value: boolean | undefined = undefined
-  onChange!: (key:string, value: boolean) => void
+  onChange: (key:string, value: boolean) => void = ()=>{}
 
   onSettingsUpdated(){
     if(this.settings[this.pKey] != null && this.value != undefined){
@@ -554,10 +559,10 @@ struct CheckBoxPreference {
   }
   build() {
     Column(){
-      baseReference({title: this.title, summary: this.summary, hasCheck: this.value, onClick:() => {
+      baseReference({ title: this.title, summary: this.summary, hasCheck: this.value, onClick:() => {
         if (this.value != undefined)
           this.value = !this.value
-        this.onChange(this.pKey, this.value)
+        this.onChange(this.pKey, this.value as boolean)
       }})
     }
 

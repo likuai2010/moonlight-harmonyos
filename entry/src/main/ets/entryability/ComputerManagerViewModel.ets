@@ -259,7 +259,7 @@ class ComputerManagerViewModel {
     }
     return true
   }
-  sleep(ms) {
+  sleep(ms: number):Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
   parseRawUserInputToUri(rawUserInput: string) {

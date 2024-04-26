@@ -7,7 +7,9 @@ import limelightCertProvider from '../entryability/crypto/LimelightCryptoProvide
 import { NvHttp } from '../entryability/http/NvHttp'
 import router from '@ohos.router'
 import { Alert, PrivacyConfirm } from './compoments/Loading'
-async function getResString(com: any, r: Resource): Promise<string> {
+import dataPreferences from '@ohos.data.preferences'
+
+async function getResString(com: object, r: Resource): Promise<string> {
   return await getContext(com).resourceManager.getStringValue(r)
 }
 
@@ -154,7 +156,8 @@ struct PcView {
 
 
 
-import dataPreferences from '@ohos.data.preferences';
+
+
 @Entry
 @Component
 struct PcPage {
@@ -176,7 +179,7 @@ struct PcPage {
   })
   onPageShow(){
     dataPreferences.getPreferences(getContext(this), "appSettings").then((pref: dataPreferences.Preferences)=>{
-      pref.get("privacyConfirm", false).then((r:boolean)=>{
+      pref.get("privacyConfirm", false).then((r: dataPreferences.ValueType) => {
         if(!r){
           this.privacyDialogController.open()
         }

@@ -5,9 +5,11 @@ import limelightCertProvider from './crypto/LimelightCryptoProvider';
 import inputDevice from '@ohos.multimodalInput.inputDevice';
 import viewModel from './ComputerManagerViewModel'
 import fileIo from '@ohos.file.fs';
+
+import pointer from '@ohos.multimodalInput.pointer';
+
 let windowStage_ = null;
 let sub_windowClass = null;
-import pointer from '@ohos.multimodalInput.pointer';
 
 export function  showSubWindow() {
   // 1.创建应用子窗口。

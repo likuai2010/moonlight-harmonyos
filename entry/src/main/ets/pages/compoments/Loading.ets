@@ -75,8 +75,8 @@ export struct Alert {
 @CustomDialog
 export struct PrivacyConfirm {
   title: string | Resource = "隐私政策"
-  message: string | Resource
-  onConfirm: ()=> void
+  message?: string | Resource
+  onConfirm?: ()=> void
   controller: CustomDialogController
   build() {
     Column(){
@@ -93,14 +93,14 @@ export struct PrivacyConfirm {
         Button('不同意并退出')
           .onClick(() => {
             this.controller.close()
-            var ui = getContext(this) as common.UIAbilityContext
+            const ui = getContext(this) as common.UIAbilityContext
             ui.terminateSelf()
           }).backgroundColor(0xffffff).fontColor(Color.Red)
         Button('同意')
           .onClick(() => {
             if (this.controller != undefined) {
               this.controller.close()
-              this.onConfirm()
+              this.onConfirm!()
             }
           }).backgroundColor(0xffffff).fontColor(Color.Black)
       }.margin({ top: 10 })
