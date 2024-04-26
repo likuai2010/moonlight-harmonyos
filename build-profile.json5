@@ -5,13 +5,13 @@
         "name": "default",
         "type": "HarmonyOS",
         "material": {
-          "certpath": "C:/Users/Administrator/Documents/product.cer",
-          "storePassword": "00000018AA59C4F4174572D6382A4F7CD295BEAB1836256F132F7125988096599B66C983927CA7E3",
-          "keyAlias": "moonlight",
-          "keyPassword": "00000018975B36680915E301DBFE10079A88107B7F2EE99251363D513275A5B2828CE9840F445DDD",
-          "profile": "C:/Users/Administrator/Documents/productRelease.p7b",
+          "certpath": "C:\\Users\\Administrator\\.ohos\\config\\auto_debug_moonlight_com.xiaobai.moonlight_2850086000506643987.cer",
+          "storePassword": "0000001ABA85C2497DF4E7BFDB9F2EF72FD8431B5FC8F156AA6448D1814A989C3B3B1AF449FA55481AC8",
+          "keyAlias": "debugKey",
+          "keyPassword": "0000001A16DEBBF8ADB317495122D6301345DA067156D24FE496294632D8D27AC76F7DBCBC1D4F99D3BE",
+          "profile": "C:\\Users\\Administrator\\.ohos\\config\\auto_debug_moonlight_com.xiaobai.moonlight_2850086000506643987.p7b",
           "signAlg": "SHA256withECDSA",
-          "storeFile": "C:/Users/Administrator/Documents/product.p12"
+          "storeFile": "C:\\Users\\Administrator\\.ohos\\config\\auto_debug_moonlight_com.xiaobai.moonlight_2850086000506643987.p12"
         }
       },
       {
@@ -19,9 +19,9 @@
         "type": "HarmonyOS",
         "material": {
           "certpath": "C:\\Users\\Administrator\\.ohos\\config\\auto_debug_moonlight_com.xiaobai.moonlight_2850086000506643987.cer",
-          "storePassword": "0000001A92EC39B29A6DC21BD869E00EC4825582BAA331286C59DAB1FB4523A5341D2199B3E04B531A41",
+          "storePassword": "0000001A4735C4B35A523109F304C4D2698838B8623F97A90CEE687124E3418DA3FFCA76512095214885",
           "keyAlias": "debugKey",
-          "keyPassword": "0000001A9D1A6C9415899F5CB9006C0FAC3B8B5B891CDEEC18A4B1FF2166E4A91A2E01488F55311282C8",
+          "keyPassword": "0000001AD6C1877EEB507A0527EE7A5C07D119CF5F10C19A1804BBAC28AC99250EEADDFDAED9D2EC58A0",
           "profile": "C:\\Users\\Administrator\\.ohos\\config\\auto_debug_moonlight_com.xiaobai.moonlight_2850086000506643987.p7b",
           "signAlg": "SHA256withECDSA",
           "storeFile": "C:\\Users\\Administrator\\.ohos\\config\\auto_debug_moonlight_com.xiaobai.moonlight_2850086000506643987.p12"
@@ -49,7 +49,8 @@
         {
           "name": "default",
           "applyToProducts": [
-            "default", "debug"
+            "default",
+            "debug"
           ]
         },
       ]

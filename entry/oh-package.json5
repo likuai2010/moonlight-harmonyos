@@ -1,8 +1,8 @@
 {
   "license": "",
   "devDependencies": {
-    "@types/libentry.so": "file:./src/main/cpp/types/libentry",
-    "@types/libcUtils.so": "file:./src/main/cpp/types/libcUtils"
+    "@types/libcUtils.so": "file:./src/main/cpp/types/libcUtils",
+    "@types/libentry.so": "file:./src/main/cpp/types/libentry"
   },
   "author": "",
   "name": "entry",
