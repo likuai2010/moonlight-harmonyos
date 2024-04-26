@@ -3,7 +3,6 @@ import emitter from '@ohos.events.emitter'
 import { SpinnerEventId } from '../../uitls/CommonEvents'
 import router from '@ohos.router'
 import common from '@ohos.app.ability.common';
-import UIAbility from '@ohos.app.ability.UIAbility';
 
 @CustomDialog
 export struct Spinner {
@@ -100,7 +99,7 @@ export struct PrivacyConfirm {
           .onClick(() => {
             if (this.controller != undefined) {
               this.controller.close()
-              this.onConfirm()
+              this.onConfirm!()
             }
           }).backgroundColor(0xffffff).fontColor(Color.Black)
       }.margin({ top: 10 })

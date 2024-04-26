@@ -43,12 +43,11 @@ class ComputerManagerViewModel {
     return detail;
   }
   async batchPollComputerList(list: ComputerDetails[]){
-
      for(let d of list){
        await this.runPoll(d, false)
-       d.isLoading = false;
        let newDetails = new ComputerDetails();
        newDetails.update(d);
+       newDetails.isLoading = false;
        this.onDetailsLinster(newDetails);
      }
   }
@@ -108,8 +107,6 @@ class ComputerManagerViewModel {
     }
     return true
   }
-
-
 
   async getImages(details: ComputerDetails, app: NvApp): Promise<Uint8Array>{
     const http = new NvHttp(details.activeAddress, details.httpsPort, true, limelightCertProvider);
@@ -253,8 +250,18 @@ class ComputerManagerViewModel {
   }
 
   async delComputer(detail: ComputerDetails): Promise<boolean> {
-    dbManger.deleteComputer(detail)
+    try {
+      dbManger.deleteComputer(detail)
+      // TODO 删除后立即查询数据库会导致无法删除, 这里延时100ms
+      await this.sleep(100)
+    } catch (e) {
+      LimeLog.error("delComputer" + e.stack)
+      return false
+    }
     return true
+  }
+  sleep(ms: number):Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
   parseRawUserInputToUri(rawUserInput: string) {
     try {

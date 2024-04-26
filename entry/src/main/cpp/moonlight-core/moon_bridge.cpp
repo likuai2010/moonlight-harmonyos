@@ -308,16 +308,16 @@ int MoonBridge_sendMouseEvent(
     uint64_t width, uint64_t height) {
     uint8_t button;
     switch (mouseEvent.button) {
-    case OH_NATIVEXCOMPONENT_LEFT_BUTTON:
-        button = BUTTON_LEFT;
-    case OH_NATIVEXCOMPONENT_RIGHT_BUTTON:
-        button = BUTTON_RIGHT;
-    case OH_NATIVEXCOMPONENT_MIDDLE_BUTTON:
-        button = BUTTON_MIDDLE;
-    case OH_NATIVEXCOMPONENT_BACK_BUTTON:
-        button = BUTTON_X1;
-    case OH_NATIVEXCOMPONENT_FORWARD_BUTTON:
-        button = BUTTON_X2;
+        case OH_NATIVEXCOMPONENT_LEFT_BUTTON:
+            button = BUTTON_LEFT;break;
+        case OH_NATIVEXCOMPONENT_RIGHT_BUTTON:
+            button = BUTTON_RIGHT;break;
+        case OH_NATIVEXCOMPONENT_MIDDLE_BUTTON:
+            button = BUTTON_MIDDLE;break;
+        case OH_NATIVEXCOMPONENT_BACK_BUTTON:
+            button = BUTTON_X1;break;
+        case OH_NATIVEXCOMPONENT_FORWARD_BUTTON:
+            button = BUTTON_X2;break;
     }
     if (mouseEvent.action == OH_NATIVEXCOMPONENT_MOUSE_MOVE) {
         LiSendMousePositionEvent(mouseEvent.x, mouseEvent.y, width, height);
@@ -496,8 +496,9 @@ void MoonBridgeApi::Export(napi_env env, napi_value exports) {
 
         if (nativeXComponent != nullptr) {
             int eer = OH_NativeXComponent_RegisterCallback(nativeXComponent, &PluginRender::m_callback);
+            int err = OH_NativeXComponent_RegisterMouseEventCallback(nativeXComponent, &PluginRender::m_mouse_callback);
             OH_LOG_Print(
-                LOG_APP, LOG_ERROR, 0, "PluginManager", "RegisterCallback success %{public}d", eer);
+                LOG_APP, LOG_ERROR, 0, "PluginManager", "RegisterCallback success %{public}d", eer, err);
         }
         std::string id(idStr);
         PluginRender *pr = PluginRender::GetInstance(id);

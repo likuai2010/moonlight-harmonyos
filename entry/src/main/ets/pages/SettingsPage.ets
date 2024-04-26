@@ -1,12 +1,10 @@
 import { NavTitle } from './compoments/Title';
+
 import dataPreferences from '@ohos.data.preferences';
-import { getResString } from '../uitls/ResString';
 import { StreamSettings, loadSettings } from '../uitls/StreamSetttings';
 import router from '@ohos.router';
-import { ValueType } from '@kit.ArkData';
+import { CheckBoxPreference, ListPreference } from './compoments/Preferences/CommonPreference';
 
-import Prompt from '@system.prompt';
-import common from '@ohos.app.ability.common';
 
 @Entry
 @Component
@@ -14,19 +12,17 @@ struct SettingsPage {
   scroller: Scroller = new Scroller();
   preferences?: dataPreferences.Preferences
   @Provide settings: StreamSettings | null = null
-  onUpdateValue = (key: string, value: ValueType)=>{
+  onUpdateValue = (key: string, value: dataPreferences.ValueType)=>{
     this.preferences?.put(key, value )
     this.preferences?.flush()
   }
   aboutToAppear(){
     this.loadPreferences(getContext(this))
-    const context = getContext(this) as common.UIAbilityContext
   }
   async loadPreferences(context: Context){
     this.preferences = await dataPreferences.getPreferences(context, "StreamSettings")
     this.settings = await loadSettings(context)
   }
-
   build() {
     Column() {
       NavTitle({ title: "设置" })
@@ -52,13 +48,13 @@ struct SettingsPage {
               entries: ["30", "60", "90", "120"],
               onChange: this.onUpdateValue
             })
-            SeekBarPreference({
-              pKey: "seekbar_bitrate",
-              title: $r("app.string.title_seekbar_bitrate"),
-              summary: $r("app.string.summary_seekbar_bitrate"),
-              value: "",
-              onChange: this.onUpdateValue
-            })
+            // SeekBarPreference({
+            //   pKey: "seekbar_bitrate",
+            //   title: $r("app.string.title_seekbar_bitrate"),
+            //   summary: $r("app.string.summary_seekbar_bitrate"),
+            //   value: "",
+            //   onChange: this.onUpdateValue
+            // })
             // ListPreference({
             //   pKey: "frame_pacing",
             //   title: $r("app.string.title_frame_pacing"),
@@ -164,30 +160,30 @@ struct SettingsPage {
           //   // })
           // }.alignItems(HorizontalAlign.Start)
 
-          // Column({ space: 10 }) {
-          //   GroupTitle($r("app.string.category_input_settings"))
-          //   CheckBoxPreference({
-          //     pKey: "touchscreen_trackpad",
-          //     title: $r("app.string.title_checkbox_touchscreen_trackpad"),
-          //     summary: $r("app.string.summary_checkbox_touchscreen_trackpad"),
-          //     value: false,
-          //     onChange: this.onUpdateValue
-          //   })
-          //   // CheckBoxPreference({
-          //   //   pKey: "mouse_nav_buttons",
-          //   //   title: $r("app.string.title_checkbox_mouse_nav_buttons"),
-          //   //   summary: $r("app.string.summary_checkbox_mouse_nav_buttons"),
-          //   //   value: false,
-          //   //   onChange: this.onUpdateValue
-          //   // })
-          //   // CheckBoxPreference({
-          //   //   pKey: "absolute_mouse_mode",
-          //   //   title: $r("app.string.title_checkbox_absolute_mouse_mode"),
-          //   //   summary: $r("app.string.summary_checkbox_absolute_mouse_mode"),
-          //   //   value: false,
-          //   //   onChange: this.onUpdateValue
-          //   // })
-          // }.alignItems(HorizontalAlign.Start)
+          Column({ space: 10 }) {
+            GroupTitle($r("app.string.category_input_settings"))
+            CheckBoxPreference({
+              pKey: "touchscreen_trackpad",
+              title: $r("app.string.title_checkbox_touchscreen_trackpad"),
+              summary: $r("app.string.summary_checkbox_touchscreen_trackpad"),
+              value: false,
+              onChange: this.onUpdateValue
+            })
+            // CheckBoxPreference({
+            //   pKey: "mouse_nav_buttons",
+            //   title: $r("app.string.title_checkbox_mouse_nav_buttons"),
+            //   summary: $r("app.string.summary_checkbox_mouse_nav_buttons"),
+            //   value: false,
+            //   onChange: this.onUpdateValue
+            // })
+            // CheckBoxPreference({
+            //   pKey: "absolute_mouse_mode",
+            //   title: $r("app.string.title_checkbox_absolute_mouse_mode"),
+            //   summary: $r("app.string.summary_checkbox_absolute_mouse_mode"),
+            //   value: false,
+            //   onChange: this.onUpdateValue
+            // })
+          }.alignItems(HorizontalAlign.Start)
 
           Column({ space: 10 }) {
             GroupTitle($r("app.string.category_on_screen_controls_settings"))
@@ -198,27 +194,27 @@ struct SettingsPage {
               value: false,
               onChange: this.onUpdateValue
             })
-            // CheckBoxPreference({
-            //   pKey: "vibrate_osc",
-            //   title: $r("app.string.title_checkbox_vibrate_osc"),
-            //   summary: $r("app.string.summary_checkbox_vibrate_osc"),
-            //   value: false,
-            //   onChange: this.onUpdateValue
-            // })
-            // CheckBoxPreference({
-            //   pKey: "only_l3r3",
-            //   title: $r("app.string.title_only_l3r3"),
-            //   summary: $r("app.string.summary_only_l3r3"),
-            //   value: false,
-            //   onChange: this.onUpdateValue
-            // })
-            // CheckBoxPreference({
-            //   pKey: "osc_opacity",
-            //   title: $r("app.string.dialog_title_osc_opacity"),
-            //   summary: $r("app.string.summary_osc_opacity"),
-            //   value: false,
-            //   onChange: this.onUpdateValue
-            // })
+            CheckBoxPreference({
+              pKey: "vibrate_osc",
+              title: $r("app.string.title_checkbox_vibrate_osc"),
+              summary: $r("app.string.summary_checkbox_vibrate_osc"),
+              value: false,
+              onChange: this.onUpdateValue
+            })
+            CheckBoxPreference({
+              pKey: "only_l3r3",
+              title: $r("app.string.title_only_l3r3"),
+              summary: $r("app.string.summary_only_l3r3"),
+              value: false,
+              onChange: this.onUpdateValue
+            })
+            CheckBoxPreference({
+              pKey: "osc_opacity",
+              title: $r("app.string.dialog_title_osc_opacity"),
+              summary: $r("app.string.summary_osc_opacity"),
+              value: false,
+              onChange: this.onUpdateValue
+            })
             CheckBoxPreference({
               pKey: "reset_osc",
               title: $r("app.string.title_reset_osc"),
@@ -361,205 +357,7 @@ struct SettingsPage {
 }
 
 @Builder
-
-function GroupTitle(title: Resource | string | undefined) {
-  Text(title).fontSize(15).fontColor(0xFFFFFF)
-}
-@Builder
-function GroupList(title: Resource | string | undefined) {
+function GroupTitle(title?: Resource | string ) {
   Text(title).fontSize(15).fontColor(0xFFFFFF)
 }
 
-/*@Component
-struct BaseReference {
-  title: Resource | string | undefined
-  summary: Resource | string | undefined
-  @State hasCheck: boolean | undefined = undefined
-  change:  (event?: ClickEvent) => void
-  build() {
-    Row() {
-      Column({ space: 2 }) {
-        Text(this.title).fontSize(20).fontColor(0xFFFFFF)
-        Text(this.summary).fontSize(16).fontColor(0xC3C3C3)
-      }.layoutWeight(1).alignItems(HorizontalAlign.Start)
-      Text(this.hasCheck+"").fontColor(0xffffff)
-      if (this.hasCheck != undefined) {
-        Toggle({ type: ToggleType.Checkbox, isOn: this.hasCheck == true })
-      }
-    }.padding({ right: 20, left: 10}).width('100%').onClick(this.change)
-  }
-}*/
-@CustomDialog
-struct SeekBarDialog{
-  @Link inputValue : number
-  title: string | Resource = ""
-  summary?: Resource
-  dialogController: CustomDialogController
-  onConfirm!: () => void
-  build(){
-    Column() {
-      Text(this.title)
-      Text(this.summary)
-      Blank().height(50)
-      Slider({
-        value: this.inputValue,
-        min: 0,
-        max: 100,
-        style: SliderStyle.InSet
-      })
-        .blockColor('#191970')
-        .trackColor('#ffe0eaec')
-        .selectedColor('#c3c3c3')
-        .showTips(true)
-        .onChange((value: number, mode: SliderChangeMode) => {
-          this.inputValue = value
-          console.info('value:' + value + 'mode:' + mode.toString())
-        })
-      Blank().height(30)
-      Button('确定').onClick(()=>{
-        this.onConfirm()
-        this.dialogController.close()
-      })
-    }.padding(20)
-  }
-}
-
-@Component
-struct SeekBarPreference {
-  @Consume  @Watch('onSettingsUpdated')
-  settings: StreamSettings
-  pKey!: string
-  title: Resource | undefined = undefined
-  summary: Resource | undefined = undefined
-  @State value: string = ""
-  onChange!: (key:string, value: string) => void
-  aboutToAppear() {
-  }
-  onSettingsUpdated(){
-    if(this.settings[this.pKey] != null){
-      this.value = this.settings[this.pKey]
-    }
-  }
-  dialogController: CustomDialogController = new CustomDialogController({
-    builder: SeekBarDialog({
-      inputValue: $value,
-      title: this.title,
-      summary: this.summary,
-      onConfirm: ()=>{
-        this.onChange(this.pKey, this.value)
-      }
-    }),
-    autoCancel: true,
-    alignment: DialogAlignment.Bottom,
-    customStyle: false
-  })
-  build() {
-    baseReference({
-      title: this.title,
-      summary: this.summary ,
-      hasCheck: undefined,
-      onClick: () => {
-        this.dialogController.open()
-        this.onChange(this.pKey, this.value)
-      }
-    })
-  }
-}
-
-
-@Component
-struct ListPreference {
-  @Consume  @Watch('onSettingsUpdated')
-  settings: StreamSettings
-  pKey!: string
-  title?: Resource | string
-  summary?: Resource | string
-  @State value: string = ""
-  onChange!: (key:string, value: object) => void
-  private select: number = 0
-  entries: string[] = []
-  names!: Resource[]
-  private labels: string[] = []
-
-  aboutToAppear() {
-    this.getLabels()
-  }
-  onSettingsUpdated(){
-    if(!this.settings || this.settings[this.pKey] == null){
-      this.select == this.entries.indexOf(this.value)
-    } else {
-      this.value = this.settings[this.pKey]
-      this.select = this.entries.indexOf(this.value)
-    }
-  }
-  async getLabels() {
-    this.onSettingsUpdated()
-    for (let r of this.names) {
-      this.labels.push(await getResString(this, r))
-    }
-  }
-  build() {
-
-    baseReference({
-      title: this.title,
-      summary: this.summary ,
-      hasCheck: undefined,
-      onClick: () => {
-          TextPickerDialog.show({
-            range: this.labels,
-            selected: this.select,
-            onAccept: (value: TextPickerResult) => {
-              // 暂未开放
-              if (value.index > 1) {
-                Prompt.showToast({message: "敬请期待!"})
-                return;
-              }
-              this.select = value.index as number
-              this.value = this.entries[value.index as number]
-              this.onChange(this.pKey, this.value)
-            },
-          })
-      }
-    })
-  }
-}
-
-@Builder function baseReference($$: { title: string | Resource, summary: string | Resource, hasCheck: boolean , onClick: () => void }) {
-  Row() {
-    Row() {
-      Column({ space: 2 }) {
-        Text($$.title).fontSize(20).fontColor(0xFFFFFF)
-        Text($$.summary).fontSize(16).fontColor(0xC3C3C3)
-      }.layoutWeight(1).alignItems(HorizontalAlign.Start)
-      if ($$.hasCheck != undefined) {
-        Toggle({ type: ToggleType.Checkbox, isOn: $$.hasCheck == true }).onClick($$.onClick)
-      }
-    }.padding({ right: 20, left: 10}).width('100%').onClick($$.onClick)
-  }
-}
-
-@Component
-struct CheckBoxPreference {
-  @Consume  @Watch('onSettingsUpdated')
-  settings: StreamSettings
-  pKey!: string
-  title: Resource | string|  undefined
-  summary: Resource | string | undefined
-  @State value: boolean | undefined = undefined
-  onChange!: (key:string, value: boolean) => void
-
-  onSettingsUpdated(){
-    if(this.settings[this.pKey] != null && this.value != undefined){
-      this.value = this.settings[this.pKey]
-    }
-  }
-  build() {
-    Column(){
-      baseReference({title: this.title, summary: this.summary, hasCheck: this.value, onClick:() => {
-        if (this.value != undefined)
-          this.value = !this.value
-        this.onChange(this.pKey, this.value)
-      }})
-    }
-  }
-}

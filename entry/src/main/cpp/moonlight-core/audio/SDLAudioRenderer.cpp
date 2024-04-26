@@ -56,8 +56,8 @@ void SDLAudioRenderer::decode_and_play_sample(char *data, int length) {
     //    }
     if (length > 0) {
         // decodeLen * channelCount * sizeof(short)
-          PcmData *pdata = new PcmData((char *)(pcmBuffer), decodeLen * channelCount * sizeof(short));
-            dataQueue->putPcmData(pdata);
+        PcmData *pdata = new PcmData((char *)(pcmBuffer), decodeLen * channelCount * sizeof(short));
+        dataQueue->putPcmData(pdata);
         //SDL_PutAudioStreamData(m_stream, data, length);
     } else {
         //SDL_Log("Opus error from decode: %d\n", length);

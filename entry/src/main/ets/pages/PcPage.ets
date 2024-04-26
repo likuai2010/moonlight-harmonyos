@@ -7,7 +7,7 @@ import limelightCertProvider from '../entryability/crypto/LimelightCryptoProvide
 import { NvHttp } from '../entryability/http/NvHttp'
 import router from '@ohos.router'
 import { Alert, PrivacyConfirm } from './compoments/Loading'
-import dataPreferences from '@ohos.data.preferences';
+import dataPreferences from '@ohos.data.preferences'
 
 async function getResString(com: object, r: Resource): Promise<string> {
   return await getContext(com).resourceManager.getStringValue(r)
@@ -36,7 +36,6 @@ struct PcView {
         this.onDelete(this.detail)
       })
       MenuItem({ content: "查看详情" }).onClick((e) => {
-
         let alertDialog = new CustomDialogController({
           builder: Alert({
             title: "查看详情",
@@ -154,9 +153,6 @@ struct PcView {
     }).bindContextMenu(this.pcMenu, ResponseType.LongPress)
   }
 }
-
-
-
 @Entry
 @Component
 struct PcPage {
@@ -178,7 +174,7 @@ struct PcPage {
   })
   onPageShow(){
     dataPreferences.getPreferences(getContext(this), "appSettings").then((pref: dataPreferences.Preferences)=>{
-      pref.get("privacyConfirm", false).then((r:dataPreferences.ValueType)=>{
+      pref.get("privacyConfirm", false).then((r: dataPreferences.ValueType) => {
         if(!r){
           this.privacyDialogController.open()
         }
@@ -188,12 +184,9 @@ struct PcPage {
   }
 
   aboutToAppear() {
-
     viewModel.onDetailsUpdate((news: ComputerDetails) => {
       let indexes = this.pcList.findIndex((d) => d.uuid == news.uuid)
-      if (indexes < 0) {
-        this.pcList.push(news)
-      } else {
+      if (indexes > -1) {
         this.pcList[indexes] = news
       }
       this.updateGrid()
@@ -211,7 +204,7 @@ struct PcPage {
   }
 
   updateGrid() {
-    let rows = Math.max(3, Math.round(this.pcList.length / 3))
+    let rows = Math.max(1, Math.round(this.pcList.length / 3))
     this.gridRowTemplate = '1fr '.repeat(rows);
     this.heightValue = rows * 192 - 8;
   }
@@ -221,18 +214,20 @@ struct PcPage {
       MainTitle()
       Scroll(this.scroller) {
         Grid() {
-          ForEach(this.pcList, (d:ComputerDetails) => {
+          ForEach(this.pcList, (d: ComputerDetails) => {
             GridItem() {
-              PcView({ detail: d, onDelete:(d)=>{
-                viewModel.delComputer(d)
-                this.fetchDetails()
+              PcView({ detail: d, onDelete:(dev)=>{
+                viewModel.delComputer(dev).then((result)=>{
+                  if (result)
+                    this.fetchDetails()
+                  else
+                    promptAction.showToast({message: "删除失败"})
+                })
               }})
             }
           }, (item: ComputerDetails) => JSON.stringify(item))
         }.onKeyEvent((e)=>{
           console.log(e.keyCode+"");
-        }).onMouse((e)=>{
-          console.log(e.button+"");
         })
         .rowsTemplate(this.gridRowTemplate)
         .columnsTemplate('1fr 1fr 1fr')

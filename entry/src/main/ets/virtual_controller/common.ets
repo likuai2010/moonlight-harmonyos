@@ -75,6 +75,13 @@ export class ElementLayoutParam {
     this.width = width
     this.height = height
   }
+  update(target: ElementLayoutParam): ElementLayoutParam{
+    this.x = target.x
+    this.y = target.y
+    this.width = target.width
+    this.height = target.height
+    return this
+  }
 }
 
 export abstract class VirtualControllerElement {
@@ -180,8 +187,7 @@ export abstract class VirtualControllerElement {
   }
   loadConfiguration(configuration: string){
     const target =  JSON.parse(configuration) as ElementLayoutParam
-    //Object.assign(this.layout, target)
-    //this.layout = Object.assign(new ElementLayoutParam(0,0,0,0), target)
+    this.layout = new ElementLayoutParam(0,0,0,0).update(target)
   }
 
   onSizeChanged(canvas: CanvasRenderingContext2D) {
