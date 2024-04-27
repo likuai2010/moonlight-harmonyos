@@ -1,13 +1,13 @@
-import { AddressTuple, ComputerDetails, ComputerState } from './computers/ComputerDetails';
+import { AddressTuple, ComputerDetails, ComputerState } from '../computers/ComputerDetails';
 import uri from '@ohos.uri';
 import common from '@ohos.app.ability.common';
-import { NvHttp } from './http/NvHttp';
-import { MoonBridge } from './nvstream/MoonBridge';
-import limelightCertProvider, { accessFile, readFile, writeFile } from './crypto/LimelightCryptoProvider'
-import dbManger from './computers/ComputerDatabaseManager'
-import LimeLog from './LimeLog';
-import { NvApp } from './http/NvApp';
-import { getResStringByContext } from '../uitls/ResString';
+import { NvHttp } from '../http/NvHttp';
+import { MoonBridge } from '../nvstream/MoonBridge';
+import limelightCertProvider, { accessFile, readFile, writeFile } from '../crypto/LimelightCryptoProvider'
+import dbManger from '../computers/ComputerDatabaseManager'
+import LimeLog from '../LimeLog';
+import { NvApp } from '../http/NvApp';
+import { getResStringByContext } from '../../uitls/ResString';
 import FaultLogger from '@ohos.faultLogger';
 
 export class ResultInfo{

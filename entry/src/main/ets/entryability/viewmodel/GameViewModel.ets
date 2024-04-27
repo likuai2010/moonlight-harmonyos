@@ -1,17 +1,17 @@
-import { NvConnectionListener } from './nvstream/ConnetionListener';
-import { AddressTuple, ComputerDetails } from './computers/ComputerDetails';
-import { NvApp } from './http/NvApp';
-import { NvHttp } from './http/NvHttp';
-import { NvConnection } from './nvstream/NvConnection';
-import { StreamConfiguration } from './nvstream/StreamConfiguration';
-import { getResStringByContext } from '../uitls/ResString';
+import { NvConnectionListener } from '../nvstream/ConnetionListener';
+import { AddressTuple, ComputerDetails } from '../computers/ComputerDetails';
+import { NvApp } from '../http/NvApp';
+import { NvHttp } from '../http/NvHttp';
+import { NvConnection } from '../nvstream/NvConnection';
+import { StreamConfiguration } from '../nvstream/StreamConfiguration';
+import { getResStringByContext } from '../../uitls/ResString';
 import emitter from '@ohos.events.emitter'
-import { SpinnerEventId } from '../uitls/CommonEvents';
-import LimeLog from './LimeLog';
+import { SpinnerEventId } from '../../uitls/CommonEvents';
+import LimeLog from '../LimeLog';
 import promptAction from '@ohos.promptAction';
-import { StreamSettings } from '../uitls/StreamSetttings';
-import { ControllerHandle } from '../virtual_controller/ControllerHandle';
-import { VirtualController } from '../virtual_controller/VirtualController';
+import { StreamSettings } from '../../uitls/StreamSetttings';
+import { ControllerHandle } from '../../virtual_controller/ControllerHandle';
+import { VirtualController } from '../../virtual_controller/VirtualController';
 
 
 class GameViewModel implements NvConnectionListener {

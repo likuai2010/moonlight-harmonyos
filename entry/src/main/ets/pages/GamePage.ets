@@ -1,4 +1,4 @@
-import gameViewModel from '../entryability/GameViewModel'
+import gameViewModel from '../entryability/viewmodel/GameViewModel'
 import { VideoStatus } from 'libentry.so';
 import router from '@ohos.router';
 import { Spinner } from './compoments/Loading'

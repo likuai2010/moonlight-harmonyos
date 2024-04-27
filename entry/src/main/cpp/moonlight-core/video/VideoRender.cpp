@@ -29,12 +29,15 @@ int VideoRender::submitDecodeUnit(PDECODE_UNIT du){
 }
 
 void VideoRender::startRenderFrame(){
-    if(m_decode_params != NULL){
-        m_eglRender->initialize(getParams());
-        running = true;
-        while (running) {
-            AVFrameHolder::GetInstance()->get([this](AVFrame *frame) { m_eglRender->renderFrame(frame); });
-            usleep(100000 / 120);
+    // 软解码需要执行
+    if (!NativeVideoDecoder::supportedHW()) {
+        if (m_decode_params != NULL) {
+            m_eglRender->initialize(getParams());
+            running = true;
+            while (running) {
+                AVFrameHolder::GetInstance()->get([this](AVFrame *frame) { m_eglRender->renderFrame(frame); });
+                usleep(100000 / 120);
+            }
         }
     }
 }
