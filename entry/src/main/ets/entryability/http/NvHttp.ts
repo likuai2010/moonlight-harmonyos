@@ -153,7 +153,7 @@ export class NvHttp {
     return this.getPairState(await this.getServerInfo(true));
   }
 
-  private getPairState(serverInfo: string): PairState {
+  public getPairState(serverInfo: string): PairState {
     // appversion is present in all supported GFE versions
     return NvHttp.getXmlString(serverInfo, "PairStatus", true) == "1" ?
     PairState.PAIRED : PairState.NOT_PAIRED;

@@ -7,8 +7,9 @@ import {  MoonBridge } from './MoonBridge';
 import { StreamConfiguration } from './StreamConfiguration'
 import { NvConnectionListener } from './ConnetionListener';
 import buffer from '@ohos.buffer';
-import { LimelightCertProvider } from '../crypto/LimelightCryptoProvider';
+import limelightCertProvider from '../crypto/LimelightCryptoProvider';
 import LimeLog from '../LimeLog';
+import { PairState } from '../http/PairingManager';
 
 export class NvConnection {
   api: MoonBridgeNapi = new MoonBridgeNapi()
@@ -70,7 +71,7 @@ export class NvConnection {
     //MoonBridge.api.setupBridge(videoDecoderRenderer, audioRenderer, connectionListener);
     LimeLog.info("startConnection")
     try {
-      const ret = this.api.startConnection(
+      const ret = await this.api.startConnection(
         context.serverAddress.toAddress(),
         context.serverAppVersion,
         context.serverGfeVersion,
@@ -90,35 +91,20 @@ export class NvConnection {
         context.videoCapabilities,
         context.streamConfig.colorSpace, context.streamConfig.colorRange
       )
-
-      // const ret = this.api.startConnection("192.168.3.5",
-      //                       "7.1.431.-1", "3.23.0.74", "rtsp://192.168.3.5:48010",
-      //                       197377,
-      //                       1280, 720,
-      //                       60, 10000,
-      //                       1392, 2,
-      //                       197322,
-      //                       1,
-      //                       6000,
-      //                       1,
-      //             context.riKey, rikeyId,
-      //                       16777216,
-      //                       1,
-      //                       0);
+      LimeLog.info("ret => "+ret)
       if(ret != 0){
         this.context.connListener.connectionTerminated(ret)
       }
-      LimeLog.info("ret=>"+ret)
-    }catch (e){
-      this.context.connListener.connectionTerminated(-1)
-      LimeLog.info("err=>" + e.stack)
+    } catch (e) {
+      this.context.connListener.connectionTerminated(e)
+      LimeLog.info("err=> " + e)
     }
 
 
   }
 
   async startApp() {
-    const h = new NvHttp(this.context.serverAddress, this.context.httpsPort, this.uniqueId, new LimelightCertProvider());
+    const h = new NvHttp(this.context.serverAddress, this.context.httpsPort, true, limelightCertProvider);
     const serverInfo = await h.getServerInfo(true);
     const context = this.context
     context.serverAppVersion = h.getServerVersion(serverInfo);
@@ -130,10 +116,10 @@ export class NvConnection {
     context.isNvidiaServerSoftware = details.nvidiaServer;
     // May be missing for older servers
     context.serverGfeVersion = h.getGfeVersion(serverInfo);
-    // if (h.getPairState(serverInfo) != PairState.PAIRED) {
-    //   this.context.connListener.displayMessage("Device not paired with computer");
-    //   return false;
-    // }
+    if (h.getPairState(serverInfo) != PairState.PAIRED) {
+      this.context.connListener.displayMessage("Device not paired with computer");
+      return false;
+    }
     context.serverCodecModeSupport = h.getServerCodecModeSupport(serverInfo);
     context.negotiatedHdr = (this.context.streamConfig.supportedVideoFormats & MoonBridge.VIDEO_FORMAT_MASK_10BIT) != 0;
     if ((context.serverCodecModeSupport & 0x20200) == 0 && this.context.negotiatedHdr) {

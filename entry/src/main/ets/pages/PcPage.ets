@@ -1,5 +1,5 @@
 import { Icon, MainTitle } from './compoments/Title'
-import viewModel from '../entryability/ComputerManagerViewModel'
+import viewModel from '../entryability/viewmodel/ComputerManagerViewModel'
 import { ComputerDetails, ComputerState } from '../entryability/computers/ComputerDetails'
 import promptAction from '@ohos.promptAction'
 import { PairState } from '../entryability/http/PairingManager'

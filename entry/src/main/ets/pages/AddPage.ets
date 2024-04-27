@@ -1,6 +1,6 @@
 
 import { NavTitle } from './compoments/Title'
-import viewModel from '../entryability/ComputerManagerViewModel'
+import viewModel from '../entryability/viewmodel/ComputerManagerViewModel'
 import router from '@ohos.router'
 import { Loading,Alert } from './compoments/Loading'
 import promptAction from '@ohos.promptAction'

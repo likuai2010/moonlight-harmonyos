@@ -45,7 +45,7 @@ export declare class MoonBridgeNapi {
     riAesKey: Uint8Array, riAesIv: Uint8Array,
     videoCapabilities: number,
     colorSpace: number, colorRange: number
-  ): number;
+  ): Promise<number>;
 
   stopConnection(): void;
   sendMultiControllerInput(

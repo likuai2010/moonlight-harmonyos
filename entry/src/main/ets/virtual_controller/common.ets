@@ -190,8 +190,6 @@ export abstract class VirtualControllerElement {
     this.layout = new ElementLayoutParam(0,0,0,0).update(target)
   }
 
-  onSizeChanged(canvas: CanvasRenderingContext2D) {
-  }
   touchId: number = -1
   onTouchEvent(event: TouchEvent):boolean | undefined {
     if (this.virtualController.currentMode == ControllerMode.Active) {
@@ -263,26 +261,22 @@ export struct VirtualControllerButton {
   private settings: RenderingContextSettings = new RenderingContextSettings(true)
   //用来创建CanvasRenderingContext2D对象，通过在canvas中调用CanvasRenderingContext2D对象来绘制。
   private context: CanvasRenderingContext2D = new CanvasRenderingContext2D(this.settings)
-  element!: VirtualControllerElement
-  @ObjectLink layout: ElementLayoutParam
-
-  onLayout() {
-    this.element.onSizeChanged(this.context)
-  }
+  element?: VirtualControllerElement
+  layout?: ElementLayoutParam
 
   build() {
     Canvas(this.context)
-      .height(this.layout.height)
-      .width(this.layout.width)
-      .translate({ x: this.layout.x, y: this.layout.y })
+      .height(this.layout?.height)
+      .width(this.layout?.width)
+      .translate({ x: this.layout?.x, y: this.layout?.y })
       .opacity(1)
       .onReady(() => {
-        this.element.onDraw(this.context)
+        this.element?.onDraw(this.context)
       })
       .onTouch((e) => {
         // 单点
-        this.element.onTouchEvent(e)
-        this.element.onDraw(this.context)
+        this.element?.onTouchEvent(e)
+        this.element?.onDraw(this.context)
       })
   }
 }

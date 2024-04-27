@@ -1,6 +1,6 @@
 
 import router from '@ohos.router'
-import viewModel from '../entryability/ComputerManagerViewModel'
+import viewModel from '../entryability/viewmodel/ComputerManagerViewModel'
 import { ComputerDetails } from '../entryability/computers/ComputerDetails'
 import { NvHttp } from '../entryability/http/NvHttp'
 import { Icon, NavTitle } from './compoments/Title'
