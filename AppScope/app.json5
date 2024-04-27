@@ -1,7 +1,7 @@
 {
   "app": {
     "bundleName": "com.xiaobai.moonlight",
-    "vendor": "example",
+    "vendor": "xiaobai",
     "versionCode": 1000000,
     "versionName": "1.0.0",
     "icon": "$media:icon",

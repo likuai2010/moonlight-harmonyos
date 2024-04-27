@@ -74,7 +74,7 @@ int NativeVideoDecoder::setup(DECODER_PARAMETERS params) {
         break;
     case VIDEO_FORMAT_H265:
         decodeLog(" find decoder HEVC");
-        m_decoder = OH_VideoDecoder_CreateByMime(OH_AVCODEC_MIMETYPE_VIDEO_HEVC);
+        m_decoder = OH_VideoDecoder_CreateByMime(OH_AVCODEC_MIMETYPE_VIDEO_AVC);
         break;
     }
     if (m_decoder == NULL) {

@@ -3,8 +3,6 @@ import { VideoStatus } from 'libentry.so';
 import router from '@ohos.router';
 import { Spinner } from './compoments/Loading'
 import { loadSettings, StreamSettings } from '../uitls/StreamSetttings';
-import { VirtualControllerButton } from '../virtual_controller/VirtualController';
-import { Icon } from './compoments/Title';
 import { VirtualController, showVirtualController  } from '../virtual_controller/VirtualController';
 import { VirtualControllerConfigurationLoader } from '../virtual_controller/VirtualControllerConfigurationLoader';
 import { ComputerDetails } from '../entryability/computers/ComputerDetails';
@@ -34,10 +32,8 @@ struct GamePage {
     const settings = await loadSettings(getContext(this))
     this.settings = settings
     let param = router.getParams() as Record<string, ComputerDetails | NvApp>;
-    if (settings.touchscreen_trackpad) {
-      await gameViewModel.init(param["computer"] as ComputerDetails, param["app"] as NvApp, settings)
-      await gameViewModel.start(this.dialogController!, getContext(this))
-    }
+    await gameViewModel.init(param["computer"] as ComputerDetails, param["app"] as NvApp, settings)
+    await gameViewModel.start(this.dialogController!, getContext(this))
     if (settings.show_onscreen_controls){
       const loader = new VirtualControllerConfigurationLoader()
       loader.createDefaultLayout(gameViewModel.virtualController, settings)

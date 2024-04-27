@@ -7,7 +7,6 @@ import { VirtualController } from './VirtualController';
 import dataPreferences from '@ohos.data.preferences';
 import display from '@ohos.display';
 import { StreamSettings } from '../uitls/StreamSetttings';
-import { ValueType } from '@kit.ArkData';
 
 
 const TRIGGER_L_BASE_X: number = 1;

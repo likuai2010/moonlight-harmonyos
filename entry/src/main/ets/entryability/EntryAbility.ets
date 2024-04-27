@@ -4,6 +4,7 @@ import window from '@ohos.window';
 import limelightCertProvider from './crypto/LimelightCryptoProvider';
 import inputDevice from '@ohos.multimodalInput.inputDevice';
 import viewModel from './ComputerManagerViewModel'
+import fileIo from '@ohos.file.fs';
 
 import pointer from '@ohos.multimodalInput.pointer';
 
@@ -49,10 +50,10 @@ export default class EntryAbility extends UIAbility {
     hilog.info(0x0000, 'testTag', '%{public}s', 'Ability onDestroy');
   }
   async initSSL(windos: window.WindowStage){
-    // const clientPath = await this.context.resourceManager.getRawFd('client.pem')
-    // const keyPath = await this.context.resourceManager.getRawFd('key.pem')
-    // await fileIo.copyFile(clientPath.fd, this.context.cacheDir + "/client.pem")
-    // await fileIo.copyFile(keyPath.fd, this.context.cacheDir + "/private.pem")
+    const clientPath = await this.context.resourceManager.getRawFd('client.pem')
+    const keyPath = await this.context.resourceManager.getRawFd('key.pem')
+    await fileIo.copyFile(clientPath.fd, this.context.cacheDir + "/client.pem")
+    await fileIo.copyFile(keyPath.fd, this.context.cacheDir + "/private.pem")
     limelightCertProvider.initCertKeyPair(this.context.cacheDir)
 
     const window = await windos.getMainWindow()

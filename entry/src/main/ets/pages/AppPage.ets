@@ -29,7 +29,6 @@ struct AppView {
       let options :image.DecodingOptions = {
         editable: false,                  // 是否可编辑
         desiredPixelFormat: 3,                   // 像素格式
-        desiredSize: { height: 100, width: 100}
       }
       if(imageSource)
         imageSource.createPixelMap(options).then((pixelMap:PixelMap) => {
