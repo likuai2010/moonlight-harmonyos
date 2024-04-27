@@ -81,6 +81,7 @@ class GameViewModel implements NvConnectionListener {
 
   connectionTerminated(errorCode: number): void {
     LimeLog.error("Connection terminated: " + errorCode);
+    promptAction.showToast({message: "Connection terminated: " + errorCode})
     this.spinnerDialog.close()
   }
 

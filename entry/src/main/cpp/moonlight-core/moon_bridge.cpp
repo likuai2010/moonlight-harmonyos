@@ -189,11 +189,7 @@ napi_value MoonBridgeApi::MoonBridge_startConnection(napi_env env, napi_callback
                                         &api->BridgeAudioRendererCallbacks,
                                         api->nativewindow, 0,
                                         nullptr, 0);
-        
            
-            napi_value result;
-            napi_create_int32(env,ret, &result);
-            napi_reject_deferred(env, info->deferred, result);
             if (api->m_render->getParams() != NULL){
                 api->m_render->startRenderFrame();
             }
@@ -202,6 +198,9 @@ napi_value MoonBridgeApi::MoonBridge_startConnection(napi_env env, napi_callback
             BridgeCallbackInfo *info = (BridgeCallbackInfo *)data;
             napi_delete_async_work(env, info->asyncWork);
             delete info;
+            napi_value result;
+            napi_create_int32(env, 0, &result);
+            napi_reject_deferred(env, info->deferred, result);
         },
         (void *)bridgeCallbackInfo, &bridgeCallbackInfo->asyncWork);
     // 将异步工作排队，等待 Node.js 事件循环处理
