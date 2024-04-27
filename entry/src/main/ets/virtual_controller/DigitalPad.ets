@@ -19,6 +19,9 @@ interface DigitalPadListener {
 }
 
 export class DigitalPad extends VirtualControllerElement {
+  onSizeChanged(canvas: CanvasRenderingContext2D) {
+  }
+
   pressed: boolean = false
   padDirection: number = DIGITAL_PAD_DIRECTION_NO_DIRECTION
   DPAD_MARGIN: number = 5;

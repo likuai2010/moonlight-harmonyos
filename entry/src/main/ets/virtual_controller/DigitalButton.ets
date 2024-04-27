@@ -28,6 +28,9 @@ export interface DigitalButtonListener {
 }
 
 export class DigitalButton extends VirtualControllerElement {
+  onSizeChanged(canvas: CanvasRenderingContext2D) {
+  }
+
   private listeners: DigitalButtonListener[] = [];
   layer: number
 

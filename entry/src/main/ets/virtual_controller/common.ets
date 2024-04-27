@@ -153,14 +153,15 @@ export abstract class VirtualControllerElement {
     this.position_pressed_x += dx;
     this.position_pressed_y += dy;
   }
-
+  abstract onSizeChanged(canvas: CanvasRenderingContext2D);
   abstract onElementDraw(canvas: CanvasRenderingContext2D);
 
   abstract onElementTouchEvent(event: TouchEvent)
 
   onDraw(canvas: CanvasRenderingContext2D) {
     this.context = canvas
-    this.onElementDraw(canvas);
+    this.onElementDraw(canvas)
+    this.onSizeChanged(canvas)
     if (this.currentMode != Mode.Normal) {
       canvas.strokeStyle = configSelectedColor
       const strokeWidth = this.getDefaultStrokeWidth()
@@ -179,7 +180,6 @@ export abstract class VirtualControllerElement {
 
   actionCancel() {
     this.currentMode = Mode.Normal;
-    //invalidate();
   }
 
   getConfiguration():string {
@@ -262,7 +262,8 @@ export struct VirtualControllerButton {
   //用来创建CanvasRenderingContext2D对象，通过在canvas中调用CanvasRenderingContext2D对象来绘制。
   private context: CanvasRenderingContext2D = new CanvasRenderingContext2D(this.settings)
   element?: VirtualControllerElement
-  layout?: ElementLayoutParam
+
+  @State layout?: ElementLayoutParam = null
 
   build() {
     Canvas(this.context)
