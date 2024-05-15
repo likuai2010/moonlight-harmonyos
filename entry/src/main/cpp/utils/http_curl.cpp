@@ -172,10 +172,9 @@ napi_value GetRequest(napi_env env, napi_callback_info info) {
     napi_create_async_work(
         env, nullptr, resourceName,
         [](napi_env env, void *data) {
-            http_request((AsyncCallbackInfo *)data);
-            //getCurl(env, (AsyncCallbackInfo *)data);
         },
         [](napi_env env, napi_status status, void *data) {
+            http_request((AsyncCallbackInfo *)data);
             AsyncCallbackInfo *asyncCallbackInfo = (AsyncCallbackInfo *)data;
             if (asyncCallbackInfo->error == nullptr) {
                 napi_value result = createTypedArray(env, asyncCallbackInfo->size, napi_uint8_array, asyncCallbackInfo->result);
