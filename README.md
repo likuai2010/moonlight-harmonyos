@@ -17,11 +17,13 @@ Moonlight-HarmonyOS是基于开源项目moonlight-stream-android的HarmonyOS版�
 ## 目标和愿景
 
 我们的目标是在HarmonyOS生态系统中建立一个优秀的游戏流式服务，为用户提供出色的游戏体验。我们的愿景是让Moonlight-HarmonyOS成为HarmonyOS平台上流行的游戏流媒体解决方案之一。
-
+## 演示进展
+- [[bilibili](https://www.bilibili.com/video/BV1h5411y79y/?spm_id_from=pageDriver&vd_source=a57591f50ada2248ca93e7f3a05e6fe8)]
 ## 最新进展
 **2024年5月最新进展：**
 - 硬件解码测试完成(harmonyos next)
 **2024年4月最新进展：**
+- https://www.bilibili.com/video/BV1WF4m1w7LU/?spm_id_from=333.788&vd_source=a57591f50ada2248ca93e7f3a05e6fe8
 - 华为商店已上架 (harmonyos 4.0)
 **2024年1月进展：**
 - 虚拟控制器 (暂不支持手柄)
