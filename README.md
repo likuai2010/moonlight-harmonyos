@@ -35,6 +35,12 @@ Moonlight-HarmonyOS是基于开源项目moonlight-stream-android的HarmonyOS版�
 - 已成功整合moonlight-stream-android的关键功能。
 - 正在进行性能优化和用户界面改进。
 
+## 打赏
+
+<img alt="支付宝" height="400" src="reward/alipay.jpg" width="300"/>
+<img alt="微信" height="400" src="reward/alipay.jpg" width="300"/>
+
+
 ## 联系方式
 
 如果您对Moonlight-HarmonyOS有任何建议、反馈或合作意向，欢迎通过以下方式联系我们：
